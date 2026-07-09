@@ -25,12 +25,14 @@
 #include <QHash>
 #include <QString>
 
+#include "base/exceptions.h"
 #include "base/global.h"
 #include "base/logging.h"
 #include "base/utils/fs.h"
 #include "base/utils/io.h"
 #include "base/utils/misc.h"
 #include "base/version.h"
+#include "lttypecast.h"
 
 namespace
 {
@@ -154,7 +156,7 @@ void TorrentCreator::run()
                 , [this, &newTorrent](const lt::piece_index_t n)
         {
             checkInterruptionRequested();
-            sendProgressSignal(static_cast<LTUnderlyingType<lt::piece_index_t>>(n), newTorrent.num_pieces());
+            sendProgressSignal(LT::toUnderlyingType(n), newTorrent.num_pieces());
         });
 
         // Set qBittorrent as creator and add user comment to

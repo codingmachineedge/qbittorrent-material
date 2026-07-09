@@ -42,7 +42,6 @@
 #include "downloadpriority.h"
 #include "loadtorrentparams.h"
 #include "ltqbitarray.h"
-#include "ltqhash.h"
 #include "lttypecast.h"
 #include "peeraddress.h"
 #include "peerinfo.h"

@@ -13,6 +13,7 @@
 #include "torrentinfo.h"
 
 #include <memory>
+#include <span>
 
 #include <libtorrent/create_torrent.hpp>
 #include <libtorrent/error_code.hpp>

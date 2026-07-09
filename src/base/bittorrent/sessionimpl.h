@@ -619,6 +619,7 @@ namespace BitTorrent
         void handleMoveTorrentStorageJobFinished(const Path &newPath);
         void processPendingFinishedTorrents();
 
+        bool isSubcategoriesEnabled() const;
         void loadCategories();
         void storeCategories() const;
         void upgradeCategories();

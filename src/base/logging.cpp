@@ -183,15 +183,17 @@ namespace Logging
 
     void installMessageHandler()
     {
-        const QMutexLocker locker(&g_sinkMutex);
+        QMutexLocker locker(&g_sinkMutex);
         if (g_installed)
             return;
 
         // Resolve <AppDataLocation>/logs/qbittorrent.log and ensure the dir.
         const QString baseDir = QStandardPaths::writableLocation(QStandardPaths::AppDataLocation);
-        const QString logsDir = baseDir.isEmpty()
-            ? QDir::tempPath() + QStringLiteral("/qbittorrent-logs")
-            : baseDir + QStringLiteral("/logs");
+        QString logsDir;
+        if (baseDir.isEmpty())
+            logsDir = QDir::tempPath() + QStringLiteral("/qbittorrent-logs");
+        else
+            logsDir = baseDir + QStringLiteral("/logs");
         QDir().mkpath(logsDir);
         g_logFilePath = logsDir + QStringLiteral("/qbittorrent.log");
 

@@ -19,6 +19,7 @@
 #include <libtorrent/write_resume_data.hpp>
 
 #include <QByteArray>
+#include <QCoreApplication>
 #include <QDateTime>
 #include <QString>
 #include <QUrl>
@@ -131,22 +132,24 @@ void TorrentDescriptor::setTorrentInfo(TorrentInfo torrentInfo)
 nonstd::expected<TorrentDescriptor, QString> TorrentDescriptor::load(const QByteArray &data) noexcept
 {
     if (data.isEmpty())
-        return nonstd::make_unexpected(tr("Torrent data is empty."));
+        return nonstd::make_unexpected(QCoreApplication::translate("BitTorrent::TorrentDescriptor", "Torrent data is empty."));
 
-    lt::error_code ec;
     lt::load_torrent_limits limits;
     limits.max_buffer_size = TORRENT_LOAD_LIMIT_BYTES;
 
-    const lt::add_torrent_params ltParams = lt::load_torrent_buffer(
-            {data.constData(), static_cast<std::size_t>(data.size())}, limits, ec);
-    if (ec)
+    try
     {
-        qCWarning(lcEngine) << "Failed to decode torrent buffer:" << QString::fromStdString(ec.message());
-        return nonstd::make_unexpected(QString::fromStdString(ec.message()));
+        const lt::add_torrent_params ltParams = lt::load_torrent_buffer(
+                lt::span<const char>(data.constData(), data.size()), limits);
+        qCDebug(lcEngine) << "Loaded torrent from buffer, size:" << data.size();
+        return TorrentDescriptor(ltParams);
     }
-
-    qCDebug(lcEngine) << "Loaded torrent from buffer, size:" << data.size();
-    return TorrentDescriptor(ltParams);
+    catch (const lt::system_error &err)
+    {
+        const QString message = QString::fromLocal8Bit(err.what());
+        qCWarning(lcEngine) << "Failed to decode torrent buffer:" << message;
+        return nonstd::make_unexpected(message);
+    }
 }
 
 nonstd::expected<TorrentDescriptor, QString> TorrentDescriptor::loadFromFile(const Path &path) noexcept
@@ -180,7 +183,7 @@ nonstd::expected<void, QString> TorrentDescriptor::saveToFile(const Path &path) 
 
     const auto writeResult = Utils::IO::saveToFile(path, result.value());
     if (!writeResult)
-        return nonstd::make_unexpected(writeResult.error().message);
+        return nonstd::make_unexpected(writeResult.error());
 
     return {};
 }
@@ -188,7 +191,7 @@ nonstd::expected<void, QString> TorrentDescriptor::saveToFile(const Path &path) 
 nonstd::expected<QByteArray, QString> TorrentDescriptor::saveToBuffer() const
 {
     if (!m_info || !m_info->isValid())
-        return nonstd::make_unexpected(tr("Invalid metadata."));
+        return nonstd::make_unexpected(QCoreApplication::translate("BitTorrent::TorrentDescriptor", "Invalid metadata."));
 
     try
     {

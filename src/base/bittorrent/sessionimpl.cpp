@@ -28,7 +28,11 @@
 #include <libtorrent/torrent_flags.hpp>
 
 #include <QDir>
+#include <QFuture>
 #include <QHostAddress>
+#include <QJsonDocument>
+#include <QJsonObject>
+#include <QRandomGenerator>
 #include <QRegularExpression>
 #include <QString>
 #include <QThread>
@@ -39,7 +43,9 @@
 #include "base/logging.h"
 #include "base/preferences.h"
 #include "base/profile.h"
+#include "base/settingsstorage.h"
 #include "base/utils/fs.h"
+#include "base/utils/io.h"
 #include "base/utils/misc.h"
 #include "base/utils/net.h"
 #include "base/utils/string.h"
@@ -54,6 +60,7 @@
 
 using namespace BitTorrent;
 using namespace Qt::Literals::StringLiterals;
+using namespace std::chrono_literals;
 
 Session *SessionImpl::m_instance = nullptr;
 
@@ -61,6 +68,36 @@ namespace
 {
     const int MAX_PROCESSING_RESUMEDATA_COUNT = 50;
     const int STATISTICS_SAVE_INTERVAL = std::chrono::milliseconds(15min).count();
+
+    template <typename T>
+    struct LowerLimited
+    {
+        LowerLimited(T limit, T ret)
+            : m_limit(limit)
+            , m_ret(ret)
+        {
+        }
+
+        explicit LowerLimited(T limit)
+            : LowerLimited(limit, limit)
+        {
+        }
+
+        T operator()(T val) const
+        {
+            return val <= m_limit ? m_ret : val;
+        }
+
+    private:
+        const T m_limit;
+        const T m_ret;
+    };
+
+    template <typename T>
+    LowerLimited<T> lowerLimited(T limit) { return LowerLimited<T>(limit); }
+
+    template <typename T>
+    LowerLimited<T> lowerLimited(T limit, T ret) { return LowerLimited<T>(limit, ret); }
 
     QString toString(const lt::socket_type_t socketType)
     {
@@ -76,10 +113,13 @@ namespace
             return u"TCP"_s;
         case lt::socket_type_t::tcp_ssl:
             return u"TCP_SSL"_s;
-        case lt::socket_type_t::udp:
-            return u"UDP"_s;
+#ifdef QBT_USES_LIBTORRENT2
         case lt::socket_type_t::utp:
             return u"uTP"_s;
+#else
+        case lt::socket_type_t::udp:
+            return u"UDP"_s;
+#endif
         case lt::socket_type_t::utp_ssl:
             return u"uTP_SSL"_s;
 #ifdef QBT_USES_LIBTORRENT2
@@ -266,7 +306,7 @@ SessionImpl::SessionImpl(QObject *parent)
     , m_storedTags(BITTORRENT_SESSION_KEY(u"Tags"_s), {})
     , m_shareLimitAction(BITTORRENT_SESSION_KEY(u"ShareLimitAction"_s), ShareLimitAction::Stop)
     , m_shareLimitsMode(BITTORRENT_SESSION_KEY(u"ShareLimitsMode"_s), ShareLimitsMode::MatchAny)
-    , m_savePath(u"Downloads/SavePath"_s, Utils::Fs::homeFolderPath() / Path(u"qBittorrent/downloads"_s))
+    , m_savePath(u"Downloads/SavePath"_s, Utils::Fs::homePath() / Path(u"qBittorrent/downloads"_s))
     , m_downloadPath(u"Downloads/DownloadPath"_s, (m_savePath.get() / Path(u"temp"_s)))
     , m_isDownloadPathEnabled(u"Downloads/DownloadPathEnabled"_s, false)
     , m_useCategoryPathsInManualMode(BITTORRENT_SESSION_KEY(u"UseCategoryPathsInManualMode"_s), false)
@@ -281,7 +321,7 @@ SessionImpl::SessionImpl(QObject *parent)
     , m_requestQueueSize(BITTORRENT_SESSION_KEY(u"RequestQueueSize"_s), 500)
     , m_isExcludedFileNamesEnabled(BITTORRENT_KEY(u"ExcludedFileNamesEnabled"_s), false)
     , m_excludedFileNames(BITTORRENT_SESSION_KEY(u"ExcludedFileNames"_s), {})
-    , m_bannedIPs(u"State/BannedIPs"_s, {}, Utils::String::joinIntoStringList, Utils::String::splitToStringList)
+    , m_bannedIPs(u"State/BannedIPs"_s, {})
     , m_resumeDataStorageType(BITTORRENT_SESSION_KEY(u"ResumeDataStorageType"_s), ResumeDataStorageType::Legacy)
     , m_isMergeTrackersEnabled(BITTORRENT_KEY(u"MergeTrackersEnabled"_s), false)
     , m_isI2PEnabled(BITTORRENT_SESSION_KEY(u"I2P/Enabled"_s), false)
@@ -315,7 +355,7 @@ SessionImpl::SessionImpl(QObject *parent)
     m_updateTrackersFromURLTimer->setInterval(1h);
     connect(m_updateTrackersFromURLTimer, &QTimer::timeout, this, [this]() { updateTrackersFromURL(); });
 
-    m_ioThread = Utils::Thread::create();
+    m_ioThread.reset(new QThread);
     m_ioThread->setObjectName("BitTorrent session");
 
     m_asyncWorker = new QThreadPool(this);
@@ -395,13 +435,13 @@ lt::settings_pack SessionImpl::loadLTSettings() const
     lt::settings_pack pack;
 
     pack.set_int(lt::settings_pack::alert_mask, lt::alert_category::status
-            | lt::alert_category::file_progress | lt::alert_category::disk_error
+            | lt::alert_category::file_progress
             | lt::alert_category::error | lt::alert_category::port_mapping
             | lt::alert_category::ip_block | lt::alert_category::performance_warning
             | lt::alert_category::tracker | lt::alert_category::connect
             | lt::alert_category::storage);
 
-    pack.set_str(lt::settings_pack::peer_fingerprint, lt::generate_fingerprint("qB", QBT_VERSION_MAJOR, QBT_VERSION_MINOR, QBT_VERSION_BUGFIX, QBT_VERSION_BUILD).to_string());
+    pack.set_str(lt::settings_pack::peer_fingerprint, lt::generate_fingerprint("qB", QBT_VERSION_MAJOR, QBT_VERSION_MINOR, QBT_VERSION_BUGFIX, QBT_VERSION_BUILD));
     pack.set_bool(lt::settings_pack::listen_system_port_fallback, false);
     pack.set_str(lt::settings_pack::user_agent, QStringLiteral("qBittorrent/" QBT_VERSION_2).toStdString());
 
@@ -429,7 +469,7 @@ lt::settings_pack SessionImpl::loadLTSettings() const
 
 void SessionImpl::applyNetworkInterfacesSettings(lt::settings_pack &settingsPack) const
 {
-    const int portValue = (port() < 0) ? Utils::Random::rand(1024, 65535) : port();
+    const int portValue = (port() < 0) ? static_cast<int>(QRandomGenerator::global()->bounded(1024, 65536)) : port();
     const QStringList endpoints = getListeningIPs();
 
     QStringList interfaces;
@@ -805,8 +845,8 @@ void SessionImpl::handleFileRenamedAlert(const lt::file_renamed_alert *alert)
 {
     if (TorrentImpl *torrent = getTorrent(alert->handle))
     {
-        torrent->handleFileRenamed(alert->index, Path(alert->new_name())
-                , Path(alert->old_name()));
+        torrent->handleFileRenamed(alert->index, Path(QString::fromUtf8(alert->new_name()))
+                , Path(QString::fromUtf8(alert->old_name())));
     }
 }
 
@@ -847,7 +887,7 @@ void SessionImpl::handleStorageMovedAlert(const lt::storage_moved_alert *alert)
     const MoveStorageJob &currentJob = m_moveStorageQueue.first();
     Q_ASSERT(currentJob.torrentHandle == alert->handle);
 
-    const Path newPath {alert->storage_path()};
+    const Path newPath {QString::fromUtf8(alert->storage_path())};
     qCDebug(lcSession) << "Storage moved to" << newPath.data();
     handleMoveTorrentStorageJobFinished(newPath);
 }
@@ -874,10 +914,6 @@ void SessionImpl::handleMoveTorrentStorageJobFinished(const Path &newPath)
 
     if (TorrentImpl *torrent = getTorrent(finishedJob.torrentHandle))
         torrent->handleMoveStorageJobFinished(newPath, finishedJob.context, hasOutstandingJob);
-}
-
-void SessionImpl::handleTorrentFinishedChecking(const lt::torrent_checked_alert *)
-{
 }
 
 void SessionImpl::handlePerformanceAlert(const lt::performance_alert *alert) const
@@ -1195,7 +1231,7 @@ bool SessionImpl::addTorrent_impl(const TorrentDescriptor &source, const AddTorr
     if (!infoHash.isValid())
     {
         qCWarning(lcSession) << "Cannot add torrent: invalid info hash";
-        emit addTorrentFailed(infoHash, {AddTorrentError::Kind::InvalidTorrentInfo, tr("Invalid info hash.")});
+        emit addTorrentFailed(infoHash, {AddTorrentError::Kind::Other, tr("Invalid info hash.")});
         return false;
     }
 
@@ -1402,8 +1438,6 @@ bool SessionImpl::cancelDownloadMetadata(const TorrentID &id)
     qCDebug(lcSession) << "Cancelled metadata download for" << id.toString();
     return true;
 }
-
-void SessionImpl::handleMetadataReceived(TorrentImpl *) {}
 
 // --- Queue operations --------------------------------------------------------
 
@@ -1629,8 +1663,7 @@ void SessionImpl::saveStatistics() const
     if (!m_isStatisticsDirty)
         return;
 
-    Preferences *const pref = Preferences::instance();
-    pref->setValue(u"Stats/AllStats"_s, QVariantHash {
+    SettingsStorage::instance()->storeValue(u"Stats/AllStats"_s, QVariantHash {
         {u"AlltimeDL"_s, m_status.allTimeDownload},
         {u"AlltimeUL"_s, m_status.allTimeUpload}
     });
@@ -1640,8 +1673,7 @@ void SessionImpl::saveStatistics() const
 
 void SessionImpl::loadStatistics()
 {
-    const Preferences *const pref = Preferences::instance();
-    const QVariantHash stats = pref->value(u"Stats/AllStats"_s).toHash();
+    const QVariantHash stats = SettingsStorage::instance()->loadValue<QVariant>(u"Stats/AllStats"_s).toHash();
     m_previouslyDownloaded = stats.value(u"AlltimeDL"_s).toLongLong();
     m_previouslyUploaded = stats.value(u"AlltimeUL"_s).toLongLong();
 }
@@ -1791,8 +1823,6 @@ void SessionImpl::handleTorrentContentFolderRenamingFailed(TorrentImpl *torrent,
 
 void SessionImpl::handleTorrentStorageMovingStateChanged(TorrentImpl *) {}
 
-void SessionImpl::handleTorrentNeedSaveResumeData(const TorrentImpl *) {}
-
 // --- Categories --------------------------------------------------------------
 
 QStringList SessionImpl::categories() const
@@ -1818,7 +1848,7 @@ Path SessionImpl::categorySavePath(const QString &categoryName, const CategoryOp
 
     Path path = options.savePath;
     if (path.isEmpty())
-        path = Utils::Fs::toValidPath(categoryName); // relative subfolder by category name
+        path = Path(Utils::Fs::toValidFileName(categoryName)); // relative subfolder by category name
 
     return (path.isAbsolute() ? path : (basePath / path));
 }
@@ -1837,7 +1867,7 @@ Path SessionImpl::categoryDownloadPath(const QString &categoryName, const Catego
     const Path basePath = downloadPath();
     Path path = resolved.path;
     if (path.isEmpty())
-        path = Utils::Fs::toValidPath(categoryName);
+        path = Path(Utils::Fs::toValidFileName(categoryName));
 
     return (path.isAbsolute() ? path : (basePath / path));
 }
@@ -1943,7 +1973,7 @@ bool SessionImpl::removeCategory(const QString &name)
 
 bool SessionImpl::isSubcategoriesEnabled() const
 {
-    return Preferences::instance()->useSubcategories();
+    return SettingsStorage::instance()->loadValue(u"BitTorrent/Session/SubcategoriesEnabled"_s, false);
 }
 
 void SessionImpl::loadCategories()
@@ -1979,7 +2009,7 @@ void SessionImpl::storeCategories() const
     const auto result = Utils::IO::saveToFile(
             specialFolderLocation(SpecialFolder::Config) / Path(u"categories.json"_s), data);
     if (!result)
-        qCWarning(lcSession) << "Failed to store categories:" << result.error().message;
+        qCWarning(lcSession) << "Failed to store categories:" << result.error();
 }
 
 void SessionImpl::upgradeCategories()
@@ -2029,7 +2059,11 @@ bool SessionImpl::addTag(const Tag &tag)
         return false;
 
     m_tags.insert(tag);
-    m_storedTags = m_tags.toStringList();
+    QStringList tagList;
+    tagList.reserve(static_cast<qsizetype>(m_tags.size()));
+    for (const Tag &t : m_tags)
+        tagList.append(t.toString());
+    m_storedTags = tagList;
     emit tagAdded(tag);
     qCInfo(lcSession) << "Tag added:" << tag.toString();
     return true;
@@ -2043,7 +2077,11 @@ bool SessionImpl::removeTag(const Tag &tag)
     for (TorrentImpl *torrent : asConst(m_torrents))
         torrent->removeTag(tag);
 
-    m_storedTags = m_tags.toStringList();
+    QStringList tagList;
+    tagList.reserve(static_cast<qsizetype>(m_tags.size()));
+    for (const Tag &t : m_tags)
+        tagList.append(t.toString());
+    m_storedTags = tagList;
     emit tagRemoved(tag);
     qCInfo(lcSession) << "Tag removed:" << tag.toString();
     return true;
@@ -2277,7 +2315,7 @@ Path SessionImpl::savePath() const { return m_savePath; }
 
 void SessionImpl::setSavePath(const Path &path)
 {
-    const Path baseSavePath = (path.isEmpty() ? Utils::Fs::homeFolderPath() / Path(u"qBittorrent/downloads"_s) : path);
+    const Path baseSavePath = (path.isEmpty() ? Utils::Fs::homePath() / Path(u"qBittorrent/downloads"_s) : path);
     if (baseSavePath == m_savePath.get())
         return;
 

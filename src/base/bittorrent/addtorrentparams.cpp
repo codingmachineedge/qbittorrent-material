@@ -104,8 +104,8 @@ BitTorrent::AddTorrentParams BitTorrent::parseAddTorrentParams(const QJsonObject
 
     params.sslParameters =
     {
-        Utils::SSLKey::loadCertificateFromString(jsonObj.value(PARAM_SSL_CERTIFICATE).toString()),
-        Utils::SSLKey::loadPrivateKeyFromString(jsonObj.value(PARAM_SSL_PRIVATEKEY).toString()),
+        QSslCertificate(jsonObj.value(PARAM_SSL_CERTIFICATE).toString().toLatin1()),
+        Utils::SSLKey::load(jsonObj.value(PARAM_SSL_PRIVATEKEY).toString().toLatin1()),
         jsonObj.value(PARAM_SSL_DHPARAMS).toString().toLatin1()
     };
 
