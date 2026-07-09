@@ -26,7 +26,10 @@ import qBittorrent
     Never render a raw glyph with a plain Text — always go through MDIcon so
     the font, sizing and color policy stay in one place.
 */
-Text {
+// Root is an Item (not Text): a Text element's implicitWidth/implicitHeight are
+// read-only, so we give the icon a fixed square footprint on the Item and center
+// the glyph Text inside it.
+Item {
     id: root
 
     /*! Codepoint string to render, taken from the \c Icons singleton. */
@@ -44,34 +47,42 @@ Text {
     /*! Sets the Material Symbols \c GRAD (grade) axis. */
     property int grade: 0
 
+    /*! Glyph color (defaults to the theme's onSurface). */
+    property alias color: label.color
+
     /*!
         Location of the bundled Material Symbols font. Overridable for tests /
         alternate packaging; defaults to the module resource path produced by
-        \c qt_add_qml_module. See return notes for the build team.
+        \c qt_add_qml_module.
     */
     property string fontSource: "qrc:/qt/qml/qBittorrent/fonts/MaterialSymbolsOutlined.ttf"
-
-    text: icon
-    color: Theme.color("onSurface")
-
-    font.family: symbolsLoader.status === FontLoader.Ready ? symbolsLoader.name : "Material Symbols Outlined"
-    font.pixelSize: size
-    // Variable-font axes (Qt 6.7+): one file, every FILL/weight/optical-size variant.
-    font.variableAxes: ({
-        "FILL": root.fill ? 1 : 0,
-        "wght": root.weight,
-        "GRAD": root.grade,
-        "opsz": root.size
-    })
-
-    horizontalAlignment: Text.AlignHCenter
-    verticalAlignment: Text.AlignVCenter
-    textFormat: Text.PlainText
-    renderType: Text.QtRendering
 
     // Fixed square footprint so icons align on a grid regardless of glyph metrics.
     implicitWidth: size
     implicitHeight: size
+
+    Text {
+        id: label
+        anchors.centerIn: parent
+
+        text: root.icon
+        color: Theme.color("onSurface")
+
+        font.family: symbolsLoader.status === FontLoader.Ready ? symbolsLoader.name : "Material Symbols Outlined"
+        font.pixelSize: root.size
+        // Variable-font axes (Qt 6.7+): one file, every FILL/weight/optical-size variant.
+        font.variableAxes: ({
+            "FILL": root.fill ? 1 : 0,
+            "wght": root.weight,
+            "GRAD": root.grade,
+            "opsz": root.size
+        })
+
+        horizontalAlignment: Text.AlignHCenter
+        verticalAlignment: Text.AlignVCenter
+        textFormat: Text.PlainText
+        renderType: Text.QtRendering
+    }
 
     FontLoader {
         id: symbolsLoader

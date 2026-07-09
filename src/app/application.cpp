@@ -199,6 +199,9 @@ int Application::run()
     qCDebug(lcApp) << "Created AppController and DesktopIntegration";
 
     m_engine = new QQmlApplicationEngine(this);
+    // Let the engine find QML modules deployed next to the executable (e.g.
+    // Qt.labs.platform, copied there by windeployqt) so file-picker dialogs work.
+    m_engine->addImportPath(applicationDirPath() + u"/qml"_qs);
     registerContext();
     loadMainQml();
 
