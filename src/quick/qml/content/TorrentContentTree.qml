@@ -14,6 +14,7 @@ import QtQuick
 import QtQuick.Controls.Material
 import QtQuick.Layouts
 import QtQml.Models
+import qBittorrent
 
 /*!
     \qmltype TorrentContentTree

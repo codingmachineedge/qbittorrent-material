@@ -14,6 +14,7 @@ import QtQuick
 import QtQuick.Controls.Material
 import QtQuick.Layouts
 import Qt.labs.platform as Platform
+import qBittorrent
 
 /*!
     \qmltype PathField

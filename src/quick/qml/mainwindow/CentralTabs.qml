@@ -13,6 +13,7 @@
 import QtQuick
 import QtQuick.Controls.Material
 import QtQuick.Layouts
+import qBittorrent
 
 /*!
     CentralTabs — the central Material tab area: a \c TabBar over a \c StackLayout

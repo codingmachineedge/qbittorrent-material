@@ -15,6 +15,7 @@ import QtQuick.Window
 import QtQuick.Controls.Material
 import QtQuick.Layouts
 import Qt.labs.platform as Platform
+import qBittorrent
 
 /*!
     Main.qml — the single Material \c ApplicationWindow that hosts the whole app.

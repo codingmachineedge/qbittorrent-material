@@ -11,6 +11,7 @@
  */
 
 import QtQuick
+import qBittorrent
 
 /*!
     \qmltype BlockedIPsView

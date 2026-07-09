@@ -13,6 +13,7 @@
 import QtQuick
 import QtQuick.Controls.Material
 import QtCore
+import qBittorrent
 
 /*!
     \qmltype DataTable

@@ -12,6 +12,7 @@
 
 import QtQuick
 import QtQuick.Controls.Material
+import qBittorrent
 
 /*!
     \qmltype CategoryFilterMenu

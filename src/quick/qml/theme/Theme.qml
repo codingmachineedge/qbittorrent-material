@@ -14,6 +14,7 @@ pragma Singleton
 
 import QtQuick
 import QtQuick.Controls.Material
+import qBittorrent
 
 /*!
     \qmltype Theme

@@ -13,6 +13,7 @@
 import QtQuick
 import QtQuick.Window
 import QtQuick.Controls.Material
+import qBittorrent
 
 /*!
     SystemTrayMenu — the Material menu popped at the cursor when the user

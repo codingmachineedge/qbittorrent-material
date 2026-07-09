@@ -13,6 +13,7 @@
 import QtQuick
 import QtQuick.Controls.Material
 import QtQuick.Layouts
+import qBittorrent
 
 /*!
     AppStatusBar — the bottom Material status bar. Left→right it shows free disk

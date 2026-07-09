@@ -13,6 +13,7 @@
 import QtQuick
 import QtQuick.Controls.Material
 import QtQuick.Layouts
+import qBittorrent
 
 /*!
     AppMenuBar — the top-level Material menu bar (File / Edit / View / Tools /

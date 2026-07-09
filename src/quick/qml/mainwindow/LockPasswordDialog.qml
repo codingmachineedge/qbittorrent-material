@@ -13,6 +13,7 @@
 import QtQuick
 import QtQuick.Controls.Material
 import QtQuick.Layouts
+import qBittorrent
 
 /*!
     LockPasswordDialog — the Material dialog for defining the UI-lock password

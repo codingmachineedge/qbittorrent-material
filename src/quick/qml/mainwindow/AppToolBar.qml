@@ -13,6 +13,7 @@
 import QtQuick
 import QtQuick.Controls.Material
 import QtQuick.Layouts
+import qBittorrent
 
 /*!
     AppToolBar — the Material top toolbar. Buttons trigger the shared Actions

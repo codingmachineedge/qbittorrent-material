@@ -12,6 +12,7 @@
 
 import QtQuick
 import QtQuick.Controls.Material
+import qBittorrent
 
 /*!
     ToolbarContextMenu — the right-click menu on the top toolbar offering an

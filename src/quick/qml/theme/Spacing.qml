@@ -13,6 +13,7 @@
 pragma Singleton
 
 import QtQuick
+import qBittorrent
 
 /*!
     \qmltype Spacing
