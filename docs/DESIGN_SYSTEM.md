@@ -1,0 +1,42 @@
+# Material Design System
+
+
+# Material Design System — qBittorrent Quick (Qt Quick Controls 2, Material style)
+
+The app forces `QQuickStyle::setStyle("Material")` at startup and drives every color through a single QML singleton `Theme` (backed by C++ `ThemeManager`). Qt Quick Controls' Material attached properties (`Material.theme/accent/background/foreground/primary/elevation`) are set from `Theme` so stock controls and custom components stay in sync. The three legacy user options are preserved verbatim (same setting keys): `Appearance/ColorScheme` (System/Light/Dark) and `Appearance/TrayIconStyle` (Normal/Monochrome). `System` follows `Qt.styleHints.colorScheme`.
+
+## 1. Color roles (Material 3 + qBittorrent extensions)
+M3 ships primary/secondary/tertiary/error only; qBittorrent needs success (green), warning (amber), done (purple), info (blue), muted (grey). Define **extended roles** seeded from the exact Primer hexes in the inventory, each with color/onColor/container/onContainer in light+dark.
+
+Base scheme (light / dark): primary `#0969da`/`#58a6ff`; surface `#ffffff`/`#0d1117`; surfaceVariant `#f6f8fa`/`#161b22`; onSurface `#1f2328`/`#e6edf3`; onSurfaceVariant `#57606a`/`#8b949e`; outline `#d0d7de`/`#30363d`; error `#cf222e`/`#f85149`. Extended: success `#1a7f37`/`#3fb950`; successEmphasis `#2da44e`/`#238636`; warning `#7d4e00`/`#845306`; done `#8250df`/`#a371f7`; info=primary; muted=onSurfaceVariant; severe `#bc4c00`/`#db6d28`.
+
+### Named-id → Material role map (data-driven so user config.json themes still work; `Theme.color("<id>")` resolves via a JSON colors/colors.dark override table before falling back to a role)
+Transfer-list row TEXT colors (one per TorrentState): Downloading/DownloadingMetadata/ForcedDownloading*/Checking*/Moving→success; StalledDownloading→successEmphasis; Uploading/ForcedUploading→primary; StalledUploading→primaryEmphasis; QueuedDownloading/QueuedUploading→warning; StoppedDownloading→muted; StoppedUploading→done; MissingFiles/Error→error.
+Log colors: Log.TimeStamp→muted, Log.Info→primary, Log.Warning→severe, Log.Critical/Log.BannedPeer→error, Log.Normal→onSurface.
+RSS: UnreadArticle→primary + SemiBold; ReadArticle→muted + Normal.
+PiecesBar: Piece→primary, PartialPiece→primary@50%/primaryContainer, MissingPiece→surfaceVariant, Border→outlineVariant.
+ProgressBar chunk (unset)→primary; when `GUI/TransferList/ProgressBarFollowsTextColor` it takes the row state color.
+Row/progress/icon are three independent channels gated by different prefs (`UseTorrentStatesColors` vs `ProgressBarFollowsTextColor`) — never coupled.
+
+## 2. Typography (Roboto scale)
+headlineSmall 24/32 (dialog titles), titleLarge 22 (About header), titleMedium 16 SemiBold (card/groupbox headers), titleSmall 14 SemiBold (tab labels), bodyLarge 14 (values), bodyMedium 13 (table cells, labels), labelLarge 14 Medium (buttons), labelSmall 11 (captions/counts). Numeric/table cells use tabular Roboto Mono where alignment matters (speeds/sizes/ratios). General-tab + Statistics value rows: bodyMedium label (onSurfaceVariant) + bodyMedium value (onSurface).
+
+## 3. Elevation & spacing
+Spacing tokens: xs4/sm8/md12/lg16/xl24/xxl32. Radius: card12, dialog16, chip8, field4. Elevation: page 0; NavigationRail/Drawer 0 + outline; cards/groupboxes 1 (expandable "checkable groupbox" cards →2 when expanded); toolbars 0 + bottom divider; Menus/popups 8; Snackbar 6; Dialog 24; FAB 6. Table rows flat; hover 8%, selected 12%, alternating rows = surfaceVariant@40% when `useAlternatingRowColors`.
+
+## 4. Icons — Material Symbols Outlined (bundled variable font)
+`Icons` QML singleton maps every legacy icon id → codepoint; `MDIcon.qml` renders the glyph as text (size/color/fill/weight). Country flags (369 SVGs) reused verbatim via a `FlagImageProvider` (`image://flags/<iso>`) — no Material equivalent. Tray keeps `qbittorrent-tray[-mono|-light|-dark]`.
+Authoritative id→symbol map: add torrent `note_add`; add link `add_link`; delete `delete`; start `play_arrow`; stop `pause`; force start `bolt`; resume/pause session `play_circle`/`pause_circle`; queue top/up/down/bottom `vertical_align_top`/`arrow_upward`/`arrow_downward`/`vertical_align_bottom`; open folder `folder_open`; create torrent `build`; options `settings`; lock `lock`; speed limits `speed`; statistics `bar_chart`; about `info`; docs `menu_book`; donate `volunteer_activism`; exit `logout`; cookies `cookie`; plugins `extension`; check updates `system_update`; log `article`; set location `drive_file_move`; force recheck `fact_check`; force reannounce `campaign`; preview `preview`; torrent options `tune`; category `category`; tags `sell`; queue `low_priority`; copy `content_copy`; magnet `link`; hash `tag`; export `save_alt`; rename/edit `edit`. Status bar: connected `cloud_done`; disconnected `cloud_off`; firewalled `shield`; download `download`; upload `upload`; alt-speed `speed`. Status filter: all `apps`; active `trending_up`; inactive `trending_down`; stalled `hourglass_empty`; completed `check_circle`; error `error`; moving `drive_file_move`. Filters: categories `category`; tags `sell`; trackers `dns`; trackerless `cloud_off`; tracker-warning `warning`; tracker-error `error`. Options tabs: Behavior `palette`; Downloads `download`; Connection `lan`; Speed `speed`; BitTorrent `swap_vert`; Search `search`; RSS `rss_feed`; WebUI `language`; Advanced `settings_suggest`. Properties tabs: General `description`; Trackers `dns`; Peers `groups`; HTTP Sources `public`; Content `folder`; Speed `show_chart`. RSS: feed `rss_feed`; read/unread `mark_email_read`/`mail`; inbox `inbox`; new folder `create_new_folder`; loading `progress_activity`; error `block`; mark read `done_all`; refresh `refresh`; open url `open_in_new`. Search: search `search`; plugins `extension`; download `download`; open desc `open_in_new`. Peers: add `person_add`; ban `person_remove`. Shared: warning `warning`; security-high/low `shield`/`gpp_bad`; ip-blocked `block`; file `insert_drive_file`.
+
+## 5. Component conventions (Qt Quick Controls 2 Material)
+- Shell: `ApplicationWindow` + Material `ToolBar` (top toolbar), `AppMenuBar` (native `MenuBar`; platform bar on macOS), `CentralTabs` `TabBar`+`StackLayout` auto-hiding at one tab, bottom `AppStatusBar`. Sidebar/list/properties use `SplitView` (persist sizes).
+- Cards: `MaterialCard.qml` for General-tab Transfer/Information groups, Statistics, options group boxes. Checkable group boxes → `CheckableGroupBox.qml` (header `Switch` enables/disables body; elevation change on expand).
+- Navigation: Options dialog uses a NavigationRail-style left list → `StackLayout`. Central tabs use `TabBar`/`TabButton`.
+- Tables: `DataTable.qml` wraps `HorizontalHeaderView`+`TableView`: movable first section, per-column right-align, sort indicator, header `ColumnHeaderMenu.qml` (checkable visibility with last-column guard + "Resize columns"), persisted header state. Used by transfer list, peers, trackers, content, search results, cookies, preview, watched folders. Progress cells → `ProgressCell.qml` (Material `ProgressBar` + centered % label, `enabled:false` for Error/Stopped/Unknown). Priority cells → `ComboBox` delegate. Name cells → `CheckBox`+`MDIcon`.
+- Dialogs: Material `Dialog` (modal, radius16, elevation24) + `DialogButtonBox`. One-line prompts → `TextInputDialog.qml`. Confirmations → `ConfirmDialog.qml` (remember/don't-ask-again). Deletion surfaces a warning `MDIcon`.
+- Menus: Material `Menu`/`MenuItem`, tri-state (`checkState`) items for AutoTMM/super-seeding/tags; submenus Category/Tags/Queue/Copy.
+- Feedback: `Snackbar.qml` for in-app notifications when tab unfocused (search finished, added-to-tray) plus native tray notifications via C++ `DesktopIntegration`.
+- FAB: optional extended `RoundButton` "Add torrent" on Transfers tab for touch layouts.
+- Fields: `PathField`/`PathComboField`, `SpeedSpinBox` (sentinel `textFromValue` for ∞/0 (disabled)/Never/system default), `TriStateComboField` (Default/Yes/No → std::optional), `FilterTextField` (clear affordance + regex-toggle + `FilterPatternFormatMenu`).
+- Pieces/speed: `PiecesBar.qml` (C++ `QQuickPaintedItem`), `SpeedPlotView.qml` (Canvas/Qt Charts, 10 series, period combo, series-toggle menu).
+- Responsive: dialogs cap at min(implicit, window*0.9) and scroll; General-tab grids reflow 3→2→1 columns; body never scrolls horizontally (tables scroll in their own viewport).
