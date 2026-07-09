@@ -1,0 +1,873 @@
+/*
+ * qBittorrent (Material rewrite) — a BitTorrent client
+ * Copyright (C) 2026  qBittorrent-Material contributors
+ *
+ * This program is free software; you can redistribute it and/or modify
+ * it under the terms of the GNU General Public License as published by
+ * the Free Software Foundation; either version 2 of the License, or
+ * (at your option) any later version.
+ *
+ * SPDX-License-Identifier: GPL-3.0-or-later
+ */
+
+import QtQuick
+import QtQuick.Window
+import QtQuick.Controls.Material
+import QtQuick.Layouts
+import Qt.labs.platform as Platform
+
+/*!
+    Main.qml — the single Material \c ApplicationWindow that hosts the whole app.
+
+    It owns:
+      - the shared \c Action objects (mirroring the legacy \c mainwindow.ui QActions),
+        so the menu bar, toolbar and tray menu all trigger the exact same verbs;
+      - the shell view-state (toolbar/statusbar/sidebar visibility, enabled tabs,
+        auto-shutdown mode, log message-type toggles) persisted through Preferences;
+      - the top-level Material chrome (menu bar / toolbar header / status-bar footer /
+        central tabs) plus every shell dialog and the UI-lock overlay.
+
+    All heavy per-feature flows are delegated to the bridge controllers
+    (AppController, TransferController, SpeedLimitController, …) and to the
+    per-feature screen/dialog QML types referenced here by name (single module).
+*/
+ApplicationWindow {
+    id: root
+
+    // -- Window basics --------------------------------------------------------
+    width: 914
+    height: 563
+    minimumWidth: 640
+    minimumHeight: 400
+    visible: true
+
+    // -- Material palette wiring (done once, at the root; §4.3) ----------------
+    Material.theme: Theme.isDark ? Material.Dark : Material.Light
+    Material.accent: Theme.color("primary")
+    Material.primary: Theme.color("primary")
+    Material.background: Theme.color("surface")
+    Material.foreground: Theme.color("onSurface")
+
+    // -- Shell view state (initialized from Preferences in onCompleted) --------
+    property bool toolbarVisible: true
+    property bool statusbarVisible: true
+    property bool sidebarVisible: true
+    property bool speedInTitleBar: false
+    property bool searchTabEnabled: false
+    property bool rssTabEnabled: false
+    property bool executionLogEnabled: false
+    property bool logNormalEnabled: true
+    property bool logInfoEnabled: true
+    property bool logWarningEnabled: true
+    property bool logCriticalEnabled: true
+    property bool pluginsMenuVisible: false          // ENABLE_PLUGINS build flag; hidden by default
+
+    // Auto-shutdown-on-completion: 0 nothing, 1 exit qBt, 2 suspend, 3 hibernate,
+    // 4 reboot, 5 shutdown.
+    property int autoShutdownMode: 0
+
+    // -- Live session state (bound from the engine bridge) --------------------
+    readonly property bool sessionPaused: Session.paused || false
+    readonly property bool queueingEnabled: (Session.queueingEnabled === undefined) ? true : Session.queueingEnabled
+    readonly property bool altSpeedEnabled: SpeedLimitController.alternativeLimitsEnabled || false
+    readonly property int torrentCount: Session.torrentCount || 0
+    readonly property bool trayAvailable: DesktopIntegration.available || false
+    readonly property int currentTabIndex: centralTabs.currentIndex
+
+    // -- Window title (§14) ---------------------------------------------------
+    readonly property string appVersion: Qt.application.version.length > 0 ? Qt.application.version : "5.x"
+    title: {
+        var base = qsTr("qBittorrent %1").arg(root.appVersion)
+        if (root.speedInTitleBar) {
+            base = qsTr("[D: %1, U: %2] %3")
+                .arg(statusBar.formatSpeed(Session.downloadRate || 0))
+                .arg(statusBar.formatSpeed(Session.uploadRate || 0))
+                .arg(base)
+        }
+        if (root.sessionPaused)
+            base = qsTr("[PAUSED] %1").arg(base)
+        return base
+    }
+
+    // =========================================================================
+    //  Shared Actions (mirror mainwindow.ui QActions; used by menu + toolbar + tray)
+    // =========================================================================
+
+    // --- File ---
+    property alias actionOpen: actionOpen
+    Action {
+        id: actionOpen
+        text: qsTr("&Add Torrent File...")
+        shortcut: StandardKey.Open
+        onTriggered: root.addTorrentFile()
+    }
+    property alias actionDownloadFromURL: actionDownloadFromURL
+    Action {
+        id: actionDownloadFromURL
+        text: qsTr("Add Torrent &Link...")
+        shortcut: "Ctrl+Shift+O"
+        onTriggered: root.addTorrentLink()
+    }
+    property alias actionExit: actionExit
+    Action {
+        id: actionExit
+        text: qsTr("E&xit")
+        shortcut: "Ctrl+Q"
+        onTriggered: root.exitApp()
+    }
+
+    // --- Edit ---
+    property alias actionStart: actionStart
+    Action {
+        id: actionStart
+        text: qsTr("Sta&rt")
+        shortcut: "Ctrl+S"
+        enabled: TransferController.hasSelection || false
+        onTriggered: root.startSelected()
+    }
+    property alias actionStop: actionStop
+    Action {
+        id: actionStop
+        text: qsTr("Sto&p")
+        shortcut: "Ctrl+P"
+        enabled: TransferController.hasSelection || false
+        onTriggered: root.stopSelected()
+    }
+    property alias actionDelete: actionDelete
+    Action {
+        id: actionDelete
+        text: qsTr("&Remove")
+        shortcut: StandardKey.Delete
+        enabled: TransferController.hasSelection || false
+        onTriggered: root.removeSelected()
+    }
+    property alias actionTopQueuePos: actionTopQueuePos
+    Action {
+        id: actionTopQueuePos
+        text: qsTr("Top of Queue")
+        shortcut: "Ctrl+Shift++"
+        enabled: TransferController.hasSelection || false
+        onTriggered: root.queueTop()
+    }
+    property alias actionIncreaseQueuePos: actionIncreaseQueuePos
+    Action {
+        id: actionIncreaseQueuePos
+        text: qsTr("Move Up Queue")
+        shortcut: "Ctrl++"
+        enabled: TransferController.hasSelection || false
+        onTriggered: root.queueUp()
+    }
+    property alias actionDecreaseQueuePos: actionDecreaseQueuePos
+    Action {
+        id: actionDecreaseQueuePos
+        text: qsTr("Move Down Queue")
+        shortcut: "Ctrl+-"
+        enabled: TransferController.hasSelection || false
+        onTriggered: root.queueDown()
+    }
+    property alias actionBottomQueuePos: actionBottomQueuePos
+    Action {
+        id: actionBottomQueuePos
+        text: qsTr("Bottom of Queue")
+        shortcut: "Ctrl+Shift+-"
+        enabled: TransferController.hasSelection || false
+        onTriggered: root.queueBottom()
+    }
+    property alias actionPauseSession: actionPauseSession
+    Action {
+        id: actionPauseSession
+        text: qsTr("Pau&se Session")
+        shortcut: "Ctrl+Shift+P"
+        onTriggered: root.pauseSession()
+    }
+    property alias actionResumeSession: actionResumeSession
+    Action {
+        id: actionResumeSession
+        text: qsTr("R&esume Session")
+        shortcut: "Ctrl+Shift+S"
+        onTriggered: root.resumeSession()
+    }
+
+    // --- View (checkable) ---
+    property alias actionTopToolBar: actionTopToolBar
+    Action {
+        id: actionTopToolBar
+        text: qsTr("&Top Toolbar")
+        checkable: true
+        checked: root.toolbarVisible
+        onTriggered: root.setToolbarVisible(checked)
+    }
+    property alias actionShowStatusbar: actionShowStatusbar
+    Action {
+        id: actionShowStatusbar
+        text: qsTr("Status &Bar")
+        checkable: true
+        checked: root.statusbarVisible
+        onTriggered: root.setStatusbarVisible(checked)
+    }
+    property alias actionShowFiltersSidebar: actionShowFiltersSidebar
+    Action {
+        id: actionShowFiltersSidebar
+        text: qsTr("Filters Sidebar")
+        checkable: true
+        checked: root.sidebarVisible
+        onTriggered: root.setSidebarVisible(checked)
+    }
+    property alias actionSpeedInTitleBar: actionSpeedInTitleBar
+    Action {
+        id: actionSpeedInTitleBar
+        text: qsTr("S&peed in Title Bar")
+        checkable: true
+        checked: root.speedInTitleBar
+        onTriggered: root.setSpeedInTitleBar(checked)
+    }
+    property alias actionSearchWidget: actionSearchWidget
+    Action {
+        id: actionSearchWidget
+        text: qsTr("Search &Engine")
+        checkable: true
+        checked: root.searchTabEnabled
+        onTriggered: root.setSearchTabEnabled(checked)
+    }
+    property alias actionRSSReader: actionRSSReader
+    Action {
+        id: actionRSSReader
+        text: qsTr("&RSS Reader")
+        checkable: true
+        checked: root.rssTabEnabled
+        onTriggered: root.setRSSTabEnabled(checked)
+    }
+    property alias actionExecutionLogs: actionExecutionLogs
+    Action {
+        id: actionExecutionLogs
+        text: qsTr("Show")
+        checkable: true
+        checked: root.executionLogEnabled
+        onTriggered: root.setExecutionLogEnabled(checked)
+    }
+    property alias actionNormalMessages: actionNormalMessages
+    Action {
+        id: actionNormalMessages
+        text: qsTr("Normal Messages")
+        checkable: true
+        checked: root.logNormalEnabled
+        enabled: root.executionLogEnabled
+        onTriggered: root.setLogTypeEnabled("normal", checked)
+    }
+    property alias actionInformationMessages: actionInformationMessages
+    Action {
+        id: actionInformationMessages
+        text: qsTr("Information Messages")
+        checkable: true
+        checked: root.logInfoEnabled
+        enabled: root.executionLogEnabled
+        onTriggered: root.setLogTypeEnabled("info", checked)
+    }
+    property alias actionWarningMessages: actionWarningMessages
+    Action {
+        id: actionWarningMessages
+        text: qsTr("Warning Messages")
+        checkable: true
+        checked: root.logWarningEnabled
+        enabled: root.executionLogEnabled
+        onTriggered: root.setLogTypeEnabled("warning", checked)
+    }
+    property alias actionCriticalMessages: actionCriticalMessages
+    Action {
+        id: actionCriticalMessages
+        text: qsTr("Critical Messages")
+        checkable: true
+        checked: root.logCriticalEnabled
+        enabled: root.executionLogEnabled
+        onTriggered: root.setLogTypeEnabled("critical", checked)
+    }
+    property alias actionStatistics: actionStatistics
+    Action {
+        id: actionStatistics
+        text: qsTr("&Statistics")
+        shortcut: "Ctrl+I"
+        onTriggered: root.showStatistics()
+    }
+    property alias actionLock: actionLock
+    Action {
+        id: actionLock
+        text: qsTr("L&ock qBittorrent")
+        shortcut: "Ctrl+L"
+        onTriggered: root.lockUI()
+    }
+    property alias actionSetLockPassword: actionSetLockPassword
+    Action {
+        id: actionSetLockPassword
+        text: qsTr("&Set Password")
+        onTriggered: root.defineLockPassword()
+    }
+    property alias actionClearLockPassword: actionClearLockPassword
+    Action {
+        id: actionClearLockPassword
+        text: qsTr("&Clear Password")
+        enabled: AppController.lockPasswordSet || false
+        onTriggered: root.clearLockPassword()
+    }
+
+    // --- Tools ---
+    property alias actionCreateTorrent: actionCreateTorrent
+    Action {
+        id: actionCreateTorrent
+        text: qsTr("Torrent &Creator")
+        shortcut: StandardKey.New
+        onTriggered: root.createTorrent()
+    }
+    property alias actionManageCookies: actionManageCookies
+    Action {
+        id: actionManageCookies
+        text: qsTr("Manage Cookies...")
+        onTriggered: root.manageCookies()
+    }
+    property alias actionOptions: actionOptions
+    Action {
+        id: actionOptions
+        // "Preferences" on Unix; kept as "Options" for cross-platform consistency here.
+        text: qsTr("&Options...")
+        shortcut: "Alt+O"
+        onTriggered: root.showOptions()
+    }
+    // Auto-shutdown exclusive group
+    property alias actionAutoShutdownDisabled: actionAutoShutdownDisabled
+    Action {
+        id: actionAutoShutdownDisabled
+        text: qsTr("&Do nothing")
+        checkable: true
+        checked: root.autoShutdownMode === 0
+        onTriggered: root.setAutoShutdownMode(0)
+    }
+    property alias actionAutoExit: actionAutoExit
+    Action {
+        id: actionAutoExit
+        text: qsTr("&Exit qBittorrent")
+        checkable: true
+        checked: root.autoShutdownMode === 1
+        onTriggered: root.setAutoShutdownMode(1)
+    }
+    property alias actionAutoSuspend: actionAutoSuspend
+    Action {
+        id: actionAutoSuspend
+        text: qsTr("&Suspend System")
+        checkable: true
+        checked: root.autoShutdownMode === 2
+        onTriggered: root.setAutoShutdownMode(2)
+    }
+    property alias actionAutoHibernate: actionAutoHibernate
+    Action {
+        id: actionAutoHibernate
+        text: qsTr("&Hibernate System")
+        checkable: true
+        checked: root.autoShutdownMode === 3
+        onTriggered: root.setAutoShutdownMode(3)
+    }
+    property alias actionAutoReboot: actionAutoReboot
+    Action {
+        id: actionAutoReboot
+        text: qsTr("&Reboot System")
+        checkable: true
+        checked: root.autoShutdownMode === 4
+        onTriggered: root.setAutoShutdownMode(4)
+    }
+    property alias actionAutoShutdown: actionAutoShutdown
+    Action {
+        id: actionAutoShutdown
+        text: qsTr("Sh&utdown System")
+        checkable: true
+        checked: root.autoShutdownMode === 5
+        onTriggered: root.setAutoShutdownMode(5)
+    }
+
+    // --- Plugins ---
+    property alias actionManagePlugins: actionManagePlugins
+    Action {
+        id: actionManagePlugins
+        text: qsTr("Manage Plugins...")
+        onTriggered: root.managePlugins()
+    }
+
+    // --- Help ---
+    property alias actionDocumentation: actionDocumentation
+    Action {
+        id: actionDocumentation
+        text: qsTr("&Documentation")
+        shortcut: StandardKey.HelpContents
+        onTriggered: root.openDocumentation()
+    }
+    property alias actionCheckForUpdates: actionCheckForUpdates
+    Action {
+        id: actionCheckForUpdates
+        text: qsTr("Check for Updates")
+        onTriggered: root.checkForUpdates()
+    }
+    property alias actionDonateMoney: actionDonateMoney
+    Action {
+        id: actionDonateMoney
+        text: qsTr("Do&nate!")
+        onTriggered: root.donate()
+    }
+    property alias actionAbout: actionAbout
+    Action {
+        id: actionAbout
+        text: qsTr("&About")
+        onTriggered: root.showAbout()
+    }
+
+    // --- Actions not on any menu (toolbar / tray) ---
+    property alias actionSetGlobalSpeedLimits: actionSetGlobalSpeedLimits
+    Action {
+        id: actionSetGlobalSpeedLimits
+        text: qsTr("Set Global Speed Limits...")
+        onTriggered: root.showGlobalSpeedLimits()
+    }
+    property alias actionUseAlternativeSpeedLimits: actionUseAlternativeSpeedLimits
+    Action {
+        id: actionUseAlternativeSpeedLimits
+        text: qsTr("Alternative Speed Limits")
+        checkable: true
+        checked: root.altSpeedEnabled
+        onTriggered: root.toggleAltSpeed()
+    }
+    property alias actionOpenDestinationFolder: actionOpenDestinationFolder
+    Action {
+        id: actionOpenDestinationFolder
+        text: qsTr("Open Destination Folder")
+        enabled: TransferController.hasSelection || false
+        onTriggered: root.openDestinationFolder()
+    }
+
+    // =========================================================================
+    //  Chrome: menu bar / toolbar / status bar / central tabs
+    // =========================================================================
+
+    menuBar: AppMenuBar {
+        id: appMenuBar
+        shell: root
+    }
+
+    header: AppToolBar {
+        id: appToolBar
+        shell: root
+        visible: root.toolbarVisible
+    }
+
+    footer: AppStatusBar {
+        id: statusBar
+        shell: root
+        visible: root.statusbarVisible
+    }
+
+    CentralTabs {
+        id: centralTabs
+        anchors.fill: parent
+        shell: root
+        transfersCount: root.torrentCount
+        searchEnabled: root.searchTabEnabled
+        rssEnabled: root.rssTabEnabled
+        logEnabled: root.executionLogEnabled
+    }
+
+    // =========================================================================
+    //  Overlays & dialogs
+    // =========================================================================
+
+    Snackbar {
+        id: snackbar
+        parent: root.contentItem
+    }
+
+    // UI lock overlay — fills the whole window when locked.
+    UILockScreen {
+        id: lockScreen
+        parent: root.overlay
+        anchors.fill: parent
+        z: 10000
+        visible: AppController.locked
+    }
+
+    ExitConfirmationDialog {
+        id: exitDialog
+        parent: root.overlay
+        onConfirmed: (always) => {
+            Log.info("ui", "Exit confirmed (alwaysYes=" + always + ")")
+            if (always)
+                Preferences.setConfirmOnExit(false)
+            AppController.exit(true)
+        }
+        onRejected: Log.debug("ui", "Exit cancelled by user")
+    }
+
+    LockPasswordDialog {
+        id: lockPasswordDialog
+        parent: root.overlay
+        onAccepted: (password) => {
+            Log.info("ui", "UI lock password set")
+            AppController.setLockPassword(password)
+        }
+    }
+
+    SystemTrayMenu {
+        id: trayMenu
+        shell: root
+    }
+
+    // Shell dialogs (per-feature types, referenced by name in the single module).
+    OptionsDialog { id: optionsDialog; parent: root.overlay }
+    StatisticsDialog { id: statisticsDialog; parent: root.overlay }
+    TorrentCreatorDialog { id: torrentCreatorDialog; parent: root.overlay }
+    SpeedLimitDialog { id: speedLimitDialog; parent: root.overlay }
+    AboutDialog { id: aboutDialog; parent: root.overlay }
+    CookiesDialog { id: cookiesDialog; parent: root.overlay }
+    DownloadFromURLDialog {
+        id: downloadFromURLDialog
+        parent: root.overlay
+        onUrlsAccepted: (urls) => {
+            Log.info("ui", "Adding " + urls.length + " URL(s) from link dialog")
+            for (var i = 0; i < urls.length; ++i)
+                AppController.addTorrentFromSource(urls[i])
+        }
+    }
+    DeletionConfirmationDialog {
+        id: deletionDialog
+        parent: root.overlay
+        onConfirmed: (deleteFiles) => {
+            Log.info("ui", "Delete confirmed (deleteFiles=" + deleteFiles + ")")
+            TransferController.deleteSelected(deleteFiles)
+        }
+    }
+
+    // Native OS file picker for "Add Torrent File..." (allowed OS dialog).
+    Platform.FileDialog {
+        id: openTorrentDialog
+        title: qsTr("Add Torrent File")
+        fileMode: Platform.FileDialog.OpenFiles
+        nameFilters: [ qsTr("Torrent files (*.torrent)"), qsTr("All files (*)") ]
+        onAccepted: {
+            Log.info("ui", "Selected " + files.length + " torrent file(s)")
+            for (var i = 0; i < files.length; ++i)
+                AppController.addTorrentFromSource(files[i].toString())
+        }
+        onRejected: Log.debug("ui", "Add-torrent file dialog cancelled")
+    }
+
+    // =========================================================================
+    //  Global keyboard shortcuts that aren't tied to a menu item (§6)
+    // =========================================================================
+    Shortcut { sequences: ["Alt+1"]; onActivated: root.switchToTab(0) }
+    Shortcut { sequences: ["Alt+2"]; onActivated: root.switchToTab(1) }
+    Shortcut { sequences: ["Alt+3"]; onActivated: root.switchToTab(2) }
+    Shortcut { sequences: ["Alt+4"]; onActivated: root.switchToTab(3) }
+    Shortcut {
+        sequences: [StandardKey.Find, "Ctrl+E"]
+        onActivated: {
+            Log.debug("ui", "Toggle focus between filter line edits")
+            centralTabs.toggleFilterFocus()
+        }
+    }
+    Shortcut {
+        sequences: [StandardKey.Paste]
+        onActivated: {
+            Log.info("ui", "Paste-add from clipboard")
+            AppController.pasteAdd()
+        }
+    }
+
+    // =========================================================================
+    //  Engine / controller wiring
+    // =========================================================================
+    Connections {
+        target: AppController
+        function onConfirmExitRequested() {
+            Log.debug("ui", "AppController requested exit confirmation")
+            exitDialog.openForExit()
+        }
+        function onAddTorrentRequested(source) {
+            Log.info("ui", "Add-torrent requested from source")
+            AppController.addTorrentFromSource(source)
+        }
+        function onUpdateCheckFinished(available, latestVersion) {
+            Log.info("ui", "Update check finished; available=" + available)
+            if (available)
+                snackbar.show(qsTr("A new version is available: %1").arg(latestVersion))
+            else
+                snackbar.show(qsTr("qBittorrent is up to date."))
+        }
+        function onNotify(message) {
+            snackbar.show(message)
+        }
+        function onShowMainWindowRequested() { root.showAndRaise() }
+        function onToggleMainWindowRequested() { root.toggleVisibility() }
+        function onHideMainWindowRequested() { root.hide() }
+    }
+
+    Connections {
+        target: DesktopIntegration
+        function onActivationRequested() {
+            Log.debug("ui", "Tray activation -> toggle main window")
+            root.toggleVisibility()
+        }
+        function onContextMenuRequested() {
+            Log.debug("ui", "Tray context menu requested")
+            trayMenu.popup()
+        }
+        function onNotificationClicked() {
+            Log.debug("ui", "Notification clicked -> show window")
+            root.showAndRaise()
+        }
+    }
+
+    // =========================================================================
+    //  Action implementations (the shell "slots")
+    // =========================================================================
+
+    function addTorrentFile() {
+        Log.info("ui", "Action: Add Torrent File")
+        openTorrentDialog.open()
+    }
+    function addTorrentLink() {
+        Log.info("ui", "Action: Add Torrent Link")
+        downloadFromURLDialog.open()
+    }
+    function createTorrent() {
+        Log.info("ui", "Action: Torrent Creator")
+        torrentCreatorDialog.open()
+    }
+    function manageCookies() {
+        Log.info("ui", "Action: Manage Cookies")
+        cookiesDialog.open()
+    }
+    function showOptions() {
+        Log.info("ui", "Action: Options")
+        optionsDialog.open()
+    }
+    function showOptionsConnectionTab() {
+        Log.info("ui", "Action: Options (Connection tab)")
+        if (optionsDialog.showConnectionTab !== undefined)
+            optionsDialog.showConnectionTab()
+        else
+            optionsDialog.open()
+    }
+    function exitApp() {
+        Log.info("ui", "Action: Exit")
+        AppController.exit(false)
+    }
+
+    function startSelected() {
+        Log.info("ui", "Action: Start selected")
+        TransferController.start()
+    }
+    function stopSelected() {
+        Log.info("ui", "Action: Stop selected")
+        TransferController.stop()
+    }
+    function removeSelected() {
+        Log.info("ui", "Action: Remove selected")
+        deletionDialog.openForSelection(TransferController.selectionCount || 0)
+    }
+    function queueTop() { Log.info("ui", "Action: Queue top"); TransferController.moveTop() }
+    function queueUp() { Log.info("ui", "Action: Queue up"); TransferController.moveUp() }
+    function queueDown() { Log.info("ui", "Action: Queue down"); TransferController.moveDown() }
+    function queueBottom() { Log.info("ui", "Action: Queue bottom"); TransferController.moveBottom() }
+    function openDestinationFolder() {
+        Log.info("ui", "Action: Open destination folder")
+        TransferController.openDestinationFolder()
+    }
+    function pauseSession() {
+        Log.info("ui", "Action: Pause session")
+        TransferController.pauseSession()
+    }
+    function resumeSession() {
+        Log.info("ui", "Action: Resume session")
+        TransferController.resumeSession()
+    }
+
+    function showStatistics() { Log.info("ui", "Action: Statistics"); statisticsDialog.open() }
+    function showAbout() { Log.info("ui", "Action: About"); aboutDialog.open() }
+    function showGlobalSpeedLimits() { Log.info("ui", "Action: Global speed limits"); speedLimitDialog.open() }
+    function toggleAltSpeed() {
+        Log.info("ui", "Action: Toggle alternative speed limits")
+        SpeedLimitController.toggleAlternativeLimits()
+    }
+    function openDocumentation() {
+        Log.info("ui", "Action: Documentation")
+        Qt.openUrlExternally("https://doc.qbittorrent.org")
+    }
+    function donate() {
+        Log.info("ui", "Action: Donate")
+        Qt.openUrlExternally("https://www.qbittorrent.org/donate")
+    }
+    function checkForUpdates() {
+        Log.info("ui", "Action: Check for updates")
+        AppController.checkForUpdates()
+    }
+    function managePlugins() {
+        Log.info("ui", "Action: Manage plugins")
+        // TODO(engine): wire the desktop plugins dialog when ENABLE_PLUGINS is built.
+    }
+
+    function lockUI() {
+        Log.info("ui", "Action: Lock UI")
+        if (!AppController.lockPasswordSet) {
+            Log.debug("ui", "No lock password set; prompting to define one first")
+            defineLockPassword()
+            return
+        }
+        AppController.lock()
+    }
+    function defineLockPassword() {
+        Log.info("ui", "Action: Define lock password")
+        lockPasswordDialog.open()
+    }
+    function clearLockPassword() {
+        Log.info("ui", "Action: Clear lock password")
+        AppController.setLockPassword("")
+        snackbar.show(qsTr("The UI lock password has been cleared."))
+    }
+
+    // -- View toggles (persist through Preferences) --
+    function setToolbarVisible(v) {
+        Log.info("ui", "Toolbar visible -> " + v)
+        root.toolbarVisible = v
+        Preferences.setToolbarDisplayed(v)
+        Preferences.apply()
+    }
+    function setStatusbarVisible(v) {
+        Log.info("ui", "Status bar visible -> " + v)
+        root.statusbarVisible = v
+        Preferences.setStatusbarDisplayed(v)
+        Preferences.apply()
+    }
+    function setSidebarVisible(v) {
+        Log.info("ui", "Filters sidebar visible -> " + v)
+        root.sidebarVisible = v
+        Preferences.setFiltersSidebarVisible(v)
+        Preferences.apply()
+    }
+    function setSpeedInTitleBar(v) {
+        Log.info("ui", "Speed in title bar -> " + v)
+        root.speedInTitleBar = v
+        Preferences.showSpeedInTitleBar(v)
+        Preferences.apply()
+    }
+    function setSearchTabEnabled(v) {
+        Log.info("ui", "Search tab enabled -> " + v)
+        root.searchTabEnabled = v
+        Preferences.setSearchEnabled(v)
+        Preferences.apply()
+        if (v)
+            root.switchToTab(1)
+    }
+    function setRSSTabEnabled(v) {
+        Log.info("ui", "RSS tab enabled -> " + v)
+        root.rssTabEnabled = v
+        Preferences.setRSSWidgetVisible(v)
+        Preferences.apply()
+        if (v)
+            root.switchToTab(2)
+    }
+    function setExecutionLogEnabled(v) {
+        Log.info("ui", "Execution log enabled -> " + v)
+        root.executionLogEnabled = v
+        Preferences.setValue("GUI/Log/Enabled", v)
+        Preferences.apply()
+        if (v)
+            root.switchToTab(3)
+    }
+    function setLogTypeEnabled(which, v) {
+        Log.info("ui", "Log message type '" + which + "' -> " + v)
+        switch (which) {
+        case "normal": root.logNormalEnabled = v; break
+        case "info": root.logInfoEnabled = v; break
+        case "warning": root.logWarningEnabled = v; break
+        case "critical": root.logCriticalEnabled = v; break
+        }
+        // Persist a bitmask (Normal=1, Info=2, Warning=4, Critical=8) to GUI/Log/Types.
+        var mask = (root.logNormalEnabled ? 1 : 0)
+                 | (root.logInfoEnabled ? 2 : 0)
+                 | (root.logWarningEnabled ? 4 : 0)
+                 | (root.logCriticalEnabled ? 8 : 0)
+        Preferences.setValue("GUI/Log/Types", mask)
+        Preferences.apply()
+    }
+    function setAutoShutdownMode(mode) {
+        Log.info("ui", "Auto-shutdown mode -> " + mode)
+        root.autoShutdownMode = mode
+        Preferences.setShutdownqBTWhenDownloadsComplete(mode === 1)
+        Preferences.setSuspendWhenDownloadsComplete(mode === 2)
+        Preferences.setHibernateWhenDownloadsComplete(mode === 3)
+        Preferences.setRebootWhenDownloadsComplete(mode === 4)
+        Preferences.setShutdownWhenDownloadsComplete(mode === 5)
+        Preferences.apply()
+    }
+
+    // -- Toolbar transfer filter --
+    function applyTransferFilter(text, column) {
+        Log.debug("ui", "Transfer filter -> column=" + column + " text='" + text + "'")
+        TransferController.setNameFilter(text, column)
+    }
+
+    // -- Tab & window helpers --
+    function switchToTab(index) {
+        Log.debug("ui", "Switch to tab " + index)
+        // Lazily enable the tab if the user jumps to it via a shortcut.
+        if (index === 1 && !root.searchTabEnabled)
+            root.setSearchTabEnabled(true)
+        else if (index === 2 && !root.rssTabEnabled)
+            root.setRSSTabEnabled(true)
+        else if (index === 3 && !root.executionLogEnabled)
+            root.setExecutionLogEnabled(true)
+        centralTabs.activateTab(index)
+    }
+    function toggleVisibility() {
+        if (root.visible && root.visibility !== Window.Minimized)
+            root.hide()
+        else
+            root.showAndRaise()
+    }
+    function showAndRaise() {
+        root.show()
+        root.raise()
+        root.requestActivate()
+    }
+
+    // =========================================================================
+    //  Startup / shutdown
+    // =========================================================================
+    onClosing: (close) => {
+        // AppController decides whether to confirm / hide-to-tray; veto the raw
+        // close and let it drive the flow (it emits confirmExitRequested / hide).
+        Log.debug("ui", "Window close requested")
+        close.accepted = false
+        AppController.exit(false)
+    }
+
+    Component.onCompleted: {
+        Log.info("ui", "Main window constructed; initializing shell state from Preferences")
+        root.toolbarVisible = Preferences.isToolbarDisplayed()
+        root.statusbarVisible = Preferences.isStatusbarDisplayed()
+        root.sidebarVisible = Preferences.isFiltersSidebarVisible()
+        root.speedInTitleBar = Preferences.speedInTitleBar()
+        root.searchTabEnabled = Preferences.isSearchEnabled()
+        root.rssTabEnabled = Preferences.isRSSWidgetEnabled()
+        root.executionLogEnabled = Preferences.value("GUI/Log/Enabled", false)
+
+        var mask = Preferences.value("GUI/Log/Types", 15)
+        root.logNormalEnabled = (mask & 1) !== 0
+        root.logInfoEnabled = (mask & 2) !== 0
+        root.logWarningEnabled = (mask & 4) !== 0
+        root.logCriticalEnabled = (mask & 8) !== 0
+
+        if (Preferences.shutdownqBTWhenDownloadsComplete()) root.autoShutdownMode = 1
+        else if (Preferences.suspendWhenDownloadsComplete()) root.autoShutdownMode = 2
+        else if (Preferences.hibernateWhenDownloadsComplete()) root.autoShutdownMode = 3
+        else if (Preferences.rebootWhenDownloadsComplete()) root.autoShutdownMode = 4
+        else if (Preferences.shutdownWhenDownloadsComplete()) root.autoShutdownMode = 5
+        else root.autoShutdownMode = 0
+
+        Log.info("ui", "Shell ready. toolbar=" + root.toolbarVisible
+                 + " statusbar=" + root.statusbarVisible + " sidebar=" + root.sidebarVisible)
+    }
+}
