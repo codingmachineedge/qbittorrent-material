@@ -1,0 +1,161 @@
+/*
+ * qBittorrent (Material rewrite) — a BitTorrent client
+ * Copyright (C) 2026  qBittorrent-Material contributors
+ *
+ * This program is free software; you can redistribute it and/or modify
+ * it under the terms of the GNU General Public License as published by
+ * the Free Software Foundation; either version 2 of the License, or
+ * (at your option) any later version.
+ *
+ * SPDX-License-Identifier: GPL-3.0-or-later
+ */
+
+#pragma once
+
+/*
+ * RSS Session configuration file format (JSON):
+ *
+ * =============== BEGIN ===============
+ * {
+ *     "folder1": {
+ *         "subfolder1": {
+ *             "Feed name 1 (Alias)": {
+ *                 "uid": "feed unique identifier",
+ *                 "url": "http://some-feed-url1"
+ *             }
+ *             "Feed name 2 (Alias)": {
+ *                 "uid": "feed unique identifier",
+ *                 "url": "http://some-feed-url2"
+ *             }
+ *         },
+ *         "subfolder2": {},
+ *         "Feed name 3 (Alias)": {
+ *             "uid": "feed unique identifier",
+ *             "url": "http://some-feed-url3"
+ *         }
+ *     },
+ *     "folder2": {},
+ *     "folder3": {}
+ * }
+ * ================ END ================
+ *
+ * 1.   Document is a JSON object (the same as a Folder)
+ * 2.   Folder is a JSON object (keys are Item names, values are Items)
+ * 3.   Feed is a JSON object (keys are property names; 'uid' and 'url' are required)
+ */
+
+#include <chrono>
+
+#include <QHash>
+#include <QObject>
+#include <QPointer>
+#include <QTimer>
+
+#include "base/3rdparty/expected.hpp"
+#include "base/settingvalue.h"
+#include "base/utils/thread.h"
+
+class QThread;
+
+class Application;
+class AsyncFileStorage;
+
+namespace RSS
+{
+    class Feed;
+    class Folder;
+    class Item;
+
+    /// Singleton root of the RSS subsystem. Loads/persists the folder/feed tree,
+    /// drives periodic refreshes on a dedicated working thread, and offers CRUD over
+    /// items (add/move/remove folders & feeds). Mutating operations return
+    /// `nonstd::expected<T, QString>` carrying an error message on failure. QML sees
+    /// this via `RSSController`/`RSSFeedTreeModel`; subscribe to signals, never poll.
+    class Session final : public QObject
+    {
+        Q_OBJECT
+        Q_DISABLE_COPY_MOVE(Session)
+
+        friend class ::Application;
+
+        Session();
+        ~Session() override;
+
+    public:
+        static Session *instance();
+
+        bool isProcessingEnabled() const;
+        void setProcessingEnabled(bool enabled);
+
+        QThread *workingThread() const;
+        AsyncFileStorage *confFileStorage() const;
+        AsyncFileStorage *dataFileStorage() const;
+
+        int maxArticlesPerFeed() const;
+        void setMaxArticlesPerFeed(int n);
+
+        int refreshInterval() const;
+        void setRefreshInterval(int refreshInterval);
+
+        std::chrono::seconds fetchDelay() const;
+        void setFetchDelay(std::chrono::seconds delay);
+
+        nonstd::expected<Folder *, QString> addFolder(const QString &path);
+        nonstd::expected<Feed *, QString> addFeed(const QString &url, const QString &path, std::chrono::seconds refreshInterval = {});
+        nonstd::expected<void, QString> setFeedURL(const QString &path, const QString &url);
+        nonstd::expected<void, QString> setFeedURL(Feed *feed, const QString &url);
+        nonstd::expected<void, QString> moveItem(const QString &itemPath, const QString &destPath);
+        nonstd::expected<void, QString> moveItem(Item *item, const QString &destPath);
+        nonstd::expected<void, QString> removeItem(const QString &itemPath);
+
+        QList<Item *> items() const;
+        Item *itemByPath(const QString &path) const;
+        QList<Feed *> feeds() const;
+        Feed *feedByURL(const QString &url) const;
+
+        /// The (unnamed) root folder holding the whole tree.
+        Folder *rootFolder() const;
+
+    signals:
+        void processingStateChanged(bool enabled);
+        void maxArticlesPerFeedChanged(int n);
+        void itemAdded(Item *item);
+        void itemPathChanged(Item *item);
+        void itemAboutToBeRemoved(Item *item);
+        void feedIconLoaded(Feed *feed);
+        void feedStateChanged(Feed *feed);
+        void feedURLChanged(Feed *feed, const QString &oldURL);
+
+    private slots:
+        void handleItemAboutToBeDestroyed(Item *item);
+        void handleFeedTitleChanged(Feed *feed);
+
+    private:
+        QUuid generateUID() const;
+        void load();
+        bool loadFolder(const QJsonObject &jsonObj, Folder *folder);
+        void loadLegacy();
+        void store();
+        nonstd::expected<Folder *, QString> prepareItemDest(const QString &path);
+        Folder *addSubfolder(const QString &name, Folder *parentFolder);
+        Feed *addFeedToFolder(const QUuid &uid, const QString &url, const QString &name, Folder *parentFolder, std::chrono::seconds refreshInterval);
+        void addItem(Item *item, Folder *destFolder);
+        void refresh();
+        std::chrono::system_clock::time_point refreshFeed(Feed *feed, const std::chrono::system_clock::time_point &currentTimepoint);
+
+        static QPointer<Session> m_instance;
+
+        CachedSettingValue<bool> m_storeProcessingEnabled;
+        CachedSettingValue<int> m_storeRefreshInterval;
+        CachedSettingValue<qint64> m_storeFetchDelay;
+        CachedSettingValue<int> m_storeMaxArticlesPerFeed;
+        Utils::Thread::UniquePtr m_workingThread;
+        AsyncFileStorage *m_confFileStorage = nullptr;
+        AsyncFileStorage *m_dataFileStorage = nullptr;
+        QTimer m_refreshTimer;
+        QHash<QString, Item *> m_itemsByPath;
+        QHash<QUuid, Feed *> m_feedsByUID;
+        QHash<QString, Feed *> m_feedsByURL;
+        QHash<Feed *, std::chrono::system_clock::time_point> m_refreshTimepoints;
+    };
+}
