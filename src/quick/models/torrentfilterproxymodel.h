@@ -33,7 +33,7 @@
  *
  * QML instantiates one per view: `TorrentFilterProxyModel { sourceModel: TransferListModel }`.
  */
-class TorrentFilterProxyModel final : public QSortFilterProxyModel
+class TorrentFilterProxyModel : public QSortFilterProxyModel
 {
     Q_OBJECT
     QML_ELEMENT

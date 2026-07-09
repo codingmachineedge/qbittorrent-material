@@ -37,7 +37,7 @@
  * `TransferListFilters/HideZeroStatusFilters` preference is on. Selecting a row
  * feeds `TorrentFilterProxyModel::setStatusFilter`.
  */
-class StatusFilterModel final : public QAbstractListModel
+class StatusFilterModel : public QAbstractListModel
 {
     Q_OBJECT
     QML_ELEMENT

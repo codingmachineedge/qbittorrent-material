@@ -41,7 +41,7 @@
  * The @c expiration column is exposed as an ISO-8601 string so it round-trips
  * cleanly through an inline text editor.
  */
-class CookiesModel final : public QAbstractListModel
+class CookiesModel : public QAbstractListModel
 {
     Q_OBJECT
     QML_ELEMENT

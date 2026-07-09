@@ -35,7 +35,7 @@
  */
 // Named LogBridge in C++ (avoids clashing with the upstream-compat `namespace
 // Log` in base/logger.h); exposed to QML as the singleton `Log`.
-class LogBridge final : public QObject
+class LogBridge : public QObject
 {
     Q_OBJECT
     QML_NAMED_ELEMENT(Log)

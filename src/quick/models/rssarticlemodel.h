@@ -48,7 +48,7 @@
  *
  * Header-only so it registers as a @c QML_ELEMENT with no separate TU.
  */
-class RSSArticleModel final : public QAbstractListModel
+class RSSArticleModel : public QAbstractListModel
 {
     Q_OBJECT
     QML_ELEMENT

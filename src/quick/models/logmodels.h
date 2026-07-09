@@ -96,7 +96,7 @@ private:
 };
 
 /// General execution-log model: mirrors Logger::newLogMessage.
-class LogMessageModel final : public BaseLogModel
+class LogMessageModel : public BaseLogModel
 {
     Q_OBJECT
     QML_ELEMENT
@@ -110,7 +110,7 @@ private:
 };
 
 /// Blocked/banned-peers model: mirrors Logger::newLogPeer.
-class LogPeerModel final : public BaseLogModel
+class LogPeerModel : public BaseLogModel
 {
     Q_OBJECT
     QML_ELEMENT
@@ -126,7 +126,7 @@ private:
 /// Filters a ::LogMessageModel by the enabled message-type flags. Bind
 /// @c messageTypes to @c ExecutionLogController.messageTypes so the visible
 /// severities follow the View menu live.
-class LogFilterProxy final : public QSortFilterProxyModel
+class LogFilterProxy : public QSortFilterProxyModel
 {
     Q_OBJECT
     QML_ELEMENT

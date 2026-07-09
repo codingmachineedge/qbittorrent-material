@@ -57,7 +57,7 @@ class QJSEngine;
  *   GuiAddTorrentManager.addTorrent(urlField.text)
  * @endcode
  */
-class GuiAddTorrentManager final : public QObject
+class GuiAddTorrentManager : public QObject
 {
     Q_OBJECT
     QML_ELEMENT

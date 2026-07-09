@@ -35,7 +35,7 @@
  * carries a live torrent count. Selecting a node drives
  * `TorrentFilterProxyModel::setCategoryFilter` (All -> `clearCategoryFilter`).
  */
-class CategoryFilterModel final : public QAbstractItemModel
+class CategoryFilterModel : public QAbstractItemModel
 {
     Q_OBJECT
     QML_ELEMENT

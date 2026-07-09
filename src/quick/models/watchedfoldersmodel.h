@@ -46,7 +46,7 @@
  * `watchedFolderSet`/`watchedFolderRemoved` signals so external changes reflect
  * live (it never polls).
  */
-class WatchedFoldersModel final : public QAbstractListModel
+class WatchedFoldersModel : public QAbstractListModel
 {
     Q_OBJECT
     QML_ELEMENT

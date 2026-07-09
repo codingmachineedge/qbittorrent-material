@@ -40,7 +40,7 @@ class QPainter;
  * PartialPiece→primaryContainer, MissingPiece→surfaceVariant, Border→outlineVariant).
  * The item never hard-codes a palette.
  */
-class PiecesBarItem final : public QQuickPaintedItem
+class PiecesBarItem : public QQuickPaintedItem
 {
     Q_OBJECT
     QML_ELEMENT

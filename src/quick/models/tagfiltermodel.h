@@ -35,7 +35,7 @@
  * Selecting a row drives `TorrentFilterProxyModel::setTagFilter` (All ->
  * `clearTagFilter`).
  */
-class TagFilterModel final : public QAbstractListModel
+class TagFilterModel : public QAbstractListModel
 {
     Q_OBJECT
     QML_ELEMENT

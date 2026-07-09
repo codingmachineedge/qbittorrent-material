@@ -40,7 +40,7 @@
  * Header-only (methods inline) so it can be registered as a @c QML_ELEMENT with
  * no separate translation unit; @c moc still processes the @c Q_OBJECT.
  */
-class RSSFeedTreeModel final : public QAbstractItemModel
+class RSSFeedTreeModel : public QAbstractItemModel
 {
     Q_OBJECT
     QML_ELEMENT

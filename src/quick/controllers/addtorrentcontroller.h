@@ -108,7 +108,7 @@ private:
     QList<int> m_priorities;
 };
 
-class AddTorrentController final : public QObject
+class AddTorrentController : public QObject
 {
     Q_OBJECT
     QML_ELEMENT

@@ -56,7 +56,7 @@ class ContentNode;
  * verbs (setItemPriority / setChecked / renameItem / checkAll / …) rather than
  * @c setData, so QML never has to build @c EditRole payloads.
  */
-class TorrentContentModel final : public QAbstractItemModel
+class TorrentContentModel : public QAbstractItemModel
 {
     Q_OBJECT
     QML_ELEMENT
@@ -199,7 +199,7 @@ private:
  * QML action helpers on the tree operate on @b source indexes, so this proxy
  * exposes @c sourceIndex() to translate a proxy index back to the source model.
  */
-class TorrentContentFilterModel final : public QSortFilterProxyModel
+class TorrentContentFilterModel : public QSortFilterProxyModel
 {
     Q_OBJECT
     QML_ELEMENT

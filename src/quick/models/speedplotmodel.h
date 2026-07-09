@@ -48,7 +48,7 @@
  * Enabled series and the selected period are persisted through @c Preferences
  * (`getSpeedWidgetGraphEnable` / `getSpeedWidgetPeriod`).
  */
-class SpeedPlotModel final : public QObject
+class SpeedPlotModel : public QObject
 {
     Q_OBJECT
     QML_ELEMENT

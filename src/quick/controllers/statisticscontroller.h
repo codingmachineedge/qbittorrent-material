@@ -44,7 +44,7 @@
  *     (Performance statistics)
  * @li @c queuedTrackerAnnounces                     (Tracker statistics)
  */
-class StatisticsController final : public QObject
+class StatisticsController : public QObject
 {
     Q_OBJECT
     QML_ELEMENT

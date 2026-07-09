@@ -36,7 +36,7 @@ class QSystemTrayIcon;
  * The tray icon artwork honors the legacy `Appearance/TrayIconStyle` setting
  * (Normal / Monochrome light / Monochrome dark).
  */
-class DesktopIntegration final : public QObject
+class DesktopIntegration : public QObject
 {
     Q_OBJECT
     QML_ELEMENT

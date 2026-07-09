@@ -30,7 +30,7 @@ class QJSEngine;
  *
  * Accessed from QML by name: `AppController.exit()`, `AppController.locked`, …
  */
-class AppController final : public QObject
+class AppController : public QObject
 {
     Q_OBJECT
     QML_ELEMENT

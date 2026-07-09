@@ -34,7 +34,7 @@
  * @c RSS::AutoDownloader (the engine facades); this controller never caches
  * feed data — it subscribes to the engine and forwards.
  */
-class RSSController final : public QObject
+class RSSController : public QObject
 {
     Q_OBJECT
     QML_ELEMENT

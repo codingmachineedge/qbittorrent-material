@@ -35,7 +35,7 @@
  * each torrent's `announceStatus()` flags. Selecting a row drives
  * `TorrentFilterProxyModel::setAnnounceStatusFilter` (All clears it).
  */
-class TrackerStatusFilterModel final : public QAbstractListModel
+class TrackerStatusFilterModel : public QAbstractListModel
 {
     Q_OBJECT
     QML_ELEMENT

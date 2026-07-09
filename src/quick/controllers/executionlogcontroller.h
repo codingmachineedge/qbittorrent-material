@@ -45,7 +45,7 @@
  * translation unit is required (AUTOMOC + qmltyperegistrar pick the type up from
  * this header via the module's @c SOURCES glob).
  */
-class ExecutionLogController final : public QObject
+class ExecutionLogController : public QObject
 {
     Q_OBJECT
     QML_ELEMENT

@@ -41,7 +41,7 @@ namespace Utils::I18n
  *   }
  * @endcode
  */
-class I18n final : public QObject
+class I18n : public QObject
 {
     Q_OBJECT
     QML_ELEMENT

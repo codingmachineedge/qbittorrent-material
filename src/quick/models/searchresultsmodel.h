@@ -45,7 +45,7 @@ using namespace Qt::StringLiterals;
  * Both classes are QML_UNCREATABLE: QML never instantiates them directly, it
  * binds to the proxy handed back by @c SearchController::resultsModel().
  */
-class SearchResultsModel final : public QAbstractListModel
+class SearchResultsModel : public QAbstractListModel
 {
     Q_OBJECT
     QML_ELEMENT
@@ -207,7 +207,7 @@ private:
  * seeds / size range filters. Exposes @c visibleCount / @c totalCount for the
  * "Results (showing X out of Y)" label.
  */
-class SearchResultsProxyModel final : public QSortFilterProxyModel
+class SearchResultsProxyModel : public QSortFilterProxyModel
 {
     Q_OBJECT
     QML_ELEMENT

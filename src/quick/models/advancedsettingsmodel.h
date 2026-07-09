@@ -47,7 +47,7 @@
  * nothing reaches the engine until `apply()` is called from the dialog OK/Apply.
  * `reset()` reloads live values, discarding staged edits.
  */
-class AdvancedSettingsModel final : public QAbstractListModel
+class AdvancedSettingsModel : public QAbstractListModel
 {
     Q_OBJECT
     QML_ELEMENT

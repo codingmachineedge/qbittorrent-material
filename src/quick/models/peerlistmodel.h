@@ -45,7 +45,7 @@
  * formatted display role plus, for numeric columns, a raw @c *Value role a sort
  * proxy can order on.
  */
-class PeerListModel final : public QAbstractListModel
+class PeerListModel : public QAbstractListModel
 {
     Q_OBJECT
     QML_ELEMENT

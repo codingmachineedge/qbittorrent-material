@@ -49,7 +49,7 @@ class QJSEngine;
  * @ref languageChangeRequested so the QML layer calls `I18n.setLanguage(...)` for
  * a live retranslate (keeping the I18n dependency in the view layer).
  */
-class OptionsController final : public QObject
+class OptionsController : public QObject
 {
     Q_OBJECT
     QML_ELEMENT

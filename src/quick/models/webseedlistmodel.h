@@ -36,7 +36,7 @@
  * @c QFutureWatcher) and mutated through the @ref addWebSeed / @ref removeWebSeeds
  * / @ref editWebSeed invokables, each of which re-reads the list afterwards.
  */
-class WebSeedListModel final : public QAbstractListModel
+class WebSeedListModel : public QAbstractListModel
 {
     Q_OBJECT
     QML_ELEMENT

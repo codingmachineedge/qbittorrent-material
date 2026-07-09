@@ -40,7 +40,7 @@
  * drives `TorrentFilterProxyModel::setTrackerFilter` /
  * `setAnnounceStatusFilter`.
  */
-class TrackersFilterModel final : public QAbstractListModel
+class TrackersFilterModel : public QAbstractListModel
 {
     Q_OBJECT
     QML_ELEMENT

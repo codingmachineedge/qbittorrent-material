@@ -50,7 +50,7 @@ namespace BitTorrent
  * @c sortValue / @c sticky / @c endpoint helper roles; @ref TrackerListSortModel
  * keeps the sticky rows pinned regardless of the active sort column.
  */
-class TrackerListModel final : public QAbstractItemModel
+class TrackerListModel : public QAbstractItemModel
 {
     Q_OBJECT
     QML_ELEMENT
@@ -143,7 +143,7 @@ private:
  * @brief Sort/filter proxy for @c TrackerListModel that keeps the DHT/PeX/LSD
  *        pseudo-rows pinned to the top regardless of the active sort column.
  */
-class TrackerListSortModel final : public QSortFilterProxyModel
+class TrackerListSortModel : public QSortFilterProxyModel
 {
     Q_OBJECT
     QML_ELEMENT

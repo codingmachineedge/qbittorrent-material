@@ -52,7 +52,7 @@ class QJSEngine;
  *  - @c tags : string list; @c skipChecking, @c sequential,
  *    @c firstLastPiecePriority : bool (always present)
  */
-class AddTorrentParamsController final : public QObject
+class AddTorrentParamsController : public QObject
 {
     Q_OBJECT
     QML_ELEMENT

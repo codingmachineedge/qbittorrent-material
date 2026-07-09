@@ -58,7 +58,7 @@
  *
  * Header-only so it registers as a @c QML_ELEMENT with no separate TU.
  */
-class RuleEditorController final : public QObject
+class RuleEditorController : public QObject
 {
     Q_OBJECT
     QML_ELEMENT

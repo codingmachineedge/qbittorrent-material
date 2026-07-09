@@ -99,6 +99,15 @@ qt_add_executable(qbittorrent WIN32 MACOSX_BUNDLE
 target_include_directories(qbittorrent PRIVATE
     "${CMAKE_CURRENT_SOURCE_DIR}"
     "${CMAKE_CURRENT_SOURCE_DIR}/quick"
+    # The QML type-registration file (qmltyperegistrar) includes type headers by
+    # BASENAME in angle brackets guarded by __has_include, so every directory
+    # that declares a QML_ELEMENT/QML_SINGLETON type must be on the include path.
+    "${CMAKE_CURRENT_SOURCE_DIR}/quick/controllers"
+    "${CMAKE_CURRENT_SOURCE_DIR}/quick/models"
+    "${CMAKE_CURRENT_SOURCE_DIR}/quick/theme"
+    "${CMAKE_CURRENT_SOURCE_DIR}/quick/painteditems"
+    "${CMAKE_CURRENT_SOURCE_DIR}/quick/i18n"
+    "${CMAKE_CURRENT_SOURCE_DIR}/app"
 )
 target_compile_features(qbittorrent PRIVATE cxx_std_20)
 

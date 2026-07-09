@@ -35,7 +35,7 @@
  *
  * QML-creatable: the dialog does `SearchPluginsModel { id: pluginsModel }`.
  */
-class SearchPluginsModel final : public QAbstractListModel
+class SearchPluginsModel : public QAbstractListModel
 {
     Q_OBJECT
     QML_ELEMENT

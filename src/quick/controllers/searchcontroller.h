@@ -20,14 +20,18 @@
 #include <QStringList>
 #include <QVariantList>
 
+// SearchResultsModel/SearchResultsProxyModel must be COMPLETE here: resultsModel()
+// is a Q_INVOKABLE returning SearchResultsProxyModel*, so moc records the type in
+// the metatype array and it must be a complete type (else staticMetaObject fails
+// to constinit — MSVC C2737).
+#include "models/searchresultsmodel.h"
+
 class QJSEngine;
 class QQmlEngine;
 
 class SearchHandler;
 class SearchDownloadHandler;
 class SearchPluginManager;
-class SearchResultsModel;
-class SearchResultsProxyModel;
 
 /**
  * @file searchcontroller.h
@@ -49,7 +53,7 @@ class SearchResultsProxyModel;
  * Accessed from QML by name: `SearchController.startSearch(...)`,
  * `SearchController.tabs`, `SearchController.resultsModel(id)`, …
  */
-class SearchController final : public QObject
+class SearchController : public QObject
 {
     Q_OBJECT
     QML_ELEMENT

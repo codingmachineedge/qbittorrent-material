@@ -31,7 +31,7 @@
  *
  * The sentinel @c 0 means "unlimited" (rendered as @c ∞ by @c SpeedSpinBox).
  */
-class SpeedLimitController final : public QObject
+class SpeedLimitController : public QObject
 {
     Q_OBJECT
     QML_ELEMENT

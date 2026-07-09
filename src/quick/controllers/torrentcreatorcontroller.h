@@ -43,7 +43,7 @@ class QThreadPool;
  * The piece-count estimator (@ref calculateTotalPieces) runs on a throwaway
  * worker thread and reports back through @ref totalPiecesText.
  */
-class TorrentCreatorController final : public QObject
+class TorrentCreatorController : public QObject
 {
     Q_OBJECT
     QML_ELEMENT
