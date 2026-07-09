@@ -134,7 +134,7 @@ Dialog {
                         onClicked: renameRuleDialog.openFor(root.selectedName)
                     }
                     IconButton {
-                        icon: Icons.delete
+                        icon: Icons.deleteIcon
                         size: 18
                         tooltip: qsTr("Delete selected rule")
                         enabled: root.selectionCount >= 1

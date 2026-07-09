@@ -160,7 +160,7 @@ Item {
             PropTab { tabIcon: Icons.description; tabText: qsTr("General");      onClicked: root._selectTab(0) }
             PropTab { tabIcon: Icons.dns;         tabText: qsTr("Trackers");     onClicked: root._selectTab(1) }
             PropTab { tabIcon: Icons.groups;      tabText: qsTr("Peers");        onClicked: root._selectTab(2) }
-            PropTab { tabIcon: Icons.public;      tabText: qsTr("HTTP Sources"); onClicked: root._selectTab(3) }
+            PropTab { tabIcon: Icons.publicIcon;      tabText: qsTr("HTTP Sources"); onClicked: root._selectTab(3) }
             PropTab { tabIcon: Icons.folder;      tabText: qsTr("Content");      onClicked: root._selectTab(4) }
             PropTab { tabIcon: Icons.show_chart;  tabText: qsTr("Speed");        onClicked: root._selectTab(5) }
         }

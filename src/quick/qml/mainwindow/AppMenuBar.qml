@@ -74,7 +74,7 @@ MenuBar {
         IconMenuItem { action: menuBar.shell.actionStart; glyph: Icons.play_arrow }
         IconMenuItem { action: menuBar.shell.actionStop; glyph: Icons.pause }
         MenuSeparator {}
-        IconMenuItem { action: menuBar.shell.actionDelete; glyph: Icons.delete }
+        IconMenuItem { action: menuBar.shell.actionDelete; glyph: Icons.deleteIcon }
 
         MenuSeparator { visible: menuBar.shell.queueingEnabled }
         IconMenuItem {

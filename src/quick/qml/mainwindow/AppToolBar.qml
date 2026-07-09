@@ -102,7 +102,7 @@ ToolBar {
 
         TbButton { boundAction: toolBar.shell.actionOpen; glyph: Icons.note_add }
         TbButton { boundAction: toolBar.shell.actionDownloadFromURL; glyph: Icons.add_link }
-        TbButton { boundAction: toolBar.shell.actionDelete; glyph: Icons.delete }
+        TbButton { boundAction: toolBar.shell.actionDelete; glyph: Icons.deleteIcon }
         TbSeparator {}
         TbButton { boundAction: toolBar.shell.actionStart; glyph: Icons.play_arrow }
         TbButton { boundAction: toolBar.shell.actionStop; glyph: Icons.pause }

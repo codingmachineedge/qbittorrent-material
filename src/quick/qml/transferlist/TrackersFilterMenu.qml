@@ -55,7 +55,7 @@ Menu {
         height: visible ? implicitHeight : 0
         leftPadding: 44
         MDIcon {
-            icon: Icons.delete; size: 18; x: Spacing.md
+            icon: Icons.deleteIcon; size: 18; x: Spacing.md
             anchors.verticalCenter: parent.verticalCenter
             color: Theme.color("error")
         }
@@ -90,7 +90,7 @@ Menu {
         text: qsTr("Remove torrents")
         leftPadding: 44
         MDIcon {
-            icon: Icons.delete; size: 18; x: Spacing.md
+            icon: Icons.deleteIcon; size: 18; x: Spacing.md
             anchors.verticalCenter: parent.verticalCenter
             color: Theme.color("error")
         }

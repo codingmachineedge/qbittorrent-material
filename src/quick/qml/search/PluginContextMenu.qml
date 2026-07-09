@@ -50,7 +50,7 @@ Menu {
         text: qsTr("Uninstall")
         contentItem: Row {
             spacing: Spacing.sm
-            MDIcon { icon: Icons.delete; size: 18; color: Theme.color("error") }
+            MDIcon { icon: Icons.deleteIcon; size: 18; color: Theme.color("error") }
             Label { text: qsTr("Uninstall"); font: Typography.bodyMedium; color: Theme.color("onSurface") }
         }
         onTriggered: {

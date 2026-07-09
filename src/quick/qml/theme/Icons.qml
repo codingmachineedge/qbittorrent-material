@@ -23,7 +23,7 @@ import QtQuick
     Render ONLY through \c MDIcon (never a raw Text), e.g.:
     \code
     MDIcon { icon: Icons.play_arrow }
-    MDIcon { icon: Icons.delete; color: StateColors.error; size: 20 }
+    MDIcon { icon: Icons.deleteIcon; color: StateColors.error; size: 20 }
     \endcode
 
     Where a glyph's exact codepoint could not be verified against the shipped
@@ -36,7 +36,7 @@ QtObject {
     // ---- Main toolbar / transfer-list actions ---------------------------------
     readonly property string note_add: ""             // add torrent
     readonly property string add_link: ""             // add torrent link
-    readonly property string delete: ""               // delete
+    readonly property string deleteIcon: ""               // delete
     readonly property string play_arrow: ""           // start / resume
     readonly property string pause: ""                // stop
     readonly property string bolt: ""                 // force start
@@ -105,7 +105,7 @@ QtObject {
     // ---- Properties tabs ------------------------------------------------------
     readonly property string description: ""          // General
     readonly property string groups: ""               // Peers
-    readonly property string public: ""               // HTTP sources
+    readonly property string publicIcon: ""               // HTTP sources
     readonly property string folder: ""               // Content
     readonly property string show_chart: ""           // Speed
 

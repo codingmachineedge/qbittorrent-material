@@ -78,7 +78,7 @@ Menu {
         text: qsTr("Close all tabs")
         contentItem: Row {
             spacing: Spacing.sm
-            MDIcon { icon: Icons.delete; size: 18; color: Theme.color("onSurface") }
+            MDIcon { icon: Icons.deleteIcon; size: 18; color: Theme.color("onSurface") }
             Label { text: qsTr("Close all tabs"); font: Typography.bodyMedium; color: Theme.color("onSurface") }
         }
         onTriggered: {
