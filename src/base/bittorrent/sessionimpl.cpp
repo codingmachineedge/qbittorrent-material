@@ -2959,3 +2959,12 @@ void SessionImpl::setI2PInboundLength(const int value) { if (value != m_I2PInbou
 
 int SessionImpl::I2POutboundLength() const { return m_I2POutboundLength; }
 void SessionImpl::setI2POutboundLength(const int value) { if (value != m_I2POutboundLength) { m_I2POutboundLength = value; configureDeferred(); } }
+
+void SessionImpl::torrentContentRemovingFinished(const QString &torrentName, const QString &errorMessage)
+{
+    if (errorMessage.isEmpty())
+        qCInfo(lcSession) << "Torrent content removed. Torrent:" << torrentName;
+    else
+        qCWarning(lcSession) << "Failed to remove torrent content. Torrent:" << torrentName
+                             << "Error:" << errorMessage;
+}

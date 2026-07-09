@@ -68,6 +68,12 @@ if (TARGET Qt6::Xml)
     target_link_libraries(qbt_base PUBLIC Qt6::Xml)
 endif()
 
+# Windows system libraries used by Utils::OS (SetSuspendState/ExitWindowsEx/
+# AdjustTokenPrivileges for the shutdown/suspend/hibernate actions).
+if (WIN32)
+    target_link_libraries(qbt_base PRIVATE PowrProf Advapi32 User32)
+endif()
+
 # =============================================================================
 # 2) qbittorrent — the Quick/Material executable + the single QML module
 # =============================================================================
