@@ -25,6 +25,9 @@
 #include <QVariantMap>
 
 #include "base/logging.h"
+#include "base/logger.h"
+#include "base/profile.h"
+#include "base/settingsstorage.h"
 #include "app/appcontroller.h"
 #include "app/desktopintegration.h"
 
@@ -184,8 +187,10 @@ int Application::run()
 {
     qCInfo(lcApp) << "Application::run() — beginning boot sequence";
 
-    setupTranslation();
+    // Engine singletons must be constructed before anything (translation,
+    // controllers, QML) touches Preferences/Session.
     initEngine();
+    setupTranslation();
 
     // App-owned QML singleton instances must exist before Main.qml loads,
     // because their create() factories hand back these very objects.
@@ -235,19 +240,25 @@ void Application::setupTranslation()
 void Application::initEngine()
 {
     qCInfo(lcEngine) << "Initializing engine singletons";
+
+    // Order matters: Logger and Profile first, then the settings store, then
+    // Preferences (reads the store), then the BitTorrent session (reads prefs).
+    Logger::initInstance();
+    Profile::initInstance({}, {}, false);  // default per-user profile location
+    SettingsStorage::initInstance();
+    qCDebug(lcEngine) << "Profile + SettingsStorage ready";
+
 #ifdef QBT_HAS_PREFERENCES
-    // Touch Preferences to force construction/loading of the settings store.
-    (void)Preferences::instance();
+    Preferences::initInstance();
     qCDebug(lcEngine) << "Preferences instance ready";
 #else
     qCWarning(lcEngine) << "Preferences header not present at build time";
 #endif
 
 #ifdef QBT_HAS_SESSION
-    // Touch the BitTorrent session facade; the concrete libtorrent session is
-    // brought up on its own IO thread by the engine layer.
-    (void)BitTorrent::Session::instance();
-    qCInfo(lcEngine) << "BitTorrent::Session facade ready";
+    // Brings up the concrete libtorrent session on its own IO thread.
+    BitTorrent::Session::initInstance();
+    qCInfo(lcEngine) << "BitTorrent::Session initialized";
 #else
     qCWarning(lcEngine) << "BitTorrent::Session header not present at build time";
 #endif
