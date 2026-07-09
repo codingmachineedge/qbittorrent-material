@@ -298,7 +298,11 @@ void OptionsController::loadConnection()
 
     stage(QStringLiteral("btProtocol"), static_cast<int>(session->btProtocol()));
     stage(QStringLiteral("port"), session->port());
-    stage(QStringLiteral("upnp"), Net::PortForwarder::instance()->isEnabled());
+    // The UPnP/NAT-PMP port forwarder is an abstract, session-provided component
+    // that may be absent in builds without a concrete implementation; default to
+    // disabled when it is not available.
+    auto *portForwarder = Net::PortForwarder::instance();
+    stage(QStringLiteral("upnp"), portForwarder ? portForwarder->isEnabled() : false);
 
     // Connection-limit rows: value <= 0 means "unchecked / unlimited".
     stage(QStringLiteral("maxConnections"), session->maxConnections());
@@ -401,8 +405,11 @@ void OptionsController::loadRSS()
     stage(QStringLiteral("rssProcessingEnabled"), rss->isProcessingEnabled());
     stage(QStringLiteral("rssRefreshInterval"), rss->refreshInterval());
     stage(QStringLiteral("rssMaxArticlesPerFeed"), rss->maxArticlesPerFeed());
-    stage(QStringLiteral("rssAutoDownloadEnabled"), autoDl->isProcessingEnabled());
-    stage(QStringLiteral("rssDownloadRepacks"), autoDl->downloadRepacks());
+    // The RSS auto-downloader is an optional component (it needs an IApplication
+    // host and may be uninitialised); fall back to disabled defaults when absent,
+    // matching the null-guard used in RSSController.
+    stage(QStringLiteral("rssAutoDownloadEnabled"), autoDl ? autoDl->isProcessingEnabled() : false);
+    stage(QStringLiteral("rssDownloadRepacks"), autoDl ? autoDl->downloadRepacks() : false);
     stage(QStringLiteral("rssWidgetEnabled"), pref->isRSSWidgetEnabled());
 }
 
@@ -631,7 +638,8 @@ void OptionsController::applyConnection()
 
     session->setBTProtocol(static_cast<BitTorrent::BTProtocol>(staged(QStringLiteral("btProtocol")).toInt()));
     session->setPort(staged(QStringLiteral("port")).toInt());
-    Net::PortForwarder::instance()->setEnabled(staged(QStringLiteral("upnp")).toBool());
+    if (auto *portForwarder = Net::PortForwarder::instance())
+        portForwarder->setEnabled(staged(QStringLiteral("upnp")).toBool());
 
     session->setMaxConnections(staged(QStringLiteral("maxConnections")).toInt());
     session->setMaxConnectionsPerTorrent(staged(QStringLiteral("maxConnectionsPerTorrent")).toInt());
@@ -735,8 +743,12 @@ void OptionsController::applyRSS()
     rss->setProcessingEnabled(staged(QStringLiteral("rssProcessingEnabled")).toBool());
     rss->setRefreshInterval(staged(QStringLiteral("rssRefreshInterval")).toInt());
     rss->setMaxArticlesPerFeed(staged(QStringLiteral("rssMaxArticlesPerFeed")).toInt());
-    autoDl->setProcessingEnabled(staged(QStringLiteral("rssAutoDownloadEnabled")).toBool());
-    autoDl->setDownloadRepacks(staged(QStringLiteral("rssDownloadRepacks")).toBool());
+    // Only touch the auto-downloader when it is actually present (see loadRSS).
+    if (autoDl)
+    {
+        autoDl->setProcessingEnabled(staged(QStringLiteral("rssAutoDownloadEnabled")).toBool());
+        autoDl->setDownloadRepacks(staged(QStringLiteral("rssDownloadRepacks")).toBool());
+    }
     pref->setRSSWidgetVisible(staged(QStringLiteral("rssWidgetEnabled")).toBool());
 }
 

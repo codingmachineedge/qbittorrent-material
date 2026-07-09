@@ -45,6 +45,21 @@
 #define QBT_HAS_SESSION 1
 #endif
 
+#if __has_include("base/rss/rss_session.h")
+#include "base/rss/rss_session.h"
+#define QBT_HAS_RSS 1
+#endif
+
+#if __has_include("base/net/proxyconfigurationmanager.h")
+#include "base/net/proxyconfigurationmanager.h"
+#define QBT_HAS_PROXY_MANAGER 1
+#endif
+
+#if __has_include("base/net/downloadmanager.h")
+#include "base/net/downloadmanager.h"
+#define QBT_HAS_DOWNLOAD_MANAGER 1
+#endif
+
 #if __has_include("base/utils/i18n/funnytranslator.h")
 #include "base/utils/i18n/funnytranslator.h"
 #define QBT_HAS_FUNNY_TRANSLATOR 1
@@ -258,12 +273,39 @@ void Application::initEngine()
     qCWarning(lcEngine) << "Preferences header not present at build time";
 #endif
 
+#ifdef QBT_HAS_PROXY_MANAGER
+    // Network proxy manager: an app-owned singleton read by several controllers
+    // (e.g. the Options "Connection" tab). It only reads settings, so it is safe
+    // to bring up here, after the settings store is ready.
+    Net::ProxyConfigurationManager::initInstance();
+    qCDebug(lcEngine) << "Net::ProxyConfigurationManager ready";
+#endif
+
+#ifdef QBT_HAS_DOWNLOAD_MANAGER
+    // The network download manager (also the cookie store used by CookiesModel /
+    // URL & RSS downloads). Its constructor wires up the proxy manager, so it
+    // must be created after ProxyConfigurationManager above.
+    Net::DownloadManager::initInstance();
+    qCDebug(lcEngine) << "Net::DownloadManager ready";
+#endif
+
 #ifdef QBT_HAS_SESSION
     // Brings up the concrete libtorrent session on its own IO thread.
     BitTorrent::Session::initInstance();
     qCInfo(lcEngine) << "BitTorrent::Session initialized";
 #else
     qCWarning(lcEngine) << "BitTorrent::Session header not present at build time";
+#endif
+
+#ifdef QBT_HAS_RSS
+    // The RSS session is an app-owned singleton (private ctor; Application is a
+    // friend). It must exist before any RSS bridge object (e.g. RSSController)
+    // is touched by QML, otherwise RSS::Session::instance() is null and the
+    // controller dereferences it. Depends on Profile/SettingsStorage/Preferences
+    // (already up) so it is created here, after the BitTorrent session.
+    if (!RSS::Session::instance())
+        new RSS::Session;
+    qCInfo(lcEngine) << "RSS::Session initialized";
 #endif
 }
 

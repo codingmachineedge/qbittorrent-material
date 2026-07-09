@@ -91,8 +91,13 @@ Dialog {
                 anchors.margins: Spacing.xs
                 text: qsTr("Auto downloading of RSS torrents is currently disabled. You can enable it in application settings.")
                 color: Theme.color("warning")
-                font: Typography.bodyMedium
-                font.italic: true
+                font: Qt.font({
+                    family: Typography.bodyMedium.family,
+                    pixelSize: Typography.bodyMedium.pixelSize,
+                    weight: Typography.bodyMedium.weight,
+                    letterSpacing: Typography.bodyMedium.letterSpacing,
+                    italic: true
+                })
                 wrapMode: Text.WordWrap
             }
         }

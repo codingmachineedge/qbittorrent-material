@@ -31,7 +31,7 @@ Popup {
     property int defaultTimeout: 4000
 
     /*! Bottom margin from the parent's bottom edge. */
-    property int bottomMargin: Spacing.xl
+    property int bottomOffset: Spacing.xl
 
     // Pending messages: { text, actionText, callback, timeout }.
     property var _queue: []
@@ -74,7 +74,7 @@ Popup {
 
     parent: Overlay.overlay
     x: parent ? (parent.width - width) / 2 : 0
-    y: parent ? (parent.height - height - bottomMargin) : 0
+    y: parent ? (parent.height - height - bottomOffset) : 0
     width: Math.min(560, (parent ? parent.width : 560) - Spacing.xl * 2)
 
     enter: Transition { NumberAnimation { property: "opacity"; from: 0; to: 1; duration: 150 } }

@@ -177,7 +177,7 @@ Item {
             model: contentFilter
             boundsBehavior: Flickable.StopAtBounds
 
-            property int currentRow: -1
+            property int selectedRow: -1
 
             ScrollBar.vertical: ScrollBar { policy: ScrollBar.AsNeeded }
 
@@ -198,7 +198,7 @@ Item {
                 implicitWidth: tree.width
                 implicitHeight: 40
 
-                readonly property bool selected: tree.currentRow === row
+                readonly property bool selected: tree.selectedRow === row
                 readonly property int nameWidth: Math.max(120, tree.width - root.fixedCols)
 
                 Rectangle {
@@ -394,7 +394,7 @@ Item {
                         z: -1
                         acceptedButtons: Qt.LeftButton | Qt.RightButton
                         onClicked: (mouse) => {
-                            tree.currentRow = rowItem.row
+                            tree.selectedRow = rowItem.row
                             if (mouse.button === Qt.RightButton) {
                                 const p = mapToItem(root, mouse.x, mouse.y)
                                 contentMenu.x = p.x
@@ -417,7 +417,7 @@ Item {
         id: contentMenu
         Material.elevation: Spacing.elevationMenu
 
-        readonly property int currentRow: tree.currentRow
+        readonly property int currentRow: tree.selectedRow
         readonly property bool hasRow: currentRow >= 0
         readonly property bool hasStorage: contentModel.hasStorageLocation()
 

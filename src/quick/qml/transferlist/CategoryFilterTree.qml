@@ -111,11 +111,11 @@ Column {
             implicitHeight: 32
             indentation: Spacing.md
 
-            readonly property bool selected: (del.type === root.selectedType)
+            readonly property bool filterActive: (del.type === root.selectedType)
                 && ((del.type !== 2) || (del.value === root.selectedValue))
 
             background: Rectangle {
-                color: del.selected ? Qt.alpha(Theme.color("primary"), 0.12)
+                color: del.filterActive ? Qt.alpha(Theme.color("primary"), 0.12)
                                     : (del.hovered ? Qt.alpha(Theme.color("onSurface"), 0.08) : "transparent")
                 radius: Spacing.radiusChip
             }
@@ -125,14 +125,14 @@ Column {
                 MDIcon {
                     icon: del.type === 0 ? Icons.apps : Icons.category
                     size: 18
-                    color: del.selected ? Theme.color("primary") : Theme.color("onSurfaceVariant")
+                    color: del.filterActive ? Theme.color("primary") : Theme.color("onSurfaceVariant")
                     anchors.verticalCenter: parent.verticalCenter
                 }
                 Label {
                     text: del.label
                     elide: Text.ElideRight
                     font: Typography.bodyMedium
-                    color: del.selected ? Theme.color("primary") : Theme.color("onSurface")
+                    color: del.filterActive ? Theme.color("primary") : Theme.color("onSurface")
                     anchors.verticalCenter: parent.verticalCenter
                 }
             }

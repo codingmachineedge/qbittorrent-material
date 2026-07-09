@@ -117,7 +117,7 @@ Item {
             columnSpacing: 0
             rowSpacing: 0
 
-            property int currentRow: -1
+            property int selectedRow: -1
 
             ScrollBar.vertical: ScrollBar { policy: ScrollBar.AsNeeded }
             ScrollBar.horizontal: ScrollBar { policy: ScrollBar.AsNeeded }
@@ -133,7 +133,7 @@ Item {
 
                 implicitHeight: 34
                 readonly property bool sticky: model.sticky === true
-                readonly property bool selected: tableView.currentRow === row
+                readonly property bool selected: tableView.selectedRow === row
 
                 color: selected
                        ? Qt.alpha(Theme.color("primary"), 0.12)
@@ -174,7 +174,7 @@ Item {
                     anchors.fill: parent
                     acceptedButtons: Qt.LeftButton | Qt.RightButton
                     onClicked: (mouse) => {
-                        tableView.currentRow = cell.row
+                        tableView.selectedRow = cell.row
                         if (mouse.button === Qt.RightButton) {
                             const p = mapToItem(root, mouse.x, mouse.y)
                             trackerMenu.x = p.x
@@ -183,7 +183,7 @@ Item {
                         }
                     }
                     onDoubleClicked: {
-                        tableView.currentRow = cell.row
+                        tableView.selectedRow = cell.row
                         if (!root._isSticky(cell.row))
                             root._openEdit(cell.row)
                     }
@@ -197,7 +197,7 @@ Item {
         id: trackerMenu
         Material.elevation: Spacing.elevationMenu
 
-        readonly property int currentRow: tableView.currentRow
+        readonly property int currentRow: tableView.selectedRow
         readonly property bool realRow: currentRow >= 0 && !root._isSticky(currentRow)
 
         MenuItem {

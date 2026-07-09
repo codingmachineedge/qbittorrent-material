@@ -49,10 +49,30 @@ ColumnLayout {
     // Persist expanded state only when a key is given, so unrelated sections
     // never collide on a shared settings group.
     Loader {
+        id: persistLoader
         active: root.persistKey.length > 0
         sourceComponent: Settings {
             category: "CollapsibleSection/" + root.persistKey
-            property alias expandedState: root.expanded
+            // Plain property (an alias cannot cross the Loader component
+            // boundary to reach `root`). Initialised from the current state so
+            // first-run sessions persist the correct default.
+            property bool expandedState: root.expanded
+
+            // Load: Settings restores the stored value during its own
+            // componentComplete(), which runs before this handler, so
+            // `expandedState` already holds the persisted value here.
+            Component.onCompleted: root.expanded = expandedState
+        }
+    }
+
+    // Save: mirror user toggles back into the persisted property. Kept at the
+    // top level because Settings has no default property to hold child objects.
+    Connections {
+        target: root
+        enabled: persistLoader.item !== null
+        function onExpandedChanged() {
+            if (persistLoader.item)
+                persistLoader.item.expandedState = root.expanded
         }
     }
 

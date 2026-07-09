@@ -35,6 +35,9 @@ import qBittorrent
 Item {
     id: root
 
+    /*! Back-reference to the Main.qml shell (set by CentralTabs). */
+    property var shell: null
+
     /*! Whether the left filter sidebar is shown (toolbar toggle target). */
     property bool sidebarVisible: true
 

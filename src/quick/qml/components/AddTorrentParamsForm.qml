@@ -155,9 +155,14 @@ ColumnLayout {
             Label {
                 visible: !root._manualTMM
                 text: qsTr("Note: the current defaults are displayed for reference.")
-                font: Typography.labelSmall
+                font: Qt.font({
+                    family: Typography.labelSmall.family,
+                    pixelSize: Typography.labelSmall.pixelSize,
+                    weight: Typography.labelSmall.weight,
+                    letterSpacing: Typography.labelSmall.letterSpacing,
+                    italic: true
+                })
                 color: Theme.color("onSurfaceVariant")
-                font.italic: true
                 Layout.fillWidth: true
                 wrapMode: Text.WordWrap
             }
