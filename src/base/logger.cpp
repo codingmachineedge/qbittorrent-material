@@ -122,3 +122,9 @@ QList<Logger::Peer> Logger::getPeers(const int lastKnownId) const
         return {};
     return loadFromBuffer(m_peers, (size - diff));
 }
+
+// Upstream-compatibility free function (see logger.h).
+void LogMsg(const QString &message, Logger::MsgType type)
+{
+    Logger::instance()->addMessage(message, type);
+}

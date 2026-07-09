@@ -110,3 +110,23 @@ private:
 Q_DECLARE_OPERATORS_FOR_FLAGS(Logger::MsgTypes)
 Q_DECLARE_METATYPE(Logger::Message)
 Q_DECLARE_METATYPE(Logger::Peer)
+
+// ---------------------------------------------------------------------------
+// Upstream-compatibility logging façade
+// ---------------------------------------------------------------------------
+// Base-infrastructure files ported from upstream qBittorrent use the classic
+// `Log::` namespace + free `LogMsg()` API. Map those onto this project's Logger
+// so those files compile unchanged. Enum values are identical (0x1/0x2/0x4/0x8).
+namespace Log
+{
+    using MsgType = Logger::MsgType;
+    inline constexpr Logger::MsgType NORMAL = Logger::Normal;
+    inline constexpr Logger::MsgType INFO = Logger::Info;
+    inline constexpr Logger::MsgType WARNING = Logger::Warning;
+    inline constexpr Logger::MsgType CRITICAL = Logger::Critical;
+    using Msg = Logger::Message;
+    using Peer = Logger::Peer;
+}
+
+/// Upstream-style convenience: append a line to the Execution Log.
+void LogMsg(const QString &message, Logger::MsgType type = Logger::Normal);

@@ -38,7 +38,10 @@ add_library(qbt_base STATIC
     ${QBT_BASE_PLACEHOLDER}
 )
 
-target_include_directories(qbt_base PUBLIC "${CMAKE_CURRENT_SOURCE_DIR}")
+target_include_directories(qbt_base PUBLIC
+    "${CMAKE_CURRENT_SOURCE_DIR}"
+    "${CMAKE_CURRENT_SOURCE_DIR}/base"
+)
 
 target_compile_features(qbt_base PUBLIC cxx_std_20)
 
