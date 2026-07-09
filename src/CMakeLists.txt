@@ -141,6 +141,14 @@ foreach (_singleton IN LISTS QBT_QML_SINGLETONS)
     endif()
 endforeach()
 
+# QTP0004 NEW: auto-generate a qmldir for every subdirectory that contains QML
+# files, so types under mainwindow/, dialogs/, options/, etc. are visible
+# module-wide (Main.qml references them by bare name). Without this, those types
+# resolve as "X is not a type".
+if (POLICY QTP0004)
+    qt_policy(SET QTP0004 NEW)
+endif()
+
 qt_add_qml_module(qbittorrent
     URI qBittorrent
     VERSION 1.0
