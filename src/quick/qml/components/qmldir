@@ -1,0 +1,32 @@
+# qBittorrent (Material rewrite) — reusable QML components
+#
+# These types belong to the single application module `qBittorrent`
+# (declared once via qt_add_qml_module in src/quick/CMakeLists.txt) and are
+# therefore usable by name from any file in the module with no local import.
+#
+# This qmldir is an explicit inventory of the reusable component types living
+# in this directory. There are NO singletons here — every entry is a plain,
+# instantiable Material component. (The application singletons — Theme,
+# Typography, Spacing, Icons, StateColors, I18n, Log, … — live elsewhere.)
+
+MDIcon                  1.0 MDIcon.qml
+IconButton              1.0 IconButton.qml
+MaterialCard            1.0 MaterialCard.qml
+SectionHeader           1.0 SectionHeader.qml
+CollapsibleSection      1.0 CollapsibleSection.qml
+CheckableGroupBox       1.0 CheckableGroupBox.qml
+LabeledField            1.0 LabeledField.qml
+PathField               1.0 PathField.qml
+PathComboField          1.0 PathComboField.qml
+SpeedSpinBox            1.0 SpeedSpinBox.qml
+TriStateComboField      1.0 TriStateComboField.qml
+FilterTextField         1.0 FilterTextField.qml
+FilterPatternFormatMenu 1.0 FilterPatternFormatMenu.qml
+DataTable               1.0 DataTable.qml
+ColumnHeaderMenu        1.0 ColumnHeaderMenu.qml
+ProgressCell            1.0 ProgressCell.qml
+Snackbar                1.0 Snackbar.qml
+ConfirmDialog           1.0 ConfirmDialog.qml
+TextInputDialog         1.0 TextInputDialog.qml
+SharedShareLimitsForm   1.0 SharedShareLimitsForm.qml
+AddTorrentParamsForm    1.0 AddTorrentParamsForm.qml
