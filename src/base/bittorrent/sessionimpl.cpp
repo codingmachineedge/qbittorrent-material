@@ -53,6 +53,7 @@
 #include "addtorrentparams.h"
 #include "bandwidthscheduler.h"
 #include "common.h"
+#include "filesearcher.h"
 #include "loadtorrentparams.h"
 #include "lttypecast.h"
 #include "torrentdescriptor.h"
