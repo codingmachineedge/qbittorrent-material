@@ -57,7 +57,7 @@ TextField {
         anchors.verticalCenter: parent.verticalCenter
 
         IconButton {
-            icon: Icons.close
+            symbol: Icons.close
             size: 16
             visible: root.text.length > 0
             tooltip: qsTr("Clear")
@@ -68,7 +68,7 @@ TextField {
         }
 
         IconButton {
-            icon: Icons.settings
+            symbol: Icons.settings
             size: 16
             checkable: false
             checked: root.regexEnabled

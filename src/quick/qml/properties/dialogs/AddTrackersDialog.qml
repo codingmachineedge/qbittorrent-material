@@ -148,7 +148,7 @@ Dialog {
             }
 
             IconButton {
-                icon: Icons.download
+                symbol: Icons.download
                 tooltip: qsTr("Download trackers list")
                 enabled: listUrlField.text.trim().length > 0 && !fetchBusy.running
                 onClicked: {

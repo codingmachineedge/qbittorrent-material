@@ -75,7 +75,7 @@ RowLayout {
     }
 
     IconButton {
-        icon: Icons.folder_open
+        symbol: Icons.folder_open
         size: 20
         tooltip: qsTr("Browse")
         onClicked: {

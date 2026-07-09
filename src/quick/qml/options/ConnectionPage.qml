@@ -348,7 +348,7 @@ Flickable {
                     onPathChanged: OptionsController.setValue("BitTorrent/Session/IPFilter", path)
                 }
                 IconButton {
-                    icon: Icons.refresh
+                    symbol: Icons.refresh
                     tooltip: qsTr("Reload the filter")
                     enabled: ipFilterEnable.checked
                     onClicked: {

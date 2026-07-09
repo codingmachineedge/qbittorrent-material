@@ -113,7 +113,7 @@ Dialog {
 
             IconButton {
                 id: rememberButton
-                icon: Icons.lock
+                symbol: Icons.lock
                 tooltip: qsTr("Remember choice")
                 // Enabled only when the choice differs from the stored default.
                 enabled: removeContent.checked !== (Preferences.value(root._rememberKey, false) === true)

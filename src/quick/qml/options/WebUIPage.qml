@@ -160,7 +160,7 @@ Flickable {
                         text: (root.rev, OptionsController.maskedApiKey())
                     }
                     IconButton {
-                        icon: Icons.content_copy
+                        symbol: Icons.content_copy
                         tooltip: qsTr("Copy API key")
                         enabled: OptionsController.apiKeyValid
                         onClicked: {
@@ -170,7 +170,7 @@ Flickable {
                         }
                     }
                     IconButton {
-                        icon: Icons.refresh
+                        symbol: Icons.refresh
                         tooltip: OptionsController.apiKeyValid ? qsTr("Rotate API key") : qsTr("Generate API key")
                         onClicked: {
                             apiKeyDialog.mode = OptionsController.apiKeyValid ? "rotate" : "generate"
@@ -178,7 +178,7 @@ Flickable {
                         }
                     }
                     IconButton {
-                        icon: Icons.remove
+                        symbol: Icons.remove
                         tooltip: qsTr("Delete API key")
                         enabled: OptionsController.apiKeyValid
                         onClicked: {

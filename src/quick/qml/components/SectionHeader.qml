@@ -26,7 +26,7 @@ import qBittorrent
     SectionHeader {
         text: qsTr("Trackers")
         icon: Icons.dns
-        IconButton { icon: Icons.person_add; tooltip: qsTr("Add tracker") }
+        IconButton { symbol: Icons.person_add; tooltip: qsTr("Add tracker") }
     }
     \endqml
 */

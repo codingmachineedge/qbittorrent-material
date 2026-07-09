@@ -117,7 +117,7 @@ Item {
                 onTextEdited: Log.trace("search", "Query edited")
 
                 IconButton {
-                    icon: Icons.arrow_drop_down
+                    symbol: Icons.arrow_drop_down
                     size: 18
                     visible: SearchController.history.length > 0
                     anchors.right: parent.right
@@ -296,7 +296,7 @@ Item {
                                 Layout.fillWidth: true
                             }
                             IconButton {
-                                icon: Icons.close
+                                symbol: Icons.close
                                 size: 14
                                 tooltip: qsTr("Close tab")
                                 onClicked: SearchController.closeTab(modelData.id)

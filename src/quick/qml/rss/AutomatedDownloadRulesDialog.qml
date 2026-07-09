@@ -121,28 +121,28 @@ Dialog {
                     }
 
                     IconButton {
-                        icon: Icons.content_copy
+                        symbol: Icons.content_copy
                         size: 18
                         tooltip: qsTr("Clone selected rule to a new rule.\nThe cloned rule will be set as disabled and the downloaded episodes history will be cleared.")
                         enabled: root.selectionCount === 1
                         onClicked: cloneRuleDialog.openFor(root.selectedName)
                     }
                     IconButton {
-                        icon: Icons.edit
+                        symbol: Icons.edit
                         size: 18
                         tooltip: qsTr("Rename selected rule. You can also use the F2 hotkey to rename.")
                         enabled: root.selectionCount === 1
                         onClicked: renameRuleDialog.openFor(root.selectedName)
                     }
                     IconButton {
-                        icon: Icons.deleteIcon
+                        symbol: Icons.deleteIcon
                         size: 18
                         tooltip: qsTr("Delete selected rule")
                         enabled: root.selectionCount >= 1
                         onClicked: deleteRuleConfirm.open()
                     }
                     IconButton {
-                        icon: Icons.add
+                        symbol: Icons.add
                         size: 18
                         tooltip: qsTr("Add new rule")
                         onClicked: addRuleDialog.open()

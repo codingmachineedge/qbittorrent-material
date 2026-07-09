@@ -27,8 +27,9 @@ import qBittorrent
 ToolButton {
     id: root
 
-    /*! Codepoint string for the glyph, from the \c Icons singleton. */
-    property string icon: ""
+    /*! Codepoint string for the glyph, from the \c Icons singleton.
+        Named \c symbol (not \c icon) because AbstractButton::icon is FINAL. */
+    property string symbol: ""
 
     /*! Icon size in pixels. */
     property int size: 24
@@ -47,7 +48,7 @@ ToolButton {
     implicitHeight: Math.max(size + Spacing.sm * 2, 32)
 
     contentItem: MDIcon {
-        icon: root.icon
+        icon: root.symbol
         size: root.size
         fill: root.checked
         color: root.enabled ? (root.checked ? Theme.color("primary") : root.color)
@@ -62,7 +63,7 @@ ToolButton {
     Connections {
         target: root
         function onClicked() {
-            Log.debug("ui", "IconButton clicked: " + (root.tooltip.length ? root.tooltip : root.icon))
+            Log.debug("ui", "IconButton clicked: " + (root.tooltip.length ? root.tooltip : root.symbol))
         }
         function onToggled() {
             if (root.checkable)

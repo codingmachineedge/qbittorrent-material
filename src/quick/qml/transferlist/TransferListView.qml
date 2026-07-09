@@ -328,7 +328,7 @@ Item {
             }
 
             IconButton {
-                icon: Icons.more_vert
+                symbol: Icons.more_vert
                 tooltip: qsTr("Column visibility")
                 onClicked: {
                     Log.debug("ui", "Opening column visibility menu");
