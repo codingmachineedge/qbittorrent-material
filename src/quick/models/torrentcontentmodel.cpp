@@ -381,7 +381,7 @@ QVariant TorrentContentModel::data(const QModelIndex &index, const int role) con
             if (avail < 0)
                 return tr("N/A");
             const QString value = (avail >= 1) ? u"100"_s : Utils::String::fromDouble((avail * 100), 1);
-            return value + u'%';
+            return QString(value + u'%');
         }
     case AvailabilityValueRole:
         return node->availability();

@@ -17,6 +17,7 @@
 #include <QDesktopServices>
 #include <QGuiApplication>
 #include <QRegularExpression>
+#include <QTextDocument>
 #include <QUrl>
 
 #include "base/bittorrent/session.h"

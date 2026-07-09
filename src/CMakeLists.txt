@@ -96,7 +96,10 @@ qt_add_executable(qbittorrent WIN32 MACOSX_BUNDLE
     "${CMAKE_CURRENT_SOURCE_DIR}/main.cpp"
 )
 
-target_include_directories(qbittorrent PRIVATE "${CMAKE_CURRENT_SOURCE_DIR}")
+target_include_directories(qbittorrent PRIVATE
+    "${CMAKE_CURRENT_SOURCE_DIR}"
+    "${CMAKE_CURRENT_SOURCE_DIR}/quick"
+)
 target_compile_features(qbittorrent PRIVATE cxx_std_20)
 
 if (QBT_DBUS AND TARGET Qt6::DBus)

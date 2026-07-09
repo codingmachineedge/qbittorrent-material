@@ -15,6 +15,7 @@
 #include <chrono>
 
 #include <QHostAddress>
+#include <QQmlEngine>
 #include <QRandomGenerator>
 #include <QSet>
 #include <QTime>
