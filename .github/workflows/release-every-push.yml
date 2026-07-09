@@ -91,7 +91,9 @@ jobs:
           }
 
           $installedExe = Join-Path $smokeRoot "bin/qbittorrent.exe"
-          $platformPlugin = Join-Path $smokeRoot "bin/platforms/qwindows.dll"
+          # Qt's CMake deployment API keeps plugins at the install prefix,
+          # beside bin/, rather than nesting them under the executable folder.
+          $platformPlugin = Join-Path $smokeRoot "plugins/platforms/qwindows.dll"
           if (-not (Test-Path -LiteralPath $installedExe)) {
             throw "Installed executable is missing: $installedExe"
           }
