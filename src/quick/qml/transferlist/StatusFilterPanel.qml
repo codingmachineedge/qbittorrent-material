@@ -1,0 +1,125 @@
+/*
+ * qBittorrent (Material rewrite) — a BitTorrent client
+ * Copyright (C) 2026  qBittorrent-Material contributors
+ *
+ * This program is free software; you can redistribute it and/or modify
+ * it under the terms of the GNU General Public License as published by
+ * the Free Software Foundation; either version 2 of the License, or
+ * (at your option) any later version.
+ *
+ * SPDX-License-Identifier: GPL-3.0-or-later
+ */
+
+import QtQuick
+import QtQuick.Controls.Material
+
+/*!
+    \qmltype StatusFilterPanel
+    \brief The "Status" sidebar sub-panel — fixed rows with live counts.
+
+    Bound to a \c StatusFilterModel instance (fixed \c TorrentFilter::Status rows,
+    each with a live count and a hide-zero policy). Selecting a row sets the shared
+    \l proxy's status filter (\c proxy.setStatusFilter(value)); the active row is
+    reflected from \c proxy.statusFilter. When
+    \c TransferListFilters/HideZeroStatusFilters is on, zero-count rows are hidden
+    (except "All") by the model.
+*/
+Column {
+    id: root
+
+    /*! The shared \c TorrentFilterProxyModel. */
+    property var proxy: null
+
+    spacing: 0
+
+    // TorrentFilter::Status int -> the status glyph (DESIGN_SYSTEM §4).
+    function _statusIcon(value) {
+        switch (value) {
+        case 0:  return Icons.apps;              // All
+        case 1:  return Icons.download;          // Downloading
+        case 2:  return Icons.upload;            // Seeding
+        case 3:  return Icons.check_circle;      // Completed
+        case 4:  return Icons.play_arrow;        // Running
+        case 5:  return Icons.pause;             // Stopped
+        case 6:  return Icons.trending_up;       // Active
+        case 7:  return Icons.trending_down;     // Inactive
+        case 8:  return Icons.hourglass_empty;   // Stalled
+        case 9:  return Icons.hourglass_empty;   // Stalled Uploading
+        case 10: return Icons.hourglass_empty;   // Stalled Downloading
+        case 11: return Icons.fact_check;        // Checking
+        case 12: return Icons.drive_file_move;   // Moving
+        case 13: return Icons.error;             // Errored
+        default: return Icons.apps;
+        }
+    }
+
+    StatusFilterModel {
+        id: statusModel
+        hideZero: Preferences.value("TransferListFilters/HideZeroStatusFilters", false) === true
+    }
+
+    // Keep the model's hide-zero policy in sync with the preference.
+    Connections {
+        target: Preferences
+        function onChanged() {
+            statusModel.hideZero =
+                Preferences.value("TransferListFilters/HideZeroStatusFilters", false) === true;
+        }
+    }
+
+    StatusFilterMenu { id: contextMenu; proxy: root.proxy }
+
+    Repeater {
+        model: statusModel
+        delegate: ItemDelegate {
+            id: rowItem
+            required property int index
+            required property var model
+            readonly property bool selected: root.proxy && (root.proxy.statusFilter === model.value)
+            width: root.width
+            height: 32
+            padding: Spacing.xs
+
+            background: Rectangle {
+                color: rowItem.selected ? Qt.alpha(Theme.color("primary"), 0.12)
+                                        : (rowItem.hovered ? Qt.alpha(Theme.color("onSurface"), 0.08) : "transparent")
+                radius: Spacing.radiusChip
+            }
+
+            contentItem: Row {
+                spacing: Spacing.sm
+                leftPadding: Spacing.sm
+                MDIcon {
+                    icon: root._statusIcon(rowItem.model.value)
+                    size: 18
+                    color: rowItem.selected ? Theme.color("primary") : Theme.color("onSurfaceVariant")
+                    anchors.verticalCenter: parent.verticalCenter
+                }
+                Label {
+                    width: root.width - 60
+                    text: rowItem.model.label
+                    elide: Text.ElideRight
+                    font: Typography.bodyMedium
+                    color: rowItem.selected ? Theme.color("primary") : Theme.color("onSurface")
+                    anchors.verticalCenter: parent.verticalCenter
+                }
+            }
+
+            onClicked: {
+                Log.info("ui", "Status filter -> " + model.label + " (" + model.value + ")");
+                if (root.proxy)
+                    root.proxy.setStatusFilter(model.value);
+            }
+
+            TapHandler {
+                acceptedButtons: Qt.RightButton
+                onTapped: {
+                    Log.debug("ui", "Status filter panel context menu");
+                    contextMenu.popup();
+                }
+            }
+        }
+    }
+
+    Component.onCompleted: Log.debug("ui", "StatusFilterPanel ready")
+}
