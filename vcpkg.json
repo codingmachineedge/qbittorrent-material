@@ -6,7 +6,9 @@
   "description": "Native dependencies for qBittorrent Material",
   "license": "GPL-3.0-or-later",
   "dependencies": [
+    "boost-circular-buffer",
     "boost-headers",
+    "boost-multi-index",
     "libtorrent",
     "openssl",
     "zlib"
