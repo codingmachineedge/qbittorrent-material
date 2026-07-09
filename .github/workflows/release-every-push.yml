@@ -1,0 +1,164 @@
+name: Build and release every push
+
+on:
+  push:
+    branches:
+      - "**"
+  workflow_dispatch:
+
+# The workflow creates a tag and prerelease for the commit that triggered it.
+# Branch-only filtering above excludes tag pushes, and GITHUB_TOKEN-generated
+# events do not recursively start another ordinary push workflow.
+permissions:
+  contents: write
+
+jobs:
+  windows-installer:
+    name: Windows installer
+    runs-on: windows-2022
+    timeout-minutes: 180
+    env:
+      VCPKG_DEFAULT_TRIPLET: x64-windows-static-md
+      VCPKG_DEFAULT_HOST_TRIPLET: x64-windows-static-md
+
+    steps:
+      - name: Check out the pushed commit
+        uses: actions/checkout@v4
+
+      - name: Activate the MSVC 2022 toolchain
+        uses: ilammy/msvc-dev-cmd@v1
+        with:
+          arch: x64
+
+      - name: Install Qt
+        uses: jurplel/install-qt-action@v4
+        with:
+          version: "6.8.3"
+          host: windows
+          target: desktop
+          arch: win64_msvc2022_64
+          modules: "qt5compat qtimageformats qtshadertools"
+          cache: true
+
+      - name: Set up vcpkg and binary caching
+        uses: lukka/run-vcpkg@v11.6
+        with:
+          vcpkgJsonGlob: "**/vcpkg.json"
+          runVcpkgInstall: false
+
+      - name: Configure the release build
+        shell: pwsh
+        run: |
+          $shortSha = $env:GITHUB_SHA.Substring(0, 8)
+          $buildId = "build.$env:GITHUB_RUN_NUMBER.$shortSha"
+          "QBT_BUILD_ID=$buildId" >> $env:GITHUB_ENV
+
+          cmake -S . -B build -G Ninja `
+            -DCMAKE_BUILD_TYPE=Release `
+            "-DCMAKE_TOOLCHAIN_FILE=$env:VCPKG_ROOT/scripts/buildsystems/vcpkg.cmake" `
+            -DVCPKG_TARGET_TRIPLET=x64-windows-static-md `
+            "-DQBT_BUILD_ID=$buildId"
+
+      - name: Build
+        shell: pwsh
+        run: cmake --build build --parallel
+
+      - name: Build and verify the NSIS installer
+        id: package
+        shell: pwsh
+        run: |
+          cpack --config build/CPackConfig.cmake -G NSIS -C Release
+
+          $installers = @(
+            Get-ChildItem -Path "build/packages" -File `
+              -Filter "qBittorrent-Material-*-$env:QBT_BUILD_ID-windows-x64.exe"
+          )
+          if ($installers.Count -ne 1) {
+            throw "Expected exactly one NSIS installer, found $($installers.Count)."
+          }
+          $installer = $installers[0]
+          $hash = (Get-FileHash -Algorithm SHA256 -LiteralPath $installer.FullName).Hash.ToLowerInvariant()
+
+          $smokeRoot = Join-Path $env:RUNNER_TEMP "qbt-material-smoke"
+          if (Test-Path -LiteralPath $smokeRoot) {
+            Remove-Item -Recurse -Force -LiteralPath $smokeRoot
+          }
+          $installProcess = Start-Process -FilePath $installer.FullName `
+            -ArgumentList @("/S", "/D=$smokeRoot") `
+            -PassThru -Wait
+          if ($installProcess.ExitCode -ne 0) {
+            throw "Silent installer returned exit code $($installProcess.ExitCode)."
+          }
+
+          $installedExe = Join-Path $smokeRoot "bin/qbittorrent.exe"
+          $platformPlugin = Join-Path $smokeRoot "bin/platforms/qwindows.dll"
+          if (-not (Test-Path -LiteralPath $installedExe)) {
+            throw "Installed executable is missing: $installedExe"
+          }
+          if (-not (Test-Path -LiteralPath $platformPlugin)) {
+            throw "Qt platform plugin is missing: $platformPlugin"
+          }
+
+          $env:QT_QPA_PLATFORM = "offscreen"
+          $process = Start-Process -FilePath $installedExe -PassThru
+          Start-Sleep -Seconds 10
+          if ($process.HasExited) {
+            throw "Installed application exited during smoke test with code $($process.ExitCode)."
+          }
+          Stop-Process -Id $process.Id -Force
+          $process.WaitForExit()
+
+          $uninstaller = Join-Path $smokeRoot "Uninstall.exe"
+          if (-not (Test-Path -LiteralPath $uninstaller)) {
+            throw "NSIS uninstaller is missing: $uninstaller"
+          }
+          $uninstallProcess = Start-Process -FilePath $uninstaller -ArgumentList "/S" -PassThru -Wait
+          if ($uninstallProcess.ExitCode -ne 0) {
+            throw "Silent uninstaller returned exit code $($uninstallProcess.ExitCode)."
+          }
+
+          "installer=$($installer.FullName)" >> $env:GITHUB_OUTPUT
+          "sha256=$hash" >> $env:GITHUB_OUTPUT
+          "Installer: $($installer.Name)"
+          "SHA256: $hash"
+
+      - name: Preserve the installer as a workflow artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: qBittorrent-Material-${{ env.QBT_BUILD_ID }}-windows-x64
+          path: ${{ steps.package.outputs.installer }}
+          if-no-files-found: error
+
+      - name: Create or update this push's prerelease
+        shell: pwsh
+        env:
+          GH_TOKEN: ${{ github.token }}
+          INSTALLER_PATH: ${{ steps.package.outputs.installer }}
+          INSTALLER_SHA256: ${{ steps.package.outputs.sha256 }}
+        run: |
+          $shortSha = $env:GITHUB_SHA.Substring(0, 8)
+          $tag = "build-$env:GITHUB_RUN_NUMBER-$shortSha"
+          $title = "qBittorrent Material build #$env:GITHUB_RUN_NUMBER ($shortSha)"
+
+          if (gh release view $tag --repo $env:GITHUB_REPOSITORY 2>$null) {
+            gh release upload $tag $env:INSTALLER_PATH `
+              --clobber `
+              --repo $env:GITHUB_REPOSITORY
+          }
+          else {
+            $notes = @"
+          Automated Windows prerelease for commit ``$env:GITHUB_SHA``.
+
+          - Build: ``$env:QBT_BUILD_ID``
+          - Branch: ``$env:GITHUB_REF_NAME``
+          - Installer SHA256: ``$env:INSTALLER_SHA256``
+          "@
+
+            gh release create $tag $env:INSTALLER_PATH `
+              --repo $env:GITHUB_REPOSITORY `
+              --target $env:GITHUB_SHA `
+              --title $title `
+              --notes $notes `
+              --prerelease `
+              --latest=false
+          }

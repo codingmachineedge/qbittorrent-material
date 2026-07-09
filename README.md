@@ -9,22 +9,35 @@ A ground-up rewrite of [qBittorrent](https://www.qbittorrent.org/) with a **Qt 6
 
 ## Status
 
-Feature-by-feature rewrite in progress. See [`docs/FEATURE_SPEC.md`](docs/FEATURE_SPEC.md) for the full inventory of cloned features and [`docs/PARITY.md`](docs/PARITY.md) for the checklist.
+Feature-by-feature rewrite in progress. See
+[`docs/FEATURE_SPEC.md`](docs/FEATURE_SPEC.md) for the full feature inventory.
 
 ## Building
 
-Requires:
+On Windows, the helper provisions Qt 6.8.3 and the remaining repository-local
+dependencies, then builds with MSVC 2022 and Ninja:
 
-- Qt 6.5+ (`Quick`, `QuickControls2`, `Qml`, `Core`, `Network`, `Widgets` for tray/native dialogs)
-- libtorrent-rasterbar 2.0+
-- CMake 3.21+, a C++20 compiler, Ninja
+```powershell
+# Build and run
+powershell -ExecutionPolicy Bypass -File .\run.ps1
 
-```sh
-cmake -B build -G Ninja -DCMAKE_PREFIX_PATH="<Qt6 dir>;<libtorrent dir>"
-cmake --build build
+# Build only
+powershell -ExecutionPolicy Bypass -File .\run.ps1 -NoRun
+
+# Build a self-contained Windows installer
+powershell -ExecutionPolicy Bypass -File .\run.ps1 -Package
 ```
 
-See [`docs/BUILDING.md`](docs/BUILDING.md).
+CPack writes local installers and SHA-256 checksums to `build\packages`.
+See [`docs/BUILDING.md`](docs/BUILDING.md) for prerequisites, manual CMake
+commands, and Linux/macOS instructions.
+
+## Continuous prereleases
+
+Every branch push runs a Windows installer build on GitHub Actions using
+`windows-2022` and Qt 6.8.3. A successful run publishes the installer as a
+workflow artifact and creates a uniquely tagged GitHub prerelease for that
+exact commit.
 
 ## License
 

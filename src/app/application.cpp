@@ -95,7 +95,7 @@ Application::Application(int &argc, char **argv)
     setOrganizationName(u"qBittorrent"_qs);
     setOrganizationDomain(u"qbittorrent.org"_qs);
     setApplicationVersion(QCoreApplication::applicationVersion().isEmpty()
-            ? u"5.0.0"_qs : QCoreApplication::applicationVersion());
+            ? u"5.3.0-material"_qs : QCoreApplication::applicationVersion());
     setApplicationDisplayName(u"qBittorrent"_qs);
     setQuitOnLastWindowClosed(false);  // closing the window may just hide to tray
 

@@ -31,10 +31,23 @@ import qBittorrent
 QtObject {
     id: typography
 
+    // The app-assets resource collection is mounted at qrc:/, so fonts under
+    // resources/fonts are available at qrc:/fonts/<file>. FontLoader registers
+    // each bundled face with the application and exposes its canonical family
+    // name; the literal fallbacks keep the UI usable if a package is damaged.
+    readonly property FontLoader robotoLoader: FontLoader {
+        source: "qrc:/fonts/Roboto.ttf"
+    }
+    readonly property FontLoader robotoMonoLoader: FontLoader {
+        source: "qrc:/fonts/RobotoMono.ttf"
+    }
+
     //! Primary UI font family.
-    readonly property string family: "Roboto"
+    readonly property string family: robotoLoader.status === FontLoader.Ready
+        ? robotoLoader.name : "Roboto"
     //! Monospaced family for tabular numerics (speeds/sizes/ratios).
-    readonly property string monoFamily: "Roboto Mono"
+    readonly property string monoFamily: robotoMonoLoader.status === FontLoader.Ready
+        ? robotoMonoLoader.name : "Roboto Mono"
 
     // ---- Display / headline / title -------------------------------------------
 
