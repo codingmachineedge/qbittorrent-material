@@ -1,0 +1,15 @@
+# qBittorrent (Material rewrite) — theme singletons
+#
+# There is exactly ONE QML module for the whole application: `qBittorrent`.
+# These theme singletons belong to that module and are therefore usable by name
+# (no local import) from any .qml file in the app. When built via
+# qt_add_qml_module the singleton flag is also applied through QT_QML_SINGLETON_TYPE;
+# this qmldir keeps the declarations explicit and authoritative.
+
+module qBittorrent
+
+singleton Theme 1.0 Theme.qml
+singleton Typography 1.0 Typography.qml
+singleton Spacing 1.0 Spacing.qml
+singleton Icons 1.0 Icons.qml
+singleton StateColors 1.0 StateColors.qml

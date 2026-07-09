@@ -1,0 +1,163 @@
+/*
+ * qBittorrent (Material rewrite) — a BitTorrent client
+ * Copyright (C) 2026  qBittorrent-Material contributors
+ *
+ * This program is free software; you can redistribute it and/or modify
+ * it under the terms of the GNU General Public License as published by
+ * the Free Software Foundation; either version 2 of the License, or
+ * (at your option) any later version.
+ *
+ * SPDX-License-Identifier: GPL-3.0-or-later
+ */
+
+pragma Singleton
+
+import QtQuick
+import QtQuick.Controls.Material
+
+/*!
+    \qmltype Theme
+    \brief Application color facade.
+
+    Thin QML facade over the C++ \c ThemeManager singleton. Every color in the
+    app is resolved through \c Theme.color(id) / \c Theme.stateColor(state) so
+    color policy lives in exactly one place. The light+dark hex tables are owned
+    by \c ThemeManager (see thememanager.cpp) and mirrored here as documentation
+    of the DESIGN_SYSTEM palette; call \c color() rather than the raw literals so
+    user \c config.json overrides and the named-id map are honored.
+
+    Root wiring (done once in Main.qml):
+    \code
+    Material.theme: Theme.materialTheme
+    Material.accent: Theme.accent
+    Material.primary: Theme.primary
+    Material.background: Theme.surface
+    Material.foreground: Theme.onSurface
+    \endcode
+*/
+QtObject {
+    id: theme
+
+    // ---- Scheme state (driven by ThemeManager) --------------------------------
+
+    //! True when the effective color scheme (resolving System) is dark.
+    readonly property bool isDark: ThemeManager.isDark
+
+    //! Material.theme value for the current scheme.
+    readonly property int materialTheme: isDark ? Material.Dark : Material.Light
+
+    // ---- Resolution -----------------------------------------------------------
+
+    /*!
+        Resolve a color \a id to a concrete color. Accepts Material/extended role
+        names ("primary", "onSurfaceVariant", "success", ...), named ids
+        ("StalledDownloading", "Log.Warning", "PiecesBar.Piece", ...) and literal
+        "#rrggbb" strings. Delegates to ThemeManager so overrides + the named-id
+        map are applied. Always returns a valid color.
+    */
+    function color(id) {
+        return ThemeManager.color(id);
+    }
+
+    /*!
+        Row TEXT color for a BitTorrent::TorrentState \a state (the int value).
+        Maps the state to its named id and resolves via ThemeManager, so the
+        row-color policy stays data-driven and override-able.
+    */
+    function stateColor(state) {
+        return ThemeManager.color(_stateName(state));
+    }
+
+    // Map a TorrentState int to its named-id (kept in sync with TransferState
+    // numeric values in CONTRACTS §6.3). Unknown -> "Unknown" -> muted.
+    function _stateName(state) {
+        switch (state) {
+        case 0:  return "ForcedDownloading";
+        case 1:  return "Downloading";
+        case 2:  return "ForcedDownloadingMetadata";
+        case 3:  return "DownloadingMetadata";
+        case 4:  return "StalledDownloading";
+        case 5:  return "ForcedUploading";
+        case 6:  return "Uploading";
+        case 7:  return "StalledUploading";
+        case 8:  return "CheckingResumeData";
+        case 9:  return "QueuedDownloading";
+        case 10: return "QueuedUploading";
+        case 11: return "CheckingUploading";
+        case 12: return "CheckingDownloading";
+        case 13: return "StoppedDownloading";
+        case 14: return "StoppedUploading";
+        case 15: return "Moving";
+        case 16: return "MissingFiles";
+        case 17: return "Error";
+        default: return "Unknown";
+        }
+    }
+
+    // ---- Convenience role properties (live-bound to the scheme) ----------------
+    // Each is just color("<role>") so overrides still apply; exposed by name for
+    // ergonomic bindings (e.g. `color: Theme.onSurface`).
+
+    readonly property color primary: color("primary")
+    readonly property color onPrimary: color("onPrimary")
+    readonly property color primaryContainer: color("primaryContainer")
+    readonly property color onPrimaryContainer: color("onPrimaryContainer")
+    readonly property color primaryEmphasis: color("primaryEmphasis")
+
+    readonly property color secondary: color("secondary")
+    readonly property color onSecondary: color("onSecondary")
+    readonly property color tertiary: color("tertiary")
+    readonly property color onTertiary: color("onTertiary")
+
+    readonly property color surface: color("surface")
+    readonly property color surfaceVariant: color("surfaceVariant")
+    readonly property color onSurface: color("onSurface")
+    readonly property color onSurfaceVariant: color("onSurfaceVariant")
+    readonly property color background: color("background")
+    readonly property color onBackground: color("onBackground")
+
+    readonly property color outline: color("outline")
+    readonly property color outlineVariant: color("outlineVariant")
+
+    readonly property color error: color("error")
+    readonly property color onError: color("onError")
+    readonly property color errorContainer: color("errorContainer")
+    readonly property color onErrorContainer: color("onErrorContainer")
+
+    // qBittorrent extended roles.
+    readonly property color success: color("success")
+    readonly property color successEmphasis: color("successEmphasis")
+    readonly property color warning: color("warning")
+    readonly property color done: color("done")
+    readonly property color info: color("info")
+    readonly property color muted: color("muted")
+    readonly property color severe: color("severe")
+
+    //! The Material accent used at the window root.
+    readonly property color accent: primary
+
+    // ---- Interaction-state overlays (Material state layers) --------------------
+    // Alpha overlays applied on hover/press/selection per DESIGN_SYSTEM §3.
+    readonly property real hoverOpacity: 0.08
+    readonly property real selectedOpacity: 0.12
+    readonly property real pressedOpacity: 0.16
+    //! Alternating-row tint = surfaceVariant @ 40%.
+    readonly property color alternateRow: Qt.rgba(surfaceVariant.r, surfaceVariant.g,
+                                                  surfaceVariant.b, 0.40)
+
+    // ---- Elevation tokens (Material `elevation`) ------------------------------
+    readonly property int elevationPage: 0
+    readonly property int elevationRail: 0
+    readonly property int elevationCard: 1
+    readonly property int elevationCardExpanded: 2
+    readonly property int elevationToolbar: 0
+    readonly property int elevationMenu: 8
+    readonly property int elevationSnackbar: 6
+    readonly property int elevationDialog: 24
+    readonly property int elevationFab: 6
+
+    Component.onCompleted: Log.debug("theme", "Theme singleton ready; isDark=" + isDark)
+
+    // Re-log whenever the scheme flips so theme changes are traceable.
+    onIsDarkChanged: Log.info("theme", "Effective color scheme changed; isDark=" + isDark)
+}
