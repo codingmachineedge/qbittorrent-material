@@ -16,49 +16,49 @@
 
 #include "base/logging.h"
 
-Log *Log::create(QQmlEngine *engine, QJSEngine *scriptEngine)
+LogBridge *LogBridge::create(QQmlEngine *engine, QJSEngine *scriptEngine)
 {
     Q_UNUSED(engine)
     Q_UNUSED(scriptEngine)
 
-    auto *instance = new Log;
+    auto *instance = new LogBridge;
     // The QML engine takes ownership of the returned singleton.
     QJSEngine::setObjectOwnership(instance, QJSEngine::CppOwnership);
-    qCDebug(lcLog) << "Log QML singleton created";
+    qCDebug(lcLog) << "LogBridge QML singleton created";
     return instance;
 }
 
-Log::Log(QObject *parent)
+LogBridge::LogBridge(QObject *parent)
     : QObject(parent)
 {
 }
 
-void Log::trace(const QString &category, const QString &message)
+void LogBridge::trace(const QString &category, const QString &message)
 {
     // Qt has no trace level; route to debug so it still reaches every sink.
     const QLoggingCategory &cat = Logging::categoryForTag(category);
     QMessageLogger(nullptr, 0, nullptr, cat.categoryName()).debug(cat).noquote() << message;
 }
 
-void Log::debug(const QString &category, const QString &message)
+void LogBridge::debug(const QString &category, const QString &message)
 {
     const QLoggingCategory &cat = Logging::categoryForTag(category);
     QMessageLogger(nullptr, 0, nullptr, cat.categoryName()).debug(cat).noquote() << message;
 }
 
-void Log::info(const QString &category, const QString &message)
+void LogBridge::info(const QString &category, const QString &message)
 {
     const QLoggingCategory &cat = Logging::categoryForTag(category);
     QMessageLogger(nullptr, 0, nullptr, cat.categoryName()).info(cat).noquote() << message;
 }
 
-void Log::warning(const QString &category, const QString &message)
+void LogBridge::warning(const QString &category, const QString &message)
 {
     const QLoggingCategory &cat = Logging::categoryForTag(category);
     QMessageLogger(nullptr, 0, nullptr, cat.categoryName()).warning(cat).noquote() << message;
 }
 
-void Log::critical(const QString &category, const QString &message)
+void LogBridge::critical(const QString &category, const QString &message)
 {
     const QLoggingCategory &cat = Logging::categoryForTag(category);
     QMessageLogger(nullptr, 0, nullptr, cat.categoryName()).critical(cat).noquote() << message;

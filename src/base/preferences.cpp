@@ -68,6 +68,16 @@ Preferences *Preferences::instance()
     return m_instance;
 }
 
+QVariant Preferences::value(const QString &key, const QVariant &defaultValue) const
+{
+    return SettingsStorage::instance()->loadValue<QVariant>(key, defaultValue);
+}
+
+void Preferences::setValue(const QString &key, const QVariant &value)
+{
+    SettingsStorage::instance()->storeValue(key, value);
+}
+
 void Preferences::initInstance()
 {
     if (!m_instance)

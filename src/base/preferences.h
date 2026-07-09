@@ -71,6 +71,11 @@ public:
     static void freeInstance();
     static Preferences *instance();
 
+    // Generic passthrough to the underlying settings store. Used by the QML
+    // bridge layer (controllers/theme/i18n) for keys without a typed accessor.
+    QVariant value(const QString &key, const QVariant &defaultValue = {}) const;
+    void setValue(const QString &key, const QVariant &value);
+
     // General options
     QString getLocale() const;
     void setLocale(const QString &locale);

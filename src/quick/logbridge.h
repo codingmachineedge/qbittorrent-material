@@ -33,17 +33,19 @@
  * "search" "log"); it is mapped to the matching @c QLoggingCategory so QML logs
  * flow through exactly the same file + Execution-Log sinks as C++ logs.
  */
-class Log final : public QObject
+// Named LogBridge in C++ (avoids clashing with the upstream-compat `namespace
+// Log` in base/logger.h); exposed to QML as the singleton `Log`.
+class LogBridge final : public QObject
 {
     Q_OBJECT
-    QML_ELEMENT
+    QML_NAMED_ELEMENT(Log)
     QML_SINGLETON
 
 public:
     /// QML singleton factory — returns the shared instance.
-    static Log *create(QQmlEngine *engine, QJSEngine *scriptEngine);
+    static LogBridge *create(QQmlEngine *engine, QJSEngine *scriptEngine);
 
-    explicit Log(QObject *parent = nullptr);
+    explicit LogBridge(QObject *parent = nullptr);
 
     /// Lowest verbosity — routed to qCDebug (Qt has no distinct trace level).
     Q_INVOKABLE void trace(const QString &category, const QString &message);
