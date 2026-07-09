@@ -13,6 +13,7 @@
 #include "torrentimpl.h"
 
 #include <algorithm>
+#include <limits>
 #include <memory>
 
 #include <libtorrent/address.hpp>
@@ -27,6 +28,7 @@
 #include <QtSystemDetection>
 #include <QByteArray>
 #include <QDebug>
+#include <QFuture>
 #include <QPromise>
 #include <QSet>
 #include <QStringList>
@@ -35,6 +37,8 @@
 #include "base/global.h"
 #include "base/logging.h"
 #include "base/preferences.h"
+#include "base/settingsstorage.h"
+#include "base/types.h"
 #include "base/utils/fs.h"
 #include "base/utils/io.h"
 #include "base/utils/string.h"
@@ -46,6 +50,7 @@
 #include "peeraddress.h"
 #include "peerinfo.h"
 #include "sessionimpl.h"
+#include "torrentdescriptor.h"
 #include "trackerentry.h"
 
 using namespace BitTorrent;
@@ -79,6 +84,38 @@ namespace
         // TODO(engine): fully translate per-endpoint libtorrent announce state into
         // our TrackerEndpointStatus map. The common single-endpoint path is wired below.
         trackerEntryStatus.tier = nativeEntry.tier;
+    }
+
+    // This is an imitation of the limit normalization performed by libtorrent itself.
+    // We need to perform it to keep cached values in line with the ones used by libtorrent.
+    int cleanLimitValue(const int value)
+    {
+        return ((value < 0) || (value == std::numeric_limits<int>::max())) ? 0 : value;
+    }
+
+    // Seed the native status snapshot from the add_torrent_params so that the torrent
+    // exposes sane values before libtorrent delivers the first status update alert.
+    void initializeStatus(lt::torrent_status &status, const lt::add_torrent_params &params)
+    {
+        status.flags = params.flags;
+        status.save_path = params.save_path;
+        status.added_time = params.added_time;
+        status.completed_time = params.completed_time;
+        status.last_seen_complete = params.last_seen_complete;
+        status.all_time_upload = params.total_uploaded;
+        status.all_time_download = params.total_downloaded;
+    }
+
+    // Torrent is paused internally by libtorrent (as opposed to being user-stopped).
+    bool isPaused(const lt::torrent_status &nativeStatus)
+    {
+        return static_cast<bool>(nativeStatus.flags & lt::torrent_flags::paused);
+    }
+
+    // Torrent is "queued" when libtorrent auto-manages it but currently keeps it paused.
+    bool isQueuedInternal(const lt::torrent_status &nativeStatus)
+    {
+        return static_cast<bool>(nativeStatus.flags & lt::torrent_flags::paused);
     }
 }
 
@@ -298,7 +335,7 @@ Path TorrentImpl::rootPath() const
     if (!hasMetadata())
         return {};
 
-    const Path relativeRootPath = Path(m_torrentInfo.filePath(0)).relativeRootPath();
+    const Path relativeRootPath = Path::findRootFolder(filePaths());
     if (relativeRootPath.isEmpty())
         return {};
 
@@ -330,7 +367,7 @@ bool TorrentImpl::belongsToCategory(const QString &category) const
     if (m_category == category)
         return true;
 
-    return Preferences::instance()->useSubcategories()
+    return SettingsStorage::instance()->loadValue(u"BitTorrent/Session/SubcategoriesEnabled"_s, false)
             && (m_category.startsWith(category + u'/'));
 }
 
@@ -425,7 +462,7 @@ qreal TorrentImpl::progress() const
         return m_nativeStatus.progress;
 
     if (m_nativeStatus.total_wanted == 0)
-        return isPaused() ? 0 : 1;
+        return isPaused(m_nativeStatus) ? 0 : 1;
 
     if (m_nativeStatus.total_wanted_done == m_nativeStatus.total_wanted)
         return 1;
@@ -587,7 +624,7 @@ bool TorrentImpl::isQueued() const
             && (m_nativeStatus.state == lt::torrent_status::checking_files
                 || m_nativeStatus.state == lt::torrent_status::downloading
                 || m_nativeStatus.state == lt::torrent_status::seeding)
-            && isQueuedInternal();
+            && isQueuedInternal(m_nativeStatus);
 }
 
 bool TorrentImpl::isForced() const
@@ -1106,12 +1143,10 @@ void TorrentImpl::doRenameFolder(const Path &oldFolderPath, const Path &newFolde
     for (int i = 0; i < filesCount(); ++i)
     {
         const Path filePath = this->filePath(i);
-        if (!filePath.startsWith(oldFolderPath, Qt::CaseSensitive))
+        if (!filePath.hasAncestor(oldFolderPath))
             continue;
 
-        Path newFilePath = filePath;
-        newFilePath.removePrefix(oldFolderPath);
-        newFilePath = newFolderPath / newFilePath;
+        const Path newFilePath = newFolderPath / oldFolderPath.relativePathOf(filePath);
 
         jobInfo.renamedFiles.insert(i, newFilePath);
         doRenameFile(i, newFilePath, jobID);
@@ -1471,7 +1506,7 @@ nonstd::expected<void, QString> TorrentImpl::exportToFile(const Path &path) cons
 
     const auto result = Utils::IO::saveToFile(path, buffer.value());
     if (!result)
-        return nonstd::make_unexpected(result.error().message);
+        return nonstd::make_unexpected(result.error());
 
     return {};
 }

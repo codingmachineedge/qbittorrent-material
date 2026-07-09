@@ -1715,6 +1715,13 @@ void SessionImpl::exportTorrentFile(const Torrent *torrent, const Path &folderPa
 
 void SessionImpl::handleTorrentResumeDataRequested(const TorrentImpl *) {}
 
+void SessionImpl::handleTorrentNeedSaveResumeData(TorrentImpl *torrent)
+{
+    // Schedule a (coalesced) resume-data save for the torrent. The torrent defers the
+    // actual save_resume_data() request onto the event loop and collapses duplicates.
+    torrent->deferredRequestResumeData();
+}
+
 void SessionImpl::handleTorrentResumeDataReady(TorrentImpl *torrent, LoadTorrentParams data)
 {
     Q_UNUSED(torrent);
