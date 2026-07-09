@@ -9,11 +9,16 @@
 cmake_minimum_required(VERSION 3.21 FATAL_ERROR)
 
 project(qbittorrent-material
-    VERSION 5.0.0
+    VERSION 5.3.0
     DESCRIPTION "qBittorrent — Material (Qt Quick) rewrite"
     HOMEPAGE_URL "https://www.qbittorrent.org/"
     LANGUAGES CXX
 )
+
+# A per-build identifier used only for package/release filenames. CI supplies a
+# unique value; local packages retain the fork marker used by src/base/version.h.
+set(QBT_BUILD_ID "material" CACHE STRING
+    "Build identifier appended to installer filenames (for example build.42.a1b2c3d4)")
 
 # --- Global language settings -------------------------------------------------
 set(CMAKE_CXX_STANDARD 20)
@@ -109,3 +114,51 @@ if (WIN32)
 endif()
 
 add_subdirectory(src)
+
+# --- Packaging ---------------------------------------------------------------
+# Keep the numeric package version aligned with PROJECT_VERSION and the engine
+# version header. QBT_BUILD_ID differentiates continuous installers without
+# pretending each build is a new semantic version.
+set(_qbt_package_build_id "${QBT_BUILD_ID}")
+if (_qbt_package_build_id STREQUAL "")
+    set(_qbt_package_build_id "material")
+endif()
+string(REGEX REPLACE "[^A-Za-z0-9._-]+" "-"
+    _qbt_package_build_id "${_qbt_package_build_id}")
+
+set(CPACK_PACKAGE_NAME "qBittorrent Material")
+set(CPACK_PACKAGE_VENDOR "qBittorrent Material contributors")
+set(CPACK_PACKAGE_DESCRIPTION_SUMMARY "A Qt Quick Material desktop BitTorrent client")
+set(CPACK_PACKAGE_HOMEPAGE_URL "https://github.com/codingmachineedge/qbittorrent-material")
+set(CPACK_PACKAGE_VERSION "${PROJECT_VERSION}")
+set(CPACK_PACKAGE_VERSION_MAJOR "${PROJECT_VERSION_MAJOR}")
+set(CPACK_PACKAGE_VERSION_MINOR "${PROJECT_VERSION_MINOR}")
+set(CPACK_PACKAGE_VERSION_PATCH "${PROJECT_VERSION_PATCH}")
+set(CPACK_PACKAGE_INSTALL_DIRECTORY "qBittorrent Material")
+set(CPACK_PACKAGE_DIRECTORY "${CMAKE_BINARY_DIR}/packages")
+set(CPACK_PACKAGE_CHECKSUM "SHA256")
+set(CPACK_MONOLITHIC_INSTALL ON)
+
+if (WIN32)
+    set(CPACK_GENERATOR "NSIS")
+    set(CPACK_PACKAGE_FILE_NAME
+        "qBittorrent-Material-${PROJECT_VERSION}-${_qbt_package_build_id}-windows-x64")
+    set(CPACK_PACKAGE_EXECUTABLES "qbittorrent" "qBittorrent Material")
+    set(CPACK_CREATE_DESKTOP_LINKS "qbittorrent")
+    set(CPACK_NSIS_EXECUTABLES_DIRECTORY "bin")
+    set(CPACK_NSIS_DISPLAY_NAME "qBittorrent Material ${PROJECT_VERSION}")
+    set(CPACK_NSIS_PACKAGE_NAME "qBittorrent Material")
+    set(CPACK_NSIS_INSTALLED_ICON_NAME "bin\\\\qbittorrent.exe")
+    set(CPACK_NSIS_MUI_FINISHPAGE_RUN "bin\\\\qbittorrent.exe")
+    set(CPACK_NSIS_ENABLE_UNINSTALL_BEFORE_INSTALL ON)
+    set(CPACK_NSIS_MODIFY_PATH OFF)
+    set(CPACK_NSIS_MANIFEST_DPI_AWARE ON)
+    set(CPACK_NSIS_BRANDING_TEXT "qBittorrent Material")
+    set(CPACK_NSIS_URL_INFO_ABOUT "${CPACK_PACKAGE_HOMEPAGE_URL}")
+    set(CPACK_NSIS_CONTACT "qBittorrent Material contributors")
+    # The repository currently has no distributable LICENSE file. Do not show
+    # CPack's generic placeholder as if it were the application's license.
+    set(CPACK_NSIS_IGNORE_LICENSE_PAGE ON)
+endif()
+
+include(CPack)

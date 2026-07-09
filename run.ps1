@@ -1,13 +1,14 @@
 <#
-  qBittorrent Material — one-click build & run (Windows)
+  qBittorrent Material - one-click build & run (Windows)
 
-  Fully automatic: installs every dependency into the repo (nothing global),
-  configures, builds, and launches the app. Safe to re-run — each step is
-  skipped if already done.
+  Fully automatic after MSVC is present: provisions missing command-line tools,
+  keeps Qt and vcpkg inside the repo, configures, builds, and launches the app.
+  Safe to re-run; completed dependency work is reused.
 
   Usage:
       powershell -ExecutionPolicy Bypass -File run.ps1        # build + run
       ...-File run.ps1 -NoRun                                  # build only
+      ...-File run.ps1 -Package                                # build NSIS installer
       ...-File run.ps1 -Clean                                  # wipe build/ first
       ...-File run.ps1 -Jobs 8                                 # parallel build jobs
 
@@ -19,10 +20,12 @@
     - Python 3              -> used to fetch Qt (aqtinstall)
     - Qt 6.8.3 (msvc2022_64) -> fetched into .\.qt via aqtinstall
     - vcpkg + libtorrent/zlib -> cloned into .\.vcpkg and built
+    - NSIS 3                -> installed via winget only when -Package is used
 #>
 [CmdletBinding()]
 param(
     [switch]$NoRun,
+    [switch]$Package,
     [switch]$Clean,
     [int]$Jobs = 0
 )
@@ -32,17 +35,34 @@ $Repo = $PSScriptRoot
 $QtVersion = '6.8.3'
 $QtArch = 'win64_msvc2022_64'
 $QtDirName = 'msvc2022_64'
-$Triplet = 'x64-windows'
+$Triplet = 'x64-windows-static-md'
+$VcpkgBaseline = '40a9bd4ccdf5dc14ff76d4ed47d46a226ce84a83'
 $QtRoot = Join-Path $Repo '.qt'
 $QtPrefix = Join-Path $QtRoot "$QtVersion\$QtDirName"
 $VcpkgRoot = Join-Path $Repo '.vcpkg'
 $BuildDir = Join-Path $Repo 'build'
+$PackageDir = Join-Path $BuildDir 'packages'
 
 function Info($m) { Write-Host "==> $m" -ForegroundColor Cyan }
 function Warn($m) { Write-Host "!!  $m" -ForegroundColor Yellow }
 function Die($m)  { Write-Host "ERROR: $m" -ForegroundColor Red; exit 1 }
 
 function Have($cmd) { return [bool](Get-Command $cmd -ErrorAction SilentlyContinue) }
+
+function Find-Python {
+    $candidates = @(
+        'python',
+        'py',
+        (Join-Path $env:LOCALAPPDATA 'Programs\Python\Python312\python.exe'),
+        (Join-Path $env:ProgramFiles 'Python312\python.exe')
+    )
+    foreach ($candidate in $candidates) {
+        if (-not (Test-Path $candidate) -and -not (Have $candidate)) { continue }
+        & $candidate -c 'import sys; print(sys.executable)' *> $null
+        if ($LASTEXITCODE -eq 0) { return $candidate }
+    }
+    return $null
+}
 
 # --- 0. winget helper for cmake/ninja -----------------------------------------
 function Ensure-Tool($cmd, $wingetId, $friendly) {
@@ -51,9 +71,50 @@ function Ensure-Tool($cmd, $wingetId, $friendly) {
         Info "Installing $friendly via winget..."
         winget install --id $wingetId --accept-source-agreements --accept-package-agreements -e --silent | Out-Host
     }
+    # Most installers update the persistent PATH, not this PowerShell process.
+    # Add the known install directories before checking again.
+    $knownDirs = switch ($cmd) {
+        'cmake' { @((Join-Path $env:ProgramFiles 'CMake\bin')) }
+        'ninja' {
+            @(
+                (Join-Path $env:LOCALAPPDATA 'Microsoft\WinGet\Links'),
+                (Join-Path $env:ProgramFiles 'Ninja')
+            )
+        }
+        default { @() }
+    }
+    foreach ($dir in $knownDirs) {
+        if ($dir -and (Test-Path (Join-Path $dir "$cmd.exe"))) {
+            $env:PATH = "$dir;$env:PATH"
+            break
+        }
+    }
     if (-not (Have $cmd)) {
         Die "$friendly ($cmd) not found and could not be auto-installed. Install it and re-run."
     }
+}
+
+function Ensure-Nsis {
+    if (Have 'makensis') { return }
+
+    $candidates = @(
+        (Join-Path ${env:ProgramFiles(x86)} 'NSIS\makensis.exe'),
+        (Join-Path $env:ProgramFiles 'NSIS\makensis.exe')
+    )
+    $found = $candidates | Where-Object { $_ -and (Test-Path $_) } | Select-Object -First 1
+
+    if (-not $found -and (Have 'winget')) {
+        Info 'Installing NSIS via winget...'
+        winget install --id NSIS.NSIS --accept-source-agreements `
+            --accept-package-agreements -e --silent | Out-Host
+        $found = $candidates | Where-Object { $_ -and (Test-Path $_) } | Select-Object -First 1
+    }
+
+    if ($found) {
+        $env:PATH = "$(Split-Path $found);$env:PATH"
+        return
+    }
+    Die 'NSIS (makensis) was not found. Install NSIS 3 and re-run with -Package.'
 }
 
 # --- 1. Locate MSVC (vcvars64) -------------------------------------------------
@@ -84,40 +145,67 @@ function Ensure-Qt {
         Info "Qt $QtVersion already present at $QtPrefix"
         return
     }
-    $py = if (Have 'python') { 'python' } elseif (Have 'py') { 'py' } else { $null }
-    if (-not $py) { Ensure-Tool 'python' 'Python.Python.3.12' 'Python 3'; $py = 'python' }
+    # A Windows Store app-execution alias can make Get-Command report Python
+    # even though no interpreter is installed, so validate by executing it.
+    $py = Find-Python
+    if (-not $py -and (Have 'winget')) {
+        Info 'Installing Python 3 via winget...'
+        winget install --id Python.Python.3.12 --accept-source-agreements `
+            --accept-package-agreements -e --silent | Out-Host
+        $py = Find-Python
+    }
+    if (-not $py) { Die 'Python 3 was not found and could not be auto-installed.' }
     Info "Installing aqtinstall (Qt downloader)..."
     & $py -m pip install --quiet --upgrade aqtinstall
+    if ($LASTEXITCODE -ne 0) { Die 'Could not install aqtinstall.' }
     Info "Downloading Qt $QtVersion $QtArch into $QtRoot (a few minutes)..."
     & $py -m aqt install-qt windows desktop $QtVersion $QtArch `
         -m qt5compat qtimageformats qtshadertools --outputdir $QtRoot
+    if ($LASTEXITCODE -ne 0) { Die 'Qt download failed.' }
     if (-not (Test-Path (Join-Path $QtPrefix 'bin\qmake.exe'))) { Die "Qt install failed." }
 }
 
 # --- 3. vcpkg + libtorrent -----------------------------------------------------
 function Ensure-Vcpkg {
-    if (-not (Test-Path (Join-Path $VcpkgRoot 'vcpkg.exe'))) {
-        if (-not (Test-Path $VcpkgRoot)) {
-            Info "Cloning vcpkg into $VcpkgRoot ..."
-            git clone --depth 1 https://github.com/microsoft/vcpkg.git $VcpkgRoot | Out-Host
-        }
-        Info "Bootstrapping vcpkg..."
-        & (Join-Path $VcpkgRoot 'bootstrap-vcpkg.bat') -disableMetrics | Out-Host
+    if (-not (Test-Path $VcpkgRoot)) {
+        Info "Cloning vcpkg into $VcpkgRoot ..."
+        git clone --filter=blob:none https://github.com/microsoft/vcpkg.git $VcpkgRoot | Out-Host
+        if ($LASTEXITCODE -ne 0) { Die 'Could not clone vcpkg.' }
     }
+    if (-not (Test-Path (Join-Path $VcpkgRoot '.git'))) {
+        Die "$VcpkgRoot exists but is not a vcpkg Git checkout. Move it aside and re-run."
+    }
+
+    git -C $VcpkgRoot cat-file -e "$VcpkgBaseline^{commit}" 2>$null
+    if ($LASTEXITCODE -ne 0) {
+        Info "Fetching pinned vcpkg baseline $VcpkgBaseline ..."
+        git -C $VcpkgRoot fetch --depth 1 origin $VcpkgBaseline | Out-Host
+        if ($LASTEXITCODE -ne 0) { Die 'Could not fetch the pinned vcpkg baseline.' }
+    }
+    git -C $VcpkgRoot checkout --detach $VcpkgBaseline | Out-Host
+    if ($LASTEXITCODE -ne 0) { Die 'Could not check out the pinned vcpkg baseline.' }
+
+    # Re-run the inexpensive bootstrap check after selecting the baseline so an
+    # existing vcpkg.exe can never drift from the pinned source revision.
+    Info "Ensuring the pinned vcpkg tool is bootstrapped..."
+    & (Join-Path $VcpkgRoot 'bootstrap-vcpkg.bat') -disableMetrics | Out-Host
+    if ($LASTEXITCODE -ne 0) { Die 'Could not bootstrap vcpkg.' }
     $vcpkg = Join-Path $VcpkgRoot 'vcpkg.exe'
-    $installed = Join-Path $VcpkgRoot "installed\$Triplet\lib\torrent-rasterbar.lib"
-    if (Test-Path $installed) {
-        Info "libtorrent already built in vcpkg."
-    } else {
-        Warn "Building libtorrent + Boost + OpenSSL + zlib from source."
-        Warn "FIRST run only; this can take 30-90 minutes. Subsequent runs are instant."
-        & $vcpkg install "libtorrent:$Triplet" "zlib:$Triplet" --clean-after-build | Out-Host
-        if (-not (Test-Path $installed)) { Die "vcpkg failed to build libtorrent." }
-    }
+    $installedRoot = Join-Path $VcpkgRoot 'installed'
+    Warn "Restoring the vcpkg manifest for $Triplet."
+    Warn "FIRST run only; this can take 30-90 minutes. Subsequent runs are incremental."
+    & $vcpkg install --triplet $Triplet `
+        --x-manifest-root="$Repo" `
+        --x-install-root="$installedRoot" `
+        --clean-after-build | Out-Host
+    if ($LASTEXITCODE -ne 0) { Die 'vcpkg dependency restore failed.' }
+
+    $installed = Join-Path $installedRoot "$Triplet\lib\torrent-rasterbar.lib"
+    if (-not (Test-Path $installed)) { Die 'vcpkg completed but libtorrent was not installed.' }
 }
 
 # --- MAIN ----------------------------------------------------------------------
-Info "qBittorrent Material — automatic build & run"
+Info "qBittorrent Material - automatic build & run"
 Info "Repo: $Repo"
 
 if ($Clean -and (Test-Path $BuildDir)) { Info "Cleaning build/"; Remove-Item -Recurse -Force $BuildDir }
@@ -145,6 +233,8 @@ cmake -B $BuildDir -S $Repo -G Ninja `
     -DCMAKE_BUILD_TYPE=Release `
     -DCMAKE_TOOLCHAIN_FILE="$VcpkgRoot/scripts/buildsystems/vcpkg.cmake" `
     -DVCPKG_TARGET_TRIPLET=$Triplet `
+    -DVCPKG_INSTALLED_DIR="$VcpkgRoot/installed" `
+    -DVCPKG_MANIFEST_MODE=ON `
     -DCMAKE_PREFIX_PATH="$QtPrefix"
 if ($LASTEXITCODE -ne 0) { Die "CMake configure failed." }
 
@@ -155,6 +245,25 @@ if ($LASTEXITCODE -ne 0) { Die "Build failed." }
 $exe = Get-ChildItem -Path $BuildDir -Recurse -Filter 'qbittorrent.exe' -ErrorAction SilentlyContinue | Select-Object -First 1
 if (-not $exe) { Die "Build succeeded but qbittorrent.exe not found." }
 Info "Build OK: $($exe.FullName)"
+
+if ($Package) {
+    Ensure-Nsis
+    Info 'Building the self-contained NSIS installer...'
+    cmake --build $BuildDir --target package
+    if ($LASTEXITCODE -ne 0) { Die 'Installer packaging failed.' }
+
+    $installer = Get-ChildItem -Path $PackageDir `
+        -Filter 'qBittorrent-Material-*-windows-x64.exe' `
+        -File -ErrorAction SilentlyContinue |
+        Sort-Object LastWriteTime -Descending |
+        Select-Object -First 1
+    if (-not $installer) { Die "Packaging succeeded but no installer was found in $PackageDir." }
+
+    Info "Installer OK: $($installer.FullName)"
+    $checksum = "$($installer.FullName).sha256"
+    if (Test-Path $checksum) { Info "Checksum: $checksum" }
+    exit 0
+}
 
 # Ensure Qt runtime DLLs are next to the exe for a portable run.
 $windeployqt = Join-Path $QtPrefix 'bin\windeployqt.exe'

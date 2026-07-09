@@ -220,3 +220,15 @@ install(TARGETS qbittorrent
     BUNDLE  DESTINATION .
     RUNTIME DESTINATION bin
 )
+
+# Produce a self-contained install tree. On Windows this invokes windeployqt at
+# install/package time, including the Qt libraries, plugins, QML imports, and
+# compiler runtime needed by the application. Third-party engine libraries are
+# linked statically through the x64-windows-static-md vcpkg triplet.
+qt_generate_deploy_qml_app_script(
+    TARGET qbittorrent
+    OUTPUT_SCRIPT qbt_deploy_script
+    NO_UNSUPPORTED_PLATFORM_ERROR
+    DEPLOY_USER_QML_MODULES_ON_UNSUPPORTED_PLATFORM
+)
+install(SCRIPT "${qbt_deploy_script}")

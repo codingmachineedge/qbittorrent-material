@@ -52,10 +52,10 @@ Item {
 
     /*!
         Location of the bundled Material Symbols font. Overridable for tests /
-        alternate packaging; defaults to the module resource path produced by
-        \c qt_add_qml_module.
+        alternate packaging; defaults to the app-assets resource path produced
+        by \c qt_add_resources.
     */
-    property string fontSource: "qrc:/qt/qml/qBittorrent/fonts/MaterialSymbolsOutlined.ttf"
+    property string fontSource: "qrc:/fonts/MaterialSymbolsOutlined.ttf"
 
     // Fixed square footprint so icons align on a grid regardless of glyph metrics.
     implicitWidth: size
