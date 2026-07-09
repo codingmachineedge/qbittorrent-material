@@ -13,6 +13,7 @@
 #pragma once
 
 #include <memory>
+#include <vector>
 
 #include <QAbstractItemModel>
 #include <QHash>
@@ -73,7 +74,7 @@ public:
         if ((column != 0) || (row < 0))
             return {};
         const Node *const parentNode = nodeFor(parent);
-        if (!parentNode || (row >= parentNode->children.size()))
+        if (!parentNode || (row >= static_cast<int>(parentNode->children.size())))
             return {};
         return createIndex(row, column, parentNode->children.at(row).get());
     }
@@ -132,13 +133,15 @@ private:
         QString displayName;    ///< leaf label
         int count = 0;
         Node *parent = nullptr;
-        QList<std::unique_ptr<Node>> children;
+        // std::vector (not QList): a move-only element type must not force QList's
+        // copyAppend instantiation, which the QML type registration triggers.
+        std::vector<std::unique_ptr<Node>> children;
 
         [[nodiscard]] int rowInParent() const
         {
             if (!parent)
                 return 0;
-            for (int i = 0; i < parent->children.size(); ++i)
+            for (int i = 0; i < static_cast<int>(parent->children.size()); ++i)
             {
                 if (parent->children.at(i).get() == this)
                     return i;
