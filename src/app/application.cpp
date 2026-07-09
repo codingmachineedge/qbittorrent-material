@@ -1,0 +1,337 @@
+/*
+ * qBittorrent (Material rewrite) — a BitTorrent client
+ * Copyright (C) 2026  qBittorrent-Material contributors
+ *
+ * This program is free software; you can redistribute it and/or modify
+ * it under the terms of the GNU General Public License as published by
+ * the Free Software Foundation; either version 2 of the License, or
+ * (at your option) any later version.
+ *
+ * SPDX-License-Identifier: GPL-3.0-or-later
+ */
+
+#include "application.h"
+
+#include <QCryptographicHash>
+#include <QDateTime>
+#include <QDir>
+#include <QIcon>
+#include <QLocalServer>
+#include <QLocalSocket>
+#include <QQmlApplicationEngine>
+#include <QQmlContext>
+#include <QStandardPaths>
+#include <QTranslator>
+#include <QVariantMap>
+
+#include "base/logging.h"
+#include "app/appcontroller.h"
+#include "app/desktopintegration.h"
+
+// --- Optional cross-team engine headers (tolerant coupling) ------------------
+// Application depends on engine/i18n headers produced by other feature teams.
+// Guarding with __has_include keeps the bootstrap compiling while those files
+// are still landing, and lights up the real wiring the moment they exist.
+#if __has_include("base/preferences.h")
+#include "base/preferences.h"
+#define QBT_HAS_PREFERENCES 1
+#endif
+
+#if __has_include("base/bittorrent/session.h")
+#include "base/bittorrent/session.h"
+#define QBT_HAS_SESSION 1
+#endif
+
+#if __has_include("base/utils/i18n/funnytranslator.h")
+#include "base/utils/i18n/funnytranslator.h"
+#define QBT_HAS_FUNNY_TRANSLATOR 1
+#elif __has_include("quick/i18n/funnytranslator.h")
+#include "quick/i18n/funnytranslator.h"
+#define QBT_HAS_FUNNY_TRANSLATOR 1
+#endif
+
+using namespace Qt::StringLiterals;
+
+namespace
+{
+    // Persisted setting key for the runtime UI language (see CONTRACTS §2.3).
+    const QString kLanguageKey = u"Appearance/Language"_qs;
+
+    /// A stable, per-user single-instance identifier (so two different logins
+    /// on the same host don't collide).
+    QString computeInstanceId()
+    {
+        const QString seed = QStandardPaths::writableLocation(QStandardPaths::AppConfigLocation)
+            + u'|' + qEnvironmentVariable("USER", qEnvironmentVariable("USERNAME"));
+        const QByteArray digest =
+            QCryptographicHash::hash(seed.toUtf8(), QCryptographicHash::Sha1).toHex().left(16);
+        return u"qbittorrent-material-"_qs + QString::fromLatin1(digest);
+    }
+}
+
+Application::Application(int &argc, char **argv)
+    : QApplication(argc, argv)
+    , m_launchTimeSecsSinceEpoch(QDateTime::currentSecsSinceEpoch())
+{
+    setApplicationName(u"qBittorrent"_qs);
+    setOrganizationName(u"qBittorrent"_qs);
+    setOrganizationDomain(u"qbittorrent.org"_qs);
+    setApplicationVersion(QCoreApplication::applicationVersion().isEmpty()
+            ? u"5.0.0"_qs : QCoreApplication::applicationVersion());
+    setApplicationDisplayName(u"qBittorrent"_qs);
+    setQuitOnLastWindowClosed(false);  // closing the window may just hide to tray
+
+    qCInfo(lcApp) << "Application constructed:" << applicationName()
+                  << applicationVersion() << "pid" << applicationPid();
+
+    setupSingleInstance();
+}
+
+Application::~Application()
+{
+    qCDebug(lcApp) << "Application destructor";
+    cleanup();
+
+    if (m_instanceServer)
+    {
+        m_instanceServer->close();
+        delete m_instanceServer;
+        m_instanceServer = nullptr;
+    }
+}
+
+Application *Application::instance()
+{
+    return qobject_cast<Application *>(QCoreApplication::instance());
+}
+
+// ---------------------------------------------------------------------------
+// Single-instance guard
+// ---------------------------------------------------------------------------
+void Application::setupSingleInstance()
+{
+    m_instanceId = computeInstanceId();
+    qCDebug(lcApp) << "Single-instance id:" << m_instanceId;
+
+    // Probe for an existing primary by trying to connect to its local server.
+    QLocalSocket probe;
+    probe.connectToServer(m_instanceId);
+    if (probe.waitForConnected(300))
+    {
+        qCInfo(lcApp) << "Detected an existing primary instance";
+        probe.disconnectFromServer();
+        m_isPrimaryInstance = false;
+        return;
+    }
+
+    // Become the primary: (re)create the local server.
+    m_instanceServer = new QLocalServer(this);
+    QLocalServer::removeServer(m_instanceId);  // clear a stale socket from a crash
+    if (!m_instanceServer->listen(m_instanceId))
+    {
+        qCWarning(lcApp) << "Failed to listen on single-instance socket:"
+                         << m_instanceServer->errorString()
+                         << "— continuing as primary anyway";
+    }
+
+    connect(m_instanceServer, &QLocalServer::newConnection, this, [this]
+    {
+        qCInfo(lcApp) << "Received activation request from a secondary instance";
+        while (QLocalSocket *conn = m_instanceServer->nextPendingConnection())
+        {
+            conn->waitForReadyRead(200);
+            const QByteArray payload = conn->readAll();
+            conn->deleteLater();
+            if (m_appController)
+                m_appController->handleActivationRequest(QString::fromUtf8(payload));
+        }
+    });
+
+    m_isPrimaryInstance = true;
+    qCInfo(lcApp) << "This process is the primary instance";
+}
+
+bool Application::isPrimaryInstance() const
+{
+    return m_isPrimaryInstance;
+}
+
+void Application::notifyPrimaryInstance()
+{
+    qCDebug(lcApp) << "Notifying primary instance of our launch";
+    QLocalSocket socket;
+    socket.connectToServer(m_instanceId);
+    if (socket.waitForConnected(500))
+    {
+        const QStringList args = QCoreApplication::arguments();
+        const QByteArray payload = (args.size() > 1) ? args.at(1).toUtf8() : QByteArray("activate");
+        socket.write(payload);
+        socket.flush();
+        socket.waitForBytesWritten(500);
+        socket.disconnectFromServer();
+        qCInfo(lcApp) << "Handoff to primary complete";
+    }
+    else
+    {
+        qCWarning(lcApp) << "Could not reach primary instance:" << socket.errorString();
+    }
+}
+
+// ---------------------------------------------------------------------------
+// Boot sequence
+// ---------------------------------------------------------------------------
+int Application::run()
+{
+    qCInfo(lcApp) << "Application::run() — beginning boot sequence";
+
+    setupTranslation();
+    initEngine();
+
+    // App-owned QML singleton instances must exist before Main.qml loads,
+    // because their create() factories hand back these very objects.
+    m_appController = new AppController(this);
+    m_desktopIntegration = new DesktopIntegration(this);
+    qCDebug(lcApp) << "Created AppController and DesktopIntegration";
+
+    m_engine = new QQmlApplicationEngine(this);
+    registerContext();
+    loadMainQml();
+
+    connect(this, &QCoreApplication::aboutToQuit, this, &Application::cleanup);
+
+    qCInfo(lcApp) << "Entering Qt event loop";
+    const int rc = QApplication::exec();
+    qCInfo(lcApp) << "Qt event loop exited with code" << rc;
+    return rc;
+}
+
+void Application::setupTranslation()
+{
+    int langValue = 0;  // 0 == English (default)
+#ifdef QBT_HAS_PREFERENCES
+    langValue = Preferences::instance()->value(kLanguageKey, 0).toInt();
+    qCInfo(lcI18n) << "Loaded persisted language mode:" << langValue;
+#else
+    qCWarning(lcI18n) << "Preferences unavailable at startup; defaulting language to English";
+#endif
+
+#ifdef QBT_HAS_FUNNY_TRANSLATOR
+    using Utils::I18n::FunnyTranslator;
+    auto *funny = new FunnyTranslator(this);
+    if (funny->loadCatalog(u":/i18n/cantonese.json"_qs))
+        qCInfo(lcI18n) << "Cantonese catalog loaded";
+    else
+        qCWarning(lcI18n) << "Cantonese catalog missing — Cantonese/Bilingual will fall back to English";
+    funny->setMode(static_cast<FunnyTranslator::Mode>(langValue));
+    m_translator = funny;
+    installTranslator(m_translator);
+    qCInfo(lcI18n) << "FunnyTranslator installed on qApp before QML load";
+#else
+    Q_UNUSED(langValue)
+    qCWarning(lcI18n) << "FunnyTranslator not available yet; UI will render raw English literals";
+#endif
+}
+
+void Application::initEngine()
+{
+    qCInfo(lcEngine) << "Initializing engine singletons";
+#ifdef QBT_HAS_PREFERENCES
+    // Touch Preferences to force construction/loading of the settings store.
+    (void)Preferences::instance();
+    qCDebug(lcEngine) << "Preferences instance ready";
+#else
+    qCWarning(lcEngine) << "Preferences header not present at build time";
+#endif
+
+#ifdef QBT_HAS_SESSION
+    // Touch the BitTorrent session facade; the concrete libtorrent session is
+    // brought up on its own IO thread by the engine layer.
+    (void)BitTorrent::Session::instance();
+    qCInfo(lcEngine) << "BitTorrent::Session facade ready";
+#else
+    qCWarning(lcEngine) << "BitTorrent::Session header not present at build time";
+#endif
+}
+
+void Application::registerContext()
+{
+    Q_ASSERT(m_engine);
+
+    // A tiny read-only context object with build info (About dialog, logs).
+    QVariantMap appInfo;
+    appInfo.insert(u"name"_qs, applicationName());
+    appInfo.insert(u"displayName"_qs, applicationDisplayName());
+    appInfo.insert(u"version"_qs, applicationVersion());
+    appInfo.insert(u"qtVersion"_qs, QString::fromLatin1(qVersion()));
+    appInfo.insert(u"launchTime"_qs, m_launchTimeSecsSinceEpoch);
+    m_engine->rootContext()->setContextProperty(u"ApplicationInfo"_qs, appInfo);
+
+    qCDebug(lcApp) << "Registered ApplicationInfo context property";
+}
+
+void Application::loadMainQml()
+{
+    Q_ASSERT(m_engine);
+
+    connect(m_engine, &QQmlApplicationEngine::objectCreationFailed, this, []
+    {
+        qCCritical(lcApp) << "Failed to create Main.qml root object — aborting";
+        QCoreApplication::exit(-1);
+    }, Qt::QueuedConnection);
+
+    connect(m_engine, &QQmlApplicationEngine::objectCreated, this,
+        [](QObject *obj, const QUrl &url)
+        {
+            if (obj)
+                qCInfo(lcApp) << "Main QML object created:" << url.toString();
+        });
+
+    qCInfo(lcApp) << "Loading qBittorrent QML module entry point (Main)";
+    m_engine->loadFromModule(u"qBittorrent"_qs, u"Main"_qs);
+
+    if (m_engine->rootObjects().isEmpty())
+        qCCritical(lcApp) << "No root QML objects were created";
+}
+
+void Application::cleanup()
+{
+    if (m_cleanupDone)
+        return;
+    m_cleanupDone = true;
+
+    qCInfo(lcApp) << "Application cleanup started";
+    emit aboutToShutDown();
+
+    // Drop the QML engine first so bindings stop touching engine singletons.
+    if (m_engine)
+    {
+        m_engine->deleteLater();
+        m_engine = nullptr;
+        qCDebug(lcApp) << "QML engine scheduled for deletion";
+    }
+
+    qCInfo(lcApp) << "Application cleanup finished";
+}
+
+// ---------------------------------------------------------------------------
+// Accessors
+// ---------------------------------------------------------------------------
+AppController *Application::appController() const
+{
+    return m_appController.data();
+}
+
+DesktopIntegration *Application::desktopIntegration() const
+{
+    return m_desktopIntegration.data();
+}
+
+QQmlApplicationEngine *Application::qmlEngine() const
+{
+    return m_engine;
+}
+
+qint64 Application::launchTimeSecsSinceEpoch() const
+{
+    return m_launchTimeSecsSinceEpoch;
+}

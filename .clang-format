@@ -1,0 +1,94 @@
+# qBittorrent (Material rewrite) — C++ formatting rules.
+# Mirrors upstream qBittorrent: Allman braces, 4-space indent, ~100 col soft
+# limit, pointer-left (`Type *name`), west-const. Format all engine + bridge
+# C++ with this file before committing.
+---
+Language: Cpp
+BasedOnStyle: WebKit
+Standard: c++20
+
+# Indentation
+IndentWidth: 4
+TabWidth: 4
+UseTab: Never
+ContinuationIndentWidth: 8
+AccessModifierOffset: -4
+IndentCaseLabels: false
+IndentPPDirectives: None
+NamespaceIndentation: None
+
+# Braces — Allman.
+BreakBeforeBraces: Allman
+BraceWrapping:
+  AfterCaseLabel: true
+  AfterClass: true
+  AfterControlStatement: Always
+  AfterEnum: true
+  AfterFunction: true
+  AfterNamespace: true
+  AfterStruct: true
+  AfterUnion: true
+  AfterExternBlock: true
+  BeforeCatch: true
+  BeforeElse: true
+  BeforeLambdaBody: false
+  BeforeWhile: false
+  SplitEmptyFunction: false
+  SplitEmptyRecord: false
+  SplitEmptyNamespace: false
+
+# Line width
+ColumnLimit: 100
+
+# Pointers / references bind to the identifier (`Type *name`, west-const).
+PointerAlignment: Right
+ReferenceAlignment: Right
+DerivePointerAlignment: false
+QualifierAlignment: Leave
+
+# Spacing
+SpaceBeforeParens: ControlStatements
+SpaceAfterCStyleCast: false
+SpaceBeforeAssignmentOperators: true
+SpaceInEmptyParentheses: false
+SpacesInParentheses: false
+SpacesInSquareBrackets: false
+SpacesInAngles: false
+SpaceBeforeRangeBasedForLoopColon: true
+Cpp11BracedListStyle: true
+
+# Line breaking
+AllowShortFunctionsOnASingleLine: Inline
+AllowShortIfStatementsOnASingleLine: Never
+AllowShortLoopsOnASingleLine: false
+AllowShortBlocksOnASingleLine: Empty
+AllowShortCaseLabelsOnASingleLine: false
+AllowShortLambdasOnASingleLine: All
+AlwaysBreakTemplateDeclarations: Yes
+BreakConstructorInitializers: BeforeComma
+BreakBeforeBinaryOperators: None
+BreakBeforeTernaryOperators: true
+AlignAfterOpenBracket: DontAlign
+BinPackArguments: true
+BinPackParameters: true
+
+# Includes — keep groups as authored (see CONTRACTS §8.2).
+SortIncludes: CaseSensitive
+IncludeBlocks: Preserve
+
+# Misc
+FixNamespaceComments: true
+KeepEmptyLinesAtTheStartOfBlocks: false
+MaxEmptyLinesToKeep: 1
+CompactNamespaces: false
+ReflowComments: false
+AlignTrailingComments: true
+AlignConsecutiveAssignments: false
+AlignConsecutiveDeclarations: false
+AlignOperands: false
+InsertBraces: false
+EmptyLineBeforeAccessModifier: LogicalBlock
+SpaceBeforeCpp11BracedList: false
+AllowAllArgumentsOnNextLine: true
+AllowAllParametersOfDeclarationOnNextLine: true
+PenaltyReturnTypeOnItsOwnLine: 1000
