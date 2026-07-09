@@ -97,7 +97,7 @@ void Preferences::freeInstance()
 // General options
 QString Preferences::getLocale() const
 {
-    const auto localeName = value<QString>(u"Preferences/General/Locale"_s);
+    const auto localeName = readSetting<QString>(u"Preferences/General/Locale"_s);
     return (localeName.isEmpty() ? QLocale::system().name() : localeName);
 }
 
@@ -124,7 +124,7 @@ void Preferences::setUseCustomUITheme(const bool use)
 
 Path Preferences::customUIThemePath() const
 {
-    return value<Path>(u"Preferences/General/CustomUIThemePath"_s);
+    return readSetting<Path>(u"Preferences/General/CustomUIThemePath"_s);
 }
 
 void Preferences::setCustomUIThemePath(const Path &path)
@@ -228,7 +228,7 @@ void Preferences::setHideZeroValues(const bool b)
 
 int Preferences::getHideZeroComboValues() const
 {
-    return value<int>(u"Preferences/General/HideZeroComboValues"_s, 0);
+    return readSetting<int>(u"Preferences/General/HideZeroComboValues"_s, 0);
 }
 
 void Preferences::setHideZeroComboValues(const int n)
@@ -504,7 +504,7 @@ QString Preferences::getStyle() const
 #else
     const QString defaultStyleName = u"system"_s;
 #endif
-    const auto styleName = value<QString>(u"Appearance/Style"_s);
+    const auto styleName = readSetting<QString>(u"Appearance/Style"_s);
     return styleName.isEmpty() ? defaultStyleName : styleName;
 }
 
@@ -519,7 +519,7 @@ void Preferences::setStyle(const QString &styleName)
 // Downloads
 Path Preferences::getScanDirsLastPath() const
 {
-    return value<Path>(u"Preferences/Downloads/ScanDirsLastPath"_s);
+    return readSetting<Path>(u"Preferences/Downloads/ScanDirsLastPath"_s);
 }
 
 void Preferences::setScanDirsLastPath(const Path &path)
@@ -545,7 +545,7 @@ void Preferences::setMailNotificationEnabled(const bool enabled)
 
 QString Preferences::getMailNotificationSender() const
 {
-    return value<QString>(u"Preferences/MailNotification/sender"_s);
+    return readSetting<QString>(u"Preferences/MailNotification/sender"_s);
 }
 
 void Preferences::setMailNotificationSender(const QString &mail)
@@ -558,7 +558,7 @@ void Preferences::setMailNotificationSender(const QString &mail)
 
 QString Preferences::getMailNotificationEmail() const
 {
-    return value<QString>(u"Preferences/MailNotification/email"_s);
+    return readSetting<QString>(u"Preferences/MailNotification/email"_s);
 }
 
 void Preferences::setMailNotificationEmail(const QString &mail)
@@ -571,7 +571,7 @@ void Preferences::setMailNotificationEmail(const QString &mail)
 
 QString Preferences::getMailNotificationSMTP() const
 {
-    return value<QString>(u"Preferences/MailNotification/smtp_server"_s);
+    return readSetting<QString>(u"Preferences/MailNotification/smtp_server"_s);
 }
 
 void Preferences::setMailNotificationSMTP(const QString &smtpServer)
@@ -610,7 +610,7 @@ void Preferences::setMailNotificationSMTPAuth(const bool use)
 
 QString Preferences::getMailNotificationSMTPUsername() const
 {
-    return value<QString>(u"Preferences/MailNotification/username"_s);
+    return readSetting<QString>(u"Preferences/MailNotification/username"_s);
 }
 
 void Preferences::setMailNotificationSMTPUsername(const QString &username)
@@ -623,7 +623,7 @@ void Preferences::setMailNotificationSMTPUsername(const QString &username)
 
 QString Preferences::getMailNotificationSMTPPassword() const
 {
-    return value<QString>(u"Preferences/MailNotification/password"_s);
+    return readSetting<QString>(u"Preferences/MailNotification/password"_s);
 }
 
 void Preferences::setMailNotificationSMTPPassword(const QString &password)
@@ -636,7 +636,7 @@ void Preferences::setMailNotificationSMTPPassword(const QString &password)
 
 int Preferences::getActionOnDblClOnTorrentDl() const
 {
-    return value<int>(u"Preferences/Downloads/DblClOnTorDl"_s, 0);
+    return readSetting<int>(u"Preferences/Downloads/DblClOnTorDl"_s, 0);
 }
 
 void Preferences::setActionOnDblClOnTorrentDl(const int act)
@@ -649,7 +649,7 @@ void Preferences::setActionOnDblClOnTorrentDl(const int act)
 
 int Preferences::getActionOnDblClOnTorrentFn() const
 {
-    return value<int>(u"Preferences/Downloads/DblClOnTorFn"_s, 1);
+    return readSetting<int>(u"Preferences/Downloads/DblClOnTorFn"_s, 1);
 }
 
 void Preferences::setActionOnDblClOnTorrentFn(const int act)
@@ -800,7 +800,7 @@ void Preferences::setWebUIAuthSubnetWhitelistEnabled(const bool enabled)
 
 QList<Utils::Net::Subnet> Preferences::getWebUIAuthSubnetWhitelist() const
 {
-    const auto subnets = value<QStringList>(u"Preferences/WebUI/AuthSubnetWhitelist"_s);
+    const auto subnets = readSetting<QStringList>(u"Preferences/WebUI/AuthSubnetWhitelist"_s);
 
     QList<Utils::Net::Subnet> ret;
     ret.reserve(subnets.size());
@@ -827,7 +827,7 @@ void Preferences::setWebUIAuthSubnetWhitelist(QStringList subnets)
 
 QString Preferences::getServerDomains() const
 {
-    return value<QString>(u"Preferences/WebUI/ServerDomains"_s, u"*"_s);
+    return readSetting<QString>(u"Preferences/WebUI/ServerDomains"_s, u"*"_s);
 }
 
 void Preferences::setServerDomains(const QString &str)
@@ -840,7 +840,7 @@ void Preferences::setServerDomains(const QString &str)
 
 QString Preferences::getWebUIAddress() const
 {
-    return value<QString>(u"Preferences/WebUI/Address"_s, u"*"_s).trimmed();
+    return readSetting<QString>(u"Preferences/WebUI/Address"_s, u"*"_s).trimmed();
 }
 
 void Preferences::setWebUIAddress(const QString &addr)
@@ -853,7 +853,7 @@ void Preferences::setWebUIAddress(const QString &addr)
 
 quint16 Preferences::getWebUIPort() const
 {
-    return value<quint16>(u"Preferences/WebUI/Port"_s, 8080);
+    return readSetting<quint16>(u"Preferences/WebUI/Port"_s, 8080);
 }
 
 void Preferences::setWebUIPort(const quint16 port)
@@ -880,7 +880,7 @@ void Preferences::setUPnPForWebUIPort(const bool enabled)
 
 QString Preferences::getWebUIUsername() const
 {
-    return value<QString>(u"Preferences/WebUI/Username"_s, u"admin"_s);
+    return readSetting<QString>(u"Preferences/WebUI/Username"_s, u"admin"_s);
 }
 
 void Preferences::setWebUIUsername(const QString &username)
@@ -893,7 +893,7 @@ void Preferences::setWebUIUsername(const QString &username)
 
 QByteArray Preferences::getWebUIPassword() const
 {
-    return value<QByteArray>(u"Preferences/WebUI/Password_PBKDF2"_s);
+    return readSetting<QByteArray>(u"Preferences/WebUI/Password_PBKDF2"_s);
 }
 
 void Preferences::setWebUIPassword(const QByteArray &password)
@@ -906,7 +906,7 @@ void Preferences::setWebUIPassword(const QByteArray &password)
 
 QString Preferences::getWebUIApiKey() const
 {
-    return value<QString>(u"Preferences/WebUI/APIKey"_s);
+    return readSetting<QString>(u"Preferences/WebUI/APIKey"_s);
 }
 
 void Preferences::setWebUIApiKey(const QString &apiKey)
@@ -919,7 +919,7 @@ void Preferences::setWebUIApiKey(const QString &apiKey)
 
 int Preferences::getWebUIMaxAuthFailCount() const
 {
-    return value<int>(u"Preferences/WebUI/MaxAuthenticationFailCount"_s, 5);
+    return readSetting<int>(u"Preferences/WebUI/MaxAuthenticationFailCount"_s, 5);
 }
 
 void Preferences::setWebUIMaxAuthFailCount(const int count)
@@ -932,7 +932,7 @@ void Preferences::setWebUIMaxAuthFailCount(const int count)
 
 std::chrono::seconds Preferences::getWebUIBanDuration() const
 {
-    return std::chrono::seconds(value<int>(u"Preferences/WebUI/BanDuration"_s, 3600));
+    return std::chrono::seconds(readSetting<int>(u"Preferences/WebUI/BanDuration"_s, 3600));
 }
 
 void Preferences::setWebUIBanDuration(const std::chrono::seconds duration)
@@ -945,7 +945,7 @@ void Preferences::setWebUIBanDuration(const std::chrono::seconds duration)
 
 int Preferences::getWebUISessionTimeout() const
 {
-    return value<int>(u"Preferences/WebUI/SessionTimeout"_s, 3600);
+    return readSetting<int>(u"Preferences/WebUI/SessionTimeout"_s, 3600);
 }
 
 void Preferences::setWebUISessionTimeout(const int timeout)
@@ -1023,7 +1023,7 @@ void Preferences::setWebUIHttpsEnabled(const bool enabled)
 
 Path Preferences::getWebUIHttpsCertificatePath() const
 {
-    return value<Path>(u"Preferences/WebUI/HTTPS/CertificatePath"_s);
+    return readSetting<Path>(u"Preferences/WebUI/HTTPS/CertificatePath"_s);
 }
 
 void Preferences::setWebUIHttpsCertificatePath(const Path &path)
@@ -1036,7 +1036,7 @@ void Preferences::setWebUIHttpsCertificatePath(const Path &path)
 
 Path Preferences::getWebUIHttpsKeyPath() const
 {
-    return value<Path>(u"Preferences/WebUI/HTTPS/KeyPath"_s);
+    return readSetting<Path>(u"Preferences/WebUI/HTTPS/KeyPath"_s);
 }
 
 void Preferences::setWebUIHttpsKeyPath(const Path &path)
@@ -1062,7 +1062,7 @@ void Preferences::setAltWebUIEnabled(const bool enabled)
 
 Path Preferences::getWebUIRootFolder() const
 {
-    return value<Path>(u"Preferences/WebUI/RootFolder"_s);
+    return readSetting<Path>(u"Preferences/WebUI/RootFolder"_s);
 }
 
 void Preferences::setWebUIRootFolder(const Path &path)
@@ -1088,7 +1088,7 @@ void Preferences::setWebUICustomHTTPHeadersEnabled(const bool enabled)
 
 QString Preferences::getWebUICustomHTTPHeaders() const
 {
-    return value<QString>(u"Preferences/WebUI/CustomHTTPHeaders"_s);
+    return readSetting<QString>(u"Preferences/WebUI/CustomHTTPHeaders"_s);
 }
 
 void Preferences::setWebUICustomHTTPHeaders(const QString &headers)
@@ -1114,7 +1114,7 @@ void Preferences::setWebUIReverseProxySupportEnabled(const bool enabled)
 
 QString Preferences::getWebUITrustedReverseProxiesList() const
 {
-    return value<QString>(u"Preferences/WebUI/TrustedReverseProxiesList"_s);
+    return readSetting<QString>(u"Preferences/WebUI/TrustedReverseProxiesList"_s);
 }
 
 void Preferences::setWebUITrustedReverseProxiesList(const QString &addr)
@@ -1153,7 +1153,7 @@ void Preferences::setDynDNSService(const DNS::Service service)
 
 QString Preferences::getDynDomainName() const
 {
-    return value<QString>(u"Preferences/DynDNS/DomainName"_s, u"changeme.dyndns.org"_s);
+    return readSetting<QString>(u"Preferences/DynDNS/DomainName"_s, u"changeme.dyndns.org"_s);
 }
 
 void Preferences::setDynDomainName(const QString &name)
@@ -1166,7 +1166,7 @@ void Preferences::setDynDomainName(const QString &name)
 
 QString Preferences::getDynDNSUsername() const
 {
-    return value<QString>(u"Preferences/DynDNS/Username"_s);
+    return readSetting<QString>(u"Preferences/DynDNS/Username"_s);
 }
 
 void Preferences::setDynDNSUsername(const QString &username)
@@ -1179,7 +1179,7 @@ void Preferences::setDynDNSUsername(const QString &username)
 
 QString Preferences::getDynDNSPassword() const
 {
-    return value<QString>(u"Preferences/DynDNS/Password"_s);
+    return readSetting<QString>(u"Preferences/DynDNS/Password"_s);
 }
 
 void Preferences::setDynDNSPassword(const QString &password)
@@ -1193,7 +1193,7 @@ void Preferences::setDynDNSPassword(const QString &password)
 // Advanced settings
 QByteArray Preferences::getUILockPassword() const
 {
-    return value<QByteArray>(u"Locking/password_PBKDF2"_s);
+    return readSetting<QByteArray>(u"Locking/password_PBKDF2"_s);
 }
 
 void Preferences::setUILockPassword(const QByteArray &password)
@@ -1232,7 +1232,7 @@ void Preferences::setAutoRunOnTorrentAddedEnabled(const bool enabled)
 
 QString Preferences::getAutoRunOnTorrentAddedProgram() const
 {
-    return value<QString>(u"AutoRun/OnTorrentAdded/Program"_s);
+    return readSetting<QString>(u"AutoRun/OnTorrentAdded/Program"_s);
 }
 
 void Preferences::setAutoRunOnTorrentAddedProgram(const QString &program)
@@ -1258,7 +1258,7 @@ void Preferences::setAutoRunOnTorrentFinishedEnabled(const bool enabled)
 
 QString Preferences::getAutoRunOnTorrentFinishedProgram() const
 {
-    return value<QString>(u"AutoRun/program"_s);
+    return readSetting<QString>(u"AutoRun/program"_s);
 }
 
 void Preferences::setAutoRunOnTorrentFinishedProgram(const QString &program)
@@ -1431,7 +1431,7 @@ void Preferences::setRecursiveDownloadEnabled(const bool enable)
 
 int Preferences::getTrackerPort() const
 {
-    return value<int>(u"Preferences/Advanced/trackerPort"_s, 9000);
+    return readSetting<int>(u"Preferences/Advanced/trackerPort"_s, 9000);
 }
 
 void Preferences::setTrackerPort(const int port)
@@ -1607,7 +1607,7 @@ void Preferences::setConfirmRemoveTrackerFromAllTorrents(const bool enabled)
 
 QDateTime Preferences::getDNSLastUpd() const
 {
-    return value<QDateTime>(u"DNSUpdater/lastUpdateTime"_s);
+    return readSetting<QDateTime>(u"DNSUpdater/lastUpdateTime"_s);
 }
 
 void Preferences::setDNSLastUpd(const QDateTime &date)
@@ -1620,7 +1620,7 @@ void Preferences::setDNSLastUpd(const QDateTime &date)
 
 QString Preferences::getDNSLastIP() const
 {
-    return value<QString>(u"DNSUpdater/lastIP"_s);
+    return readSetting<QString>(u"DNSUpdater/lastIP"_s);
 }
 
 void Preferences::setDNSLastIP(const QString &ip)
@@ -1633,7 +1633,7 @@ void Preferences::setDNSLastIP(const QString &ip)
 
 QByteArray Preferences::getMainGeometry() const
 {
-    return value<QByteArray>(u"MainWindow/geometry"_s);
+    return readSetting<QByteArray>(u"MainWindow/geometry"_s);
 }
 
 void Preferences::setMainGeometry(const QByteArray &geometry)
@@ -1685,7 +1685,7 @@ void Preferences::setMainLastDir(const Path &path)
 
 QByteArray Preferences::getPeerListState() const
 {
-    return value<QByteArray>(u"GUI/Qt6/TorrentProperties/PeerListState"_s);
+    return readSetting<QByteArray>(u"GUI/Qt6/TorrentProperties/PeerListState"_s);
 }
 
 void Preferences::setPeerListState(const QByteArray &state)
@@ -1698,7 +1698,7 @@ void Preferences::setPeerListState(const QByteArray &state)
 
 QString Preferences::getPropSplitterSizes() const
 {
-    return value<QString>(u"TorrentProperties/SplitterSizes"_s);
+    return readSetting<QString>(u"TorrentProperties/SplitterSizes"_s);
 }
 
 void Preferences::setPropSplitterSizes(const QString &sizes)
@@ -1711,7 +1711,7 @@ void Preferences::setPropSplitterSizes(const QString &sizes)
 
 QByteArray Preferences::getPropFileListState() const
 {
-    return value<QByteArray>(u"GUI/Qt6/TorrentProperties/FilesListState"_s);
+    return readSetting<QByteArray>(u"GUI/Qt6/TorrentProperties/FilesListState"_s);
 }
 
 void Preferences::setPropFileListState(const QByteArray &state)
@@ -1724,7 +1724,7 @@ void Preferences::setPropFileListState(const QByteArray &state)
 
 int Preferences::getPropCurTab() const
 {
-    return value<int>(u"TorrentProperties/CurrentTab"_s, -1);
+    return readSetting<int>(u"TorrentProperties/CurrentTab"_s, -1);
 }
 
 void Preferences::setPropCurTab(const int tab)
@@ -1750,7 +1750,7 @@ void Preferences::setPropVisible(const bool visible)
 
 QByteArray Preferences::getTrackerListState() const
 {
-    return value<QByteArray>(u"GUI/Qt6/TorrentProperties/TrackerListState"_s);
+    return readSetting<QByteArray>(u"GUI/Qt6/TorrentProperties/TrackerListState"_s);
 }
 
 void Preferences::setTrackerListState(const QByteArray &state)
@@ -1763,7 +1763,7 @@ void Preferences::setTrackerListState(const QByteArray &state)
 
 QStringList Preferences::getRssOpenFolders() const
 {
-    return value<QStringList>(u"GUI/RSSWidget/OpenedFolders"_s);
+    return readSetting<QStringList>(u"GUI/RSSWidget/OpenedFolders"_s);
 }
 
 void Preferences::setRssOpenFolders(const QStringList &folders)
@@ -1776,7 +1776,7 @@ void Preferences::setRssOpenFolders(const QStringList &folders)
 
 QByteArray Preferences::getRssFeedListState() const
 {
-    return value<QByteArray>(u"GUI/Qt6/RSSWidget/FeedListState"_s);
+    return readSetting<QByteArray>(u"GUI/Qt6/RSSWidget/FeedListState"_s);
 }
 
 void Preferences::setRssFeedListState(const QByteArray &state)
@@ -1789,7 +1789,7 @@ void Preferences::setRssFeedListState(const QByteArray &state)
 
 QByteArray Preferences::getRssSideSplitterState() const
 {
-    return value<QByteArray>(u"GUI/Qt6/RSSWidget/SideSplitterState"_s);
+    return readSetting<QByteArray>(u"GUI/Qt6/RSSWidget/SideSplitterState"_s);
 }
 
 void Preferences::setRssSideSplitterState(const QByteArray &state)
@@ -1802,7 +1802,7 @@ void Preferences::setRssSideSplitterState(const QByteArray &state)
 
 QByteArray Preferences::getRssMainSplitterState() const
 {
-    return value<QByteArray>(u"GUI/Qt6/RSSWidget/MainSplitterState"_s);
+    return readSetting<QByteArray>(u"GUI/Qt6/RSSWidget/MainSplitterState"_s);
 }
 
 void Preferences::setRssMainSplitterState(const QByteArray &state)
@@ -1815,7 +1815,7 @@ void Preferences::setRssMainSplitterState(const QByteArray &state)
 
 QByteArray Preferences::getSearchTabHeaderState() const
 {
-    return value<QByteArray>(u"GUI/Qt6/SearchTab/HeaderState"_s);
+    return readSetting<QByteArray>(u"GUI/Qt6/SearchTab/HeaderState"_s);
 }
 
 void Preferences::setSearchTabHeaderState(const QByteArray &state)
@@ -1841,7 +1841,7 @@ void Preferences::setRegexAsFilteringPatternForSearchJob(const bool checked)
 
 QStringList Preferences::getSearchEngDisabled() const
 {
-    return value<QStringList>(u"SearchEngines/disabledEngines"_s);
+    return readSetting<QStringList>(u"SearchEngines/disabledEngines"_s);
 }
 
 void Preferences::setSearchEngDisabled(const QStringList &engines)
@@ -1867,7 +1867,7 @@ void Preferences::setTorImportLastContentDir(const QString &path)
 
 QByteArray Preferences::getTorImportGeometry() const
 {
-    return value<QByteArray>(u"TorrentImportDlg/dimensions"_s);
+    return readSetting<QByteArray>(u"TorrentImportDlg/dimensions"_s);
 }
 
 void Preferences::setTorImportGeometry(const QByteArray &geometry)
@@ -1958,7 +1958,7 @@ void Preferences::setUseSeparateTrackerStatusFilter(const bool value)
 
 int Preferences::getTransSelFilter() const
 {
-    return value<int>(u"TransferListFilters/selectedFilterIndex"_s, 0);
+    return readSetting<int>(u"TransferListFilters/selectedFilterIndex"_s, 0);
 }
 
 void Preferences::setTransSelFilter(const int index)
@@ -1971,7 +1971,7 @@ void Preferences::setTransSelFilter(const int index)
 
 bool Preferences::getHideZeroStatusFilters() const
 {
-    return value<bool>(u"TransferListFilters/HideZeroStatusFilters"_s, false);
+    return readSetting<bool>(u"TransferListFilters/HideZeroStatusFilters"_s, false);
 }
 
 void Preferences::setHideZeroStatusFilters(const bool hide)
@@ -1984,7 +1984,7 @@ void Preferences::setHideZeroStatusFilters(const bool hide)
 
 QByteArray Preferences::getTransHeaderState() const
 {
-    return value<QByteArray>(u"GUI/Qt6/TransferList/HeaderState"_s);
+    return readSetting<QByteArray>(u"GUI/Qt6/TransferList/HeaderState"_s);
 }
 
 void Preferences::setTransHeaderState(const QByteArray &state)
@@ -2024,7 +2024,7 @@ void Preferences::setRSSWidgetVisible(const bool enabled)
 
 int Preferences::getToolbarTextPosition() const
 {
-    return value<int>(u"Toolbar/textPosition"_s, -1);
+    return readSetting<int>(u"Toolbar/textPosition"_s, -1);
 }
 
 void Preferences::setToolbarTextPosition(const int position)
@@ -2037,7 +2037,7 @@ void Preferences::setToolbarTextPosition(const int position)
 
 QList<QNetworkCookie> Preferences::getNetworkCookies() const
 {
-    const auto rawCookies = value<QStringList>(u"Network/Cookies"_s);
+    const auto rawCookies = readSetting<QStringList>(u"Network/Cookies"_s);
     QList<QNetworkCookie> cookies;
     cookies.reserve(rawCookies.size());
     for (const QString &rawCookie : rawCookies)
@@ -2056,7 +2056,7 @@ void Preferences::setNetworkCookies(const QList<QNetworkCookie> &cookies)
 
 bool Preferences::useProxyForBT() const
 {
-    return value<bool>(u"Network/Proxy/Profiles/BitTorrent"_s);
+    return readSetting<bool>(u"Network/Proxy/Profiles/BitTorrent"_s);
 }
 
 void Preferences::setUseProxyForBT(const bool value)
@@ -2069,7 +2069,7 @@ void Preferences::setUseProxyForBT(const bool value)
 
 bool Preferences::useProxyForRSS() const
 {
-    return value<bool>(u"Network/Proxy/Profiles/RSS"_s);
+    return readSetting<bool>(u"Network/Proxy/Profiles/RSS"_s);
 }
 
 void Preferences::setUseProxyForRSS(const bool value)
@@ -2082,7 +2082,7 @@ void Preferences::setUseProxyForRSS(const bool value)
 
 bool Preferences::useProxyForGeneralPurposes() const
 {
-    return value<bool>(u"Network/Proxy/Profiles/Misc"_s);
+    return readSetting<bool>(u"Network/Proxy/Profiles/Misc"_s);
 }
 
 void Preferences::setUseProxyForGeneralPurposes(const bool value)
@@ -2108,7 +2108,7 @@ void Preferences::setSpeedWidgetEnabled(const bool enabled)
 
 int Preferences::getSpeedWidgetPeriod() const
 {
-    return value<int>(u"SpeedWidget/period"_s, 1);
+    return readSetting<int>(u"SpeedWidget/period"_s, 1);
 }
 
 void Preferences::setSpeedWidgetPeriod(const int period)
@@ -2194,7 +2194,7 @@ void Preferences::setAddNewTorrentDialogAttached(const bool attached)
 // (0 = English, 1 = Cantonese, 2 = Bilingual). Key: "Appearance/Language".
 int Preferences::getLanguageMode() const
 {
-    const int mode = value<int>(u"Appearance/Language"_s, 0);
+    const int mode = readSetting<int>(u"Appearance/Language"_s, 0);
     return std::clamp(mode, 0, 2);
 }
 
