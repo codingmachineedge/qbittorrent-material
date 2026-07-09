@@ -17,6 +17,9 @@
 file(GLOB_RECURSE QBT_BASE_SOURCES CONFIGURE_DEPENDS
     "${CMAKE_CURRENT_SOURCE_DIR}/base/*.cpp"
 )
+# randomlayer_{win,linux,other}.cpp are #included (platform-guarded) by random.cpp,
+# not compiled as standalone translation units.
+list(FILTER QBT_BASE_SOURCES EXCLUDE REGEX "randomlayer_")
 file(GLOB_RECURSE QBT_BASE_HEADERS CONFIGURE_DEPENDS
     "${CMAKE_CURRENT_SOURCE_DIR}/base/*.h"
 )
