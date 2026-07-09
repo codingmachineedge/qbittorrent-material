@@ -30,3 +30,11 @@ Requirements:
 - Language chosen in Preferences → Behavior, applied at runtime (all visible text updates live via bindings — no restart).
 - Every user-visible string in every screen/dialog goes through `I18n` — no hard-coded literals in QML text.
 - Persist the chosen language in settings.
+
+## Notification-first UX (dialogs → less disruptive)
+Transform the app to be less disruptive than modal dialogs:
+- **Confirmations / alerts / info** (delete confirm, exit confirm, shutdown, "are you sure", errors, "search finished", "added to tray", statistics/about quick info) → **in-app snackbar notifications** via the global `Snackbar` queue, with inline action buttons where relevant (e.g. optimistic delete + **UNDO**, or **CONFIRM / DISMISS**). Add a **notification center** (bell icon in the toolbar) listing recent notifications.
+- **Input forms** (Add Torrent, Preferences/Options 9 tabs, Torrent Options, Torrent Creator, RSS auto-download rules, category/tags editors) → **non-modal slide-in side sheets** (Material side-sheet pattern): they slide in from the right, do NOT dim/block the rest of the app, and can be dismissed by clicking away. Keep all inputs.
+- Prefer optimistic action + undo over blocking "are you sure?" prompts.
+- No modal `Dialog { modal: true }` centered popups for routine flows. Reserve true modality only for genuinely destructive irreversible actions if any remain.
+- Implementation: a `NotificationController` (C++ singleton) + `NotificationCenter.qml` + a reusable `SideSheet.qml` component; refactor existing `*Dialog.qml` files to either emit snackbars (confirmations) or become `SideSheet` content (forms). Verify by building + screenshotting.
