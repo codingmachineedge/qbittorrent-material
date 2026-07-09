@@ -111,6 +111,7 @@ private:
 class AddTorrentController : public QObject
 {
     Q_OBJECT
+    Q_DISABLE_COPY_MOVE(AddTorrentController)
     QML_ELEMENT
     QML_SINGLETON
 
