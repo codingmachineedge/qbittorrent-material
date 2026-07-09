@@ -32,7 +32,16 @@
 #include <QtSystemDetection>
 
 // for QT_FEATURE_xxx, see: https://wiki.qt.io/Qt5_Build_System#How_to
+// The private header carries QT_FEATURE_icu but is not shipped by every Qt
+// distribution (e.g. aqtinstall). Include it only when available; otherwise
+// fall back to -1 (feature "off") — on Windows/macOS the platform branch below
+// is selected regardless.
+#if __has_include(<QtCore/private/qtcore-config_p.h>)
 #include <QtCore/private/qtcore-config_p.h>
+#endif
+#ifndef QT_FEATURE_icu
+#define QT_FEATURE_icu -1
+#endif
 
 #ifndef QBT_USE_QCOLLATOR
 // macOS and Windows support 'case sensitivity' and 'numeric mode' natively
