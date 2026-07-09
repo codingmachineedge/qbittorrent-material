@@ -87,4 +87,25 @@ find_package(LibtorrentRasterbar ${minLibtorrentVersion} REQUIRED)
 message(STATUS "qbittorrent-material: Qt ${Qt6_VERSION}, "
     "libtorrent ${LibtorrentRasterbar_VERSION}, DBus=${QBT_DBUS}")
 
+# --- Global compile definitions (mirrors upstream qBittorrent CommonConfig) ----
+# QT_USE_QSTRINGBUILDER is REQUIRED: the engine (mirrored from upstream) relies on
+# `u"..." + QString` concatenation which only compiles with QStringBuilder.
+# The strict QT_NO_CAST_* defines are intentionally omitted so generated bridge
+# code using implicit string conversions still builds.
+add_compile_definitions(
+    QT_USE_QSTRINGBUILDER
+    QT_DISABLE_DEPRECATED_UP_TO=0x060500
+)
+if (WIN32)
+    add_compile_definitions(
+        NTDDI_VERSION=0x0A000006
+        _WIN32_WINNT=0x0A00
+        _WIN32_IE=0x0A00
+        WIN32_LEAN_AND_MEAN
+        NOMINMAX
+        UNICODE
+        _UNICODE
+    )
+endif()
+
 add_subdirectory(src)
