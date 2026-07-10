@@ -36,8 +36,8 @@ commands, and Linux/macOS instructions.
 
 Every branch push runs a Windows installer build on GitHub Actions using
 `windows-2022` and Qt 6.8.3. A successful run publishes the installer as a
-workflow artifact and creates a uniquely tagged GitHub prerelease for that
-exact commit.
+asset on a uniquely tagged GitHub prerelease for that exact commit. No
+separate Actions artifact is retained.
 
 ## License
 

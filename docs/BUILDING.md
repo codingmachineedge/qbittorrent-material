@@ -98,10 +98,11 @@ then configures and builds with CMake and Ninja:
 
 Every branch push triggers the `Build and release every push` GitHub Actions
 workflow. It builds on `windows-2022` with MSVC 2022 and Qt 6.8.3, creates and
-smoke-tests the NSIS installer, and publishes two outputs:
+smoke-tests the NSIS installer, and publishes it as a GitHub prerelease:
 
-- A Windows x64 installer retained as a workflow artifact.
-- A GitHub prerelease containing the same installer.
+- A GitHub prerelease containing the Windows x64 installer as its release asset.
+
+The workflow intentionally does not retain a separate Actions artifact.
 
 Each push receives a unique tag in the form
 `build-<run-number>-<short-sha>`. The prerelease targets the exact pushed
