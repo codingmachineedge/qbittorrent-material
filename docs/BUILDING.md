@@ -61,6 +61,17 @@ qBittorrent-Material-<version>-<build-id>-windows-x64.exe
 The package includes the Qt runtime, plugins, and QML imports required to run
 the installed application.
 
+## Visual smoke-test gallery
+
+The checked-in visual gallery was captured from the installed Windows package
+using a fresh test profile. It provides a quick UI handoff alongside the
+installer build and smoke test:
+
+![qBittorrent Material dashboard](images/app/01-main-window.png)
+
+See the complete [visual tour](SCREENSHOTS.md) for the toolbar, filters,
+transfer workspace, properties tabs, and status bar.
+
 If the build is already configured, the equivalent packaging command is:
 
 ```powershell
@@ -98,10 +109,11 @@ then configures and builds with CMake and Ninja:
 
 Every branch push triggers the `Build and release every push` GitHub Actions
 workflow. It builds on `windows-2022` with MSVC 2022 and Qt 6.8.3, creates and
-smoke-tests the NSIS installer, and publishes two outputs:
+smoke-tests the NSIS installer, and publishes it as a GitHub prerelease:
 
-- A Windows x64 installer retained as a workflow artifact.
-- A GitHub prerelease containing the same installer.
+- A GitHub prerelease containing the Windows x64 installer as its release asset.
+
+The workflow intentionally does not retain a separate Actions artifact.
 
 Each push receives a unique tag in the form
 `build-<run-number>-<short-sha>`. The prerelease targets the exact pushed

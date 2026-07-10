@@ -12,6 +12,27 @@ A ground-up rewrite of [qBittorrent](https://www.qbittorrent.org/) with a **Qt 6
 Feature-by-feature rewrite in progress. See
 [`docs/FEATURE_SPEC.md`](docs/FEATURE_SPEC.md) for the full feature inventory.
 
+## Screenshots
+
+Captured from the installed Windows package with a fresh, empty test profile.
+The full annotated gallery lives in [`docs/SCREENSHOTS.md`](docs/SCREENSHOTS.md).
+
+![qBittorrent Material dashboard](docs/images/app/01-main-window.png)
+
+| Navigation and toolbar | Status filters |
+| --- | --- |
+| ![Navigation and Material toolbar](docs/images/app/07-navigation-and-toolbar.png) | ![Status filter sidebar](docs/images/app/03-filter-sidebar.png) |
+
+| Transfer workspace | Torrent properties tabs |
+| --- | --- |
+| ![Transfer list and filters](docs/images/app/04-transfer-list.png) | ![Torrent property tabs](docs/images/app/05-properties-tabs.png) |
+
+| Toolbar filter controls | Main workspace |
+| --- | --- |
+| ![Toolbar filter controls](docs/images/app/02-toolbar-and-filter.png) | ![Main application workspace](docs/images/app/08-main-workspace.png) |
+
+![Application status bar](docs/images/app/06-statusbar.png)
+
 ## Building
 
 On Windows, the helper provisions Qt 6.8.3 and the remaining repository-local
@@ -36,8 +57,8 @@ commands, and Linux/macOS instructions.
 
 Every branch push runs a Windows installer build on GitHub Actions using
 `windows-2022` and Qt 6.8.3. A successful run publishes the installer as a
-workflow artifact and creates a uniquely tagged GitHub prerelease for that
-exact commit.
+release asset on a uniquely tagged GitHub prerelease for that exact commit. No
+separate Actions artifact is retained.
 
 ## License
 

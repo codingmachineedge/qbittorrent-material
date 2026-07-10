@@ -124,13 +124,6 @@ jobs:
           "Installer: $($installer.Name)"
           "SHA256: $hash"
 
-      - name: Preserve the installer as a workflow artifact
-        uses: actions/upload-artifact@v4
-        with:
-          name: qBittorrent-Material-${{ env.QBT_BUILD_ID }}-windows-x64
-          path: ${{ steps.package.outputs.installer }}
-          if-no-files-found: error
-
       - name: Create or update this push's prerelease
         shell: pwsh
         env:
