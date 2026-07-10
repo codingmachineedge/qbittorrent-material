@@ -61,6 +61,17 @@ qBittorrent-Material-<version>-<build-id>-windows-x64.exe
 The package includes the Qt runtime, plugins, and QML imports required to run
 the installed application.
 
+## Visual smoke-test gallery
+
+The checked-in visual gallery was captured from the installed Windows package
+using a fresh test profile. It provides a quick UI handoff alongside the
+installer build and smoke test:
+
+![qBittorrent Material dashboard](images/app/01-main-window.png)
+
+See the complete [visual tour](SCREENSHOTS.md) for the toolbar, filters,
+transfer workspace, properties tabs, and status bar.
+
 If the build is already configured, the equivalent packaging command is:
 
 ```powershell
