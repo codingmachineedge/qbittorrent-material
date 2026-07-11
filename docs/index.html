@@ -43,7 +43,7 @@
         <a href="#features">Features</a>
         <a href="#experience">Experience</a>
         <a href="#pipeline">Releases</a>
-        <a href="#wiki">Docs &amp; wiki</a>
+        <a href="wiki.html">Docs &amp; wiki</a>
         <a href="#gallery">Gallery</a>
       </nav>
 
@@ -76,7 +76,7 @@
             <svg aria-hidden="true" viewBox="0 0 24 24"><path d="M12 3v12m0 0 4-4m-4 4-4-4M5 21h14"/></svg>
             Get the Windows installer
           </a>
-          <a class="button button--tonal button--large" href="#wiki">
+          <a class="button button--tonal button--large" href="wiki.html">
             Explore the docs
             <svg aria-hidden="true" viewBox="0 0 24 24"><path d="m9 18 6-6-6-6"/></svg>
           </a>
@@ -184,76 +184,26 @@
       </div>
     </section>
 
-    <section class="section wiki" id="wiki" aria-labelledby="wiki-title">
-      <div class="section-heading wiki__heading">
-        <div><span class="overline">Living project knowledge</span><h2 id="wiki-title">The complete docs, in one place.</h2></div>
-        <p>Search every guide, including the complete custom Workspace Tabs reference, without leaving this page. Use plain text, precise regular expressions, and field filters.</p>
+    <section class="section section--contained wiki-cta" id="wiki" aria-labelledby="wiki-title">
+      <div class="section-heading section-heading--centered">
+        <div><span class="overline">Living project knowledge</span><h2 id="wiki-title">The complete docs, on their own page.</h2></div>
+        <p>Every guide — building, architecture, the design system, the feature specification, and the complete custom Workspace Tabs reference — lives in a dedicated, locally searchable wiki with regex and field filters.</p>
       </div>
-
-      <div class="wiki-shell" id="wiki-workspace">
-        <div class="wiki-topbar">
-          <div class="wiki-topbar__title"><img src="assets/logo-mark.svg" alt="" width="32" height="32"><span><strong>Project wiki</strong><small>All documentation · locally searchable</small></span></div>
-          <div class="wiki-topbar__tools">
-            <button class="button button--text" id="open-import-export" type="button" aria-label="Import or export documentation" aria-haspopup="dialog" aria-controls="import-export-dialog"><svg aria-hidden="true" viewBox="0 0 24 24"><path d="M12 3v12m0-12 4 4m-4-4L8 7M5 21h14v-5"/></svg>Import / export</button>
-            <a class="icon-button" href="https://github.com/codingmachineedge/qbittorrent-material/wiki" aria-label="Open the GitHub Wiki" title="Open GitHub Wiki"><svg aria-hidden="true" viewBox="0 0 24 24"><path d="M5 4h14v16H5zM9 8h6m-6 4h6m-6 4h4"/></svg></a>
-          </div>
-        </div>
-
-        <div class="wiki-search-panel">
-          <form class="search-field" id="global-search-form" role="search">
-            <svg aria-hidden="true" viewBox="0 0 24 24"><circle cx="11" cy="11" r="7"/><path d="m16 16 5 5"/></svg>
-            <label class="sr-only" for="global-search">Search all documentation</label>
-            <input id="global-search" name="q" type="search" autocomplete="off" spellcheck="false" placeholder="Search every document…" aria-describedby="search-hint">
-            <kbd aria-hidden="true">/</kbd>
-          </form>
-          <div class="search-controls" aria-label="Search options">
-            <label class="toggle-chip" title="Interpret the query as a regular expression"><input id="regex-toggle" type="checkbox"><span>.*</span> Regex</label>
-            <label class="toggle-chip" title="Match uppercase and lowercase exactly"><input id="case-toggle" type="checkbox"><span>Aa</span> Match case</label>
-            <label class="toggle-chip" title="Match only complete words"><input id="whole-word-toggle" type="checkbox"><span>“ ”</span> Whole word</label>
-            <button class="filter-chip" id="open-filter-builder" type="button" aria-haspopup="dialog" aria-controls="filter-dialog"><svg aria-hidden="true" viewBox="0 0 24 24"><path d="M4 6h16M7 12h10M10 18h4"/></svg> Filters</button>
-            <button class="filter-chip" id="open-regex-builder" type="button" aria-haspopup="dialog" aria-controls="regex-dialog"><svg aria-hidden="true" viewBox="0 0 24 24"><path d="m5 16 4-8 4 8m-6-3h4M15 8v8m0-4h4"/></svg> Regex builder</button>
-          </div>
-          <small id="search-hint">Press <kbd>/</kbd> to search · <kbd>Esc</kbd> to clear · regular expressions run locally in your browser</small>
-          <div class="active-filter-chips" id="active-filter-chips" aria-live="polite"></div>
-        </div>
-
-        <div class="wiki-layout">
-          <aside class="doc-sidebar" aria-label="Documentation navigation">
-            <div class="doc-sidebar__heading"><span>Browse</span><span id="document-count">Documents</span></div>
-            <nav id="doc-nav" aria-label="Wiki pages">
-              <div class="nav-skeleton" aria-hidden="true"><span></span><span></span><span></span><span></span><span></span></div>
-            </nav>
-            <div class="doc-sidebar__footer">
-              <a href="https://github.com/codingmachineedge/qbittorrent-material/issues"><svg aria-hidden="true" viewBox="0 0 24 24"><circle cx="12" cy="12" r="9"/><path d="M12 7v6m0 4h.01"/></svg>Report a docs issue</a>
-            </div>
-          </aside>
-
-          <div class="doc-results" id="search-results" aria-label="Search results" hidden>
-            <div class="doc-results__header"><strong>Search results</strong><span id="search-status" role="status" aria-live="polite">Type to search all documentation</span></div>
-            <div id="search-result-list"></div>
-          </div>
-
-          <article class="doc-article" id="doc-article" tabindex="-1">
-            <nav class="breadcrumbs" id="doc-breadcrumbs" aria-label="Breadcrumb"><a href="#wiki">Wiki</a><span>/</span><span>Overview</span></nav>
-            <div class="article-loading" aria-live="polite">
-              <span class="overline">Welcome to the project wiki</span>
-              <h3>Documentation that works like the app.</h3>
-              <p>Browse the navigation or search the complete local documentation set. Pages are rendered here with headings, code, tables, links, and a generated outline.</p>
-              <div class="wiki-welcome-grid">
-                <button type="button" data-doc="BUILDING.md"><svg aria-hidden="true" viewBox="0 0 24 24"><path d="M14 4 4 14l6 6L20 10M12 6l6 6"/></svg><span><strong>Build the project</strong><small>Dependencies, presets, and packaging</small></span></button>
-                <button type="button" data-doc="ARCHITECTURE.md"><svg aria-hidden="true" viewBox="0 0 24 24"><path d="M12 3 3 8l9 5 9-5zM3 13l9 5 9-5M3 18l9 5 9-5"/></svg><span><strong>Explore architecture</strong><small>Layers, boundaries, and data flow</small></span></button>
-                <button type="button" data-doc="DESIGN_SYSTEM.md"><svg aria-hidden="true" viewBox="0 0 24 24"><path d="M12 3a9 9 0 0 0 0 18h1.5a2.5 2.5 0 0 0 0-5H12a2 2 0 0 1 0-4h5a4 4 0 0 0 4-4c0-2.76-4.03-5-9-5Z"/></svg><span><strong>Read the design system</strong><small>Tokens, components, and behavior</small></span></button>
-                <button type="button" data-doc="FEATURE_SPEC.md"><svg aria-hidden="true" viewBox="0 0 24 24"><path d="M6 3h9l4 4v14H6zM14 3v5h5M9 13h6M9 17h4"/></svg><span><strong>Feature specification</strong><small>The complete product definition</small></span></button>
-              </div>
-            </div>
-            <nav class="doc-pagination" aria-label="Adjacent wiki pages"><button class="button button--text" id="doc-prev" type="button" disabled><svg aria-hidden="true" viewBox="0 0 24 24"><path d="m15 18-6-6 6-6"/></svg>Previous</button><button class="button button--text" id="doc-next" type="button">Next<svg aria-hidden="true" viewBox="0 0 24 24"><path d="m9 18 6-6-6-6"/></svg></button></nav>
-          </article>
-
-          <aside class="article-toc" aria-label="On this page">
-            <strong>On this page</strong>
-            <nav id="article-toc"><span class="toc-empty">Choose a document to see its outline.</span></nav>
-          </aside>
-        </div>
+      <div class="wiki-cta__actions">
+        <a class="button button--filled button--large" href="wiki.html">
+          <svg aria-hidden="true" viewBox="0 0 24 24"><path d="M5 4h14v16H5zM9 8h6m-6 4h6m-6 4h4"/></svg>
+          Open the documentation &amp; wiki
+        </a>
+        <a class="button button--outlined button--large" href="https://github.com/codingmachineedge/qbittorrent-material/wiki">
+          GitHub Wiki
+          <svg aria-hidden="true" viewBox="0 0 24 24"><path d="M7 17 17 7M7 7h10v10"/></svg>
+        </a>
+      </div>
+      <div class="wiki-cta__grid">
+        <a href="wiki.html#wiki/building"><svg aria-hidden="true" viewBox="0 0 24 24"><path d="M14 4 4 14l6 6L20 10M12 6l6 6"/></svg><span><strong>Build the project</strong><small>Dependencies, presets, and packaging</small></span></a>
+        <a href="wiki.html#wiki/architecture"><svg aria-hidden="true" viewBox="0 0 24 24"><path d="M12 3 3 8l9 5 9-5zM3 13l9 5 9-5M3 18l9 5 9-5"/></svg><span><strong>Explore architecture</strong><small>Layers, boundaries, and data flow</small></span></a>
+        <a href="wiki.html#wiki/design-system"><svg aria-hidden="true" viewBox="0 0 24 24"><path d="M12 3a9 9 0 0 0 0 18h1.5a2.5 2.5 0 0 0 0-5H12a2 2 0 0 1 0-4h5a4 4 0 0 0 4-4c0-2.76-4.03-5-9-5Z"/></svg><span><strong>Read the design system</strong><small>Tokens, components, and behavior</small></span></a>
+        <a href="wiki.html#wiki/wiki-workspace-tabs"><svg aria-hidden="true" viewBox="0 0 24 24"><path d="M4 5h7v4H4zM11 5h9v4h-9zM4 9h16v10H4z"/></svg><span><strong>Workspace Tabs reference</strong><small>The complete custom workspace guide</small></span></a>
       </div>
     </section>
 
@@ -375,49 +325,10 @@
     <div class="site-footer__main">
       <a class="brand" href="#home"><img class="brand__mark" src="assets/logo-mark.svg" alt="" width="40" height="40"><span class="brand__wordmark"><strong>qBittorrent</strong><span>Material</span></span></a>
       <p>A community-built native qBittorrent rewrite with one compact Material workspace system.</p>
-      <nav aria-label="Footer navigation"><div><strong>Project</strong><a href="https://github.com/codingmachineedge/qbittorrent-material">Source</a><a href="https://github.com/codingmachineedge/qbittorrent-material/releases">Releases</a><a href="https://github.com/codingmachineedge/qbittorrent-material/actions">Actions</a></div><div><strong>Learn</strong><a href="#wiki">Documentation</a><a href="#wiki/wiki-workspace-tabs">Workspace tabs</a><a href="#gallery">Screenshots</a><a href="#roadmap">Roadmap</a></div><div><strong>Community</strong><a href="https://github.com/codingmachineedge/qbittorrent-material/issues">Issues</a><a href="https://github.com/codingmachineedge/qbittorrent-material/pulls">Pull requests</a><a href="https://github.com/codingmachineedge/qbittorrent-material/wiki">GitHub Wiki</a></div></nav>
+      <nav aria-label="Footer navigation"><div><strong>Project</strong><a href="https://github.com/codingmachineedge/qbittorrent-material">Source</a><a href="https://github.com/codingmachineedge/qbittorrent-material/releases">Releases</a><a href="https://github.com/codingmachineedge/qbittorrent-material/actions">Actions</a></div><div><strong>Learn</strong><a href="wiki.html">Documentation</a><a href="wiki.html#wiki/wiki-workspace-tabs">Workspace tabs</a><a href="#gallery">Screenshots</a><a href="#roadmap">Roadmap</a></div><div><strong>Community</strong><a href="https://github.com/codingmachineedge/qbittorrent-material/issues">Issues</a><a href="https://github.com/codingmachineedge/qbittorrent-material/pulls">Pull requests</a><a href="https://github.com/codingmachineedge/qbittorrent-material/wiki">GitHub Wiki</a></div></nav>
     </div>
     <div class="site-footer__legal"><span>Released as open-source software. qBittorrent is a trademark of its respective owners.</span><a href="#home">Back to top <svg aria-hidden="true" viewBox="0 0 24 24"><path d="m6 15 6-6 6 6"/></svg></a></div>
   </footer>
-
-  <dialog class="builder-dialog" id="filter-dialog" aria-labelledby="filter-dialog-title">
-    <form method="dialog">
-      <header><div><span class="dialog-icon"><svg aria-hidden="true" viewBox="0 0 24 24"><path d="M4 6h16M7 12h10M10 18h4"/></svg></span><span><strong id="filter-dialog-title">Filter builder</strong><small>Combine rules to narrow the documentation</small></span></div><button class="icon-button" value="cancel" aria-label="Close filter builder"><svg aria-hidden="true" viewBox="0 0 24 24"><path d="M6 6l12 12M18 6 6 18"/></svg></button></header>
-      <div class="dialog-body">
-        <fieldset><legend>Match</legend><div class="segmented-control"><label><input type="radio" name="filter-match" value="all" checked><span>All rules</span></label><label><input type="radio" name="filter-match" value="any"><span>Any rule</span></label></div></fieldset>
-        <div class="filter-rules" id="filter-rules" aria-live="polite">
-          <div class="filter-rule" data-filter-rule><label><span>Field</span><select aria-label="Field"><option value="document">Document</option><option value="heading">Heading</option><option value="content">Content</option><option value="type">File type</option></select></label><label><span>Condition</span><select aria-label="Condition"><option value="contains">contains</option><option value="equals">equals</option><option value="starts">starts with</option><option value="regex">matches regex</option></select></label><label class="filter-rule__value"><span>Value</span><input type="text" aria-label="Filter value" placeholder="e.g. architecture"></label><button class="icon-button remove-filter-rule" type="button" aria-label="Remove rule"><svg aria-hidden="true" viewBox="0 0 24 24"><path d="M5 7h14M9 7V4h6v3m-8 0 1 14h8l1-14M10 11v6m4-6v6"/></svg></button></div>
-        </div>
-        <button class="button button--tonal" id="add-filter-rule" type="button"><svg aria-hidden="true" viewBox="0 0 24 24"><path d="M12 5v14M5 12h14"/></svg>Add rule</button>
-      </div>
-      <footer><button class="button button--text" id="clear-filters" type="button">Clear all</button><span></span><button class="button button--text" value="cancel">Cancel</button><button class="button button--filled" id="apply-filters" value="apply">Apply filters</button></footer>
-    </form>
-  </dialog>
-
-  <dialog class="builder-dialog" id="regex-dialog" aria-labelledby="regex-dialog-title">
-    <form method="dialog">
-      <header><div><span class="dialog-icon"><svg aria-hidden="true" viewBox="0 0 24 24"><path d="m4 16 4-8 4 8m-6-3h4M15 8v8m0-4h5"/></svg></span><span><strong id="regex-dialog-title">Regex search builder</strong><small>Build, test, import, and export a precise pattern</small></span></div><button class="icon-button" value="cancel" aria-label="Close regex builder"><svg aria-hidden="true" viewBox="0 0 24 24"><path d="M6 6l12 12M18 6 6 18"/></svg></button></header>
-      <div class="dialog-body regex-builder">
-        <label class="outlined-field regex-pattern-field"><span>Regular expression</span><span class="regex-slash">/</span><input id="regex-pattern" type="text" spellcheck="false" autocomplete="off" placeholder="(?:material|design)\\s+system"><span class="regex-slash">/</span><input id="regex-flags" class="regex-flags" type="text" value="gi" maxlength="6" aria-label="Regular expression flags"></label>
-        <div class="regex-tokens" aria-label="Pattern building blocks"><button type="button" data-regex-token=".">Any character</button><button type="button" data-regex-token="\\w+">Word</button><button type="button" data-regex-token="\\d+">Number</button><button type="button" data-regex-token="\\s+">Whitespace</button><button type="button" data-regex-token="^">Starts with</button><button type="button" data-regex-token="$">Ends with</button><button type="button" data-regex-token="(?:)">Group</button><button type="button" data-regex-token="|">Or</button><button type="button" data-regex-token=".*?">Anything</button><button type="button" data-regex-token="[A-Z]">Range</button></div>
-        <label class="outlined-field outlined-field--area"><span>Test text</span><textarea id="regex-sample" rows="5" placeholder="Paste sample documentation text here to test the expression…">The Material design system defines reusable color, typography, shape, and motion tokens.</textarea></label>
-        <div class="regex-preview" id="regex-preview" role="status" aria-live="polite"><span>Pattern preview</span><code>No pattern entered</code></div>
-        <div class="regex-builder__io"><button class="button button--text" id="regex-import" type="button"><svg aria-hidden="true" viewBox="0 0 24 24"><path d="M12 21V9m0 12-4-4m4 4 4-4M5 3h14v5"/></svg>Import pattern</button><button class="button button--text" id="regex-export" type="button"><svg aria-hidden="true" viewBox="0 0 24 24"><path d="M12 3v12m0-12 4 4m-4-4L8 7M5 21h14v-5"/></svg>Export pattern</button></div>
-      </div>
-      <footer><button class="button button--text" id="regex-clear" type="button">Reset</button><span></span><button class="button button--text" value="cancel">Cancel</button><button class="button button--filled" id="regex-apply" value="apply">Use expression</button></footer>
-    </form>
-  </dialog>
-
-  <dialog class="builder-dialog" id="import-export-dialog" aria-labelledby="import-export-title">
-    <form method="dialog">
-      <header><div><span class="dialog-icon"><svg aria-hidden="true" viewBox="0 0 24 24"><path d="M8 3H5a2 2 0 0 0-2 2v14h16v-3M12 3h7v7m0-7-9 9"/></svg></span><span><strong id="import-export-title">Import &amp; export</strong><small>Bring in Markdown or save a portable wiki snapshot</small></span></div><button class="icon-button" value="cancel" aria-label="Close import and export"><svg aria-hidden="true" viewBox="0 0 24 24"><path d="M6 6l12 12M18 6 6 18"/></svg></button></header>
-      <div class="dialog-body transfer-options">
-        <section><div class="transfer-options__icon"><svg aria-hidden="true" viewBox="0 0 24 24"><path d="M12 21V9m0 12-4-4m4 4 4-4M5 3h14v5"/></svg></div><div><h3>Import documentation</h3><p>Add local Markdown, text, or JSON wiki bundles to this browser session. Files never leave your device, and remote images in imported Markdown are blocked. Browser storage is shared by Pages sites on this owner’s <code>github.io</code> origin, so do not import secrets.</p><button class="button button--tonal" id="choose-import-files" type="button"><svg aria-hidden="true" viewBox="0 0 24 24"><path d="M12 5v14M5 12h14"/></svg>Choose files</button><input id="import-files" class="sr-only" type="file" accept=".md,.markdown,.txt,.json,text/markdown,text/plain,application/json" multiple tabindex="-1"><div id="import-file-list" class="import-file-list" aria-live="polite"></div><button class="button button--text danger-text" id="clear-imports" type="button">Clear imported pages</button></div></section>
-        <section><div class="transfer-options__icon"><svg aria-hidden="true" viewBox="0 0 24 24"><path d="M12 3v12m0-12 4 4m-4-4L8 7M5 21h14v-5"/></svg></div><div><h3>Export your workspace</h3><p>Download the full wiki index or save the current search, options, filters, and matching results.</p><div class="transfer-options__buttons"><button class="button button--tonal" id="export-wiki" type="button">Export wiki JSON</button><button class="button button--outlined" id="export-search" type="button">Export search JSON</button></div></div></section>
-      </div>
-      <footer><span></span><span></span><button class="button button--filled" value="close">Done</button></footer>
-    </form>
-  </dialog>
 
   <dialog class="lightbox-dialog" id="lightbox-dialog" aria-labelledby="lightbox-caption">
     <form method="dialog"><button class="icon-button lightbox-dialog__close" value="close" aria-label="Close image viewer"><svg aria-hidden="true" viewBox="0 0 24 24"><path d="M6 6l12 12M18 6 6 18"/></svg></button></form>

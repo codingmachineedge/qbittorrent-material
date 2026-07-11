@@ -1539,6 +1539,14 @@
   }
 
   function initialize() {
+    // The documentation wiki lives on its own page (wiki.html). If a legacy
+    // "#wiki/..." deep link lands on a page without the wiki shell (the
+    // marketing landing page), forward it to the dedicated wiki page so old
+    // bookmarks and shared links keep working.
+    if (!byId("wiki-workspace") && /^#wiki(\/|$)/.test(location.hash)) {
+      location.replace("wiki.html" + location.hash);
+      return;
+    }
     initializeTheme();
     rebuildCorpus();
     syncSearchControls();
