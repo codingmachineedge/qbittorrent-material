@@ -67,22 +67,50 @@ function Find-Python {
 # --- 0. winget helper for cmake/ninja -----------------------------------------
 function Ensure-Tool($cmd, $wingetId, $friendly) {
     if (Have $cmd) { return }
+    # Reuse tools bundled with an existing Visual Studio installation before
+    # downloading another copy. VS does not add these CMake paths globally.
+    $knownDirs = switch ($cmd) {
+        'cmake' {
+            @(
+                (Join-Path $env:ProgramFiles 'CMake\bin'),
+                (Join-Path $env:ProgramFiles 'Microsoft Visual Studio\18\Enterprise\Common7\IDE\CommonExtensions\Microsoft\CMake\CMake\bin'),
+                (Join-Path $env:ProgramFiles 'Microsoft Visual Studio\2022\Community\Common7\IDE\CommonExtensions\Microsoft\CMake\CMake\bin')
+            )
+        }
+        'ninja' {
+            @(
+                (Join-Path $env:LOCALAPPDATA 'Microsoft\WinGet\Links'),
+                (Join-Path $env:ProgramFiles 'Ninja'),
+                (Join-Path $env:ProgramFiles 'Microsoft Visual Studio\18\Enterprise\Common7\IDE\CommonExtensions\Microsoft\CMake\Ninja'),
+                (Join-Path $env:ProgramFiles 'Microsoft Visual Studio\2022\Community\Common7\IDE\CommonExtensions\Microsoft\CMake\Ninja')
+            )
+        }
+        default { @() }
+    }
+    $vswhere = "${env:ProgramFiles(x86)}\Microsoft Visual Studio\Installer\vswhere.exe"
+    if (Test-Path $vswhere) {
+        foreach ($install in @(& $vswhere -all -products * -property installationPath 2>$null)) {
+            if ($cmd -eq 'cmake') {
+                $knownDirs += (Join-Path $install 'Common7\IDE\CommonExtensions\Microsoft\CMake\CMake\bin')
+            }
+            elseif ($cmd -eq 'ninja') {
+                $knownDirs += (Join-Path $install 'Common7\IDE\CommonExtensions\Microsoft\CMake\Ninja')
+            }
+        }
+    }
+    foreach ($dir in $knownDirs) {
+        if ($dir -and (Test-Path (Join-Path $dir "$cmd.exe"))) {
+            $env:PATH = "$dir;$env:PATH"
+            break
+        }
+    }
+    if (Have $cmd) { return }
     if (Have 'winget') {
         Info "Installing $friendly via winget..."
         winget install --id $wingetId --accept-source-agreements --accept-package-agreements -e --silent | Out-Host
     }
     # Most installers update the persistent PATH, not this PowerShell process.
-    # Add the known install directories before checking again.
-    $knownDirs = switch ($cmd) {
-        'cmake' { @((Join-Path $env:ProgramFiles 'CMake\bin')) }
-        'ninja' {
-            @(
-                (Join-Path $env:LOCALAPPDATA 'Microsoft\WinGet\Links'),
-                (Join-Path $env:ProgramFiles 'Ninja')
-            )
-        }
-        default { @() }
-    }
+    # Re-check the known install directories after the installer returns.
     foreach ($dir in $knownDirs) {
         if ($dir -and (Test-Path (Join-Path $dir "$cmd.exe"))) {
             $env:PATH = "$dir;$env:PATH"

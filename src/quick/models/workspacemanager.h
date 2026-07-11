@@ -18,7 +18,7 @@
 #include <QVariantMap>
 #include <QVector>
 
-class WorkspaceManager final : public QAbstractListModel
+class WorkspaceManager : public QAbstractListModel
 {
     Q_OBJECT
     QML_ELEMENT
