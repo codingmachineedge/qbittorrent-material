@@ -5,6 +5,39 @@
 
 The app forces `QQuickStyle::setStyle("Material")` at startup and drives every color through a single QML singleton `Theme` (backed by C++ `ThemeManager`). Qt Quick Controls' Material attached properties (`Material.theme/accent/background/foreground/primary/elevation`) are set from `Theme` so stock controls and custom components stay in sync. The three legacy user options are preserved verbatim (same setting keys): `Appearance/ColorScheme` (System/Light/Dark) and `Appearance/TrayIconStyle` (Normal/Monochrome). `System` follows `Qt.styleHints.colorScheme`.
 
+## 0. Material 3 rebuild — three switchable UI styles (2026-07)
+
+The current design (handoff in `design/incoming/2026-07-11-claude/`, intake in
+[DESIGN_INTAKE.md](DESIGN_INTAKE.md)) ships **three UI styles**, each a
+complete Material 3 palette in light and dark, selected in Settings →
+Appearance and persisted as `Appearance/UiStyle`:
+
+- **A — Tonal Rail** (purple, `primary` `#5646d6`/`#c4c0ff`): an 84px labeled
+  navigation rail + FAB, status filter chips, a comfortable 56px-row table,
+  and a floating selection action bar.
+- **B — Split Dock** (teal, `#00696d`/`#80d4d9`): navigation as header
+  segments, the classic 232px filter sidebar, a dense 34px table with
+  queue/status/ratio columns, and a bottom properties dock.
+- **C — Card Flow** (pink, `#8c4a60`/`#ffb1c8`): a 64px icon rail + FAB,
+  chips, a card list, and a persistent 340px detail panel.
+
+Each style defines the 13 core roles (`bg surf sc sc2 on onv ol olv pr onPr pc
+onPc shadow`) per scheme; a shared GitHub-style status set (`success error
+warning done muted info`) is layered on top, along with hover overlays
+(`hover`/`hoverStrong`), an inverse snackbar surface, and per-style container
+tints. `ThemeManager::buildStylePalette()` maps these onto the same role ids
+the whole app already resolves through `Theme.color(id)`, so switching style
+or scheme restyles every screen without per-consumer changes. QML branches
+layout on `Theme.isTonalRail` / `Theme.isSplitDock` / `Theme.isCardFlow`.
+
+The redesign also adds non-blocking right **sheets** (`src/quick/qml/shell/`):
+the git History manager, the notification center, quick Settings (theme +
+style switch + retention), and the Regex Builder — none of them modal.
+
+The sections below document the original single-accent palette and remain the
+reference for typography, geometry, icons, and motion, which the rebuild
+inherits unchanged.
+
 ## 1. Color roles (qBittorrent Material + Google dark)
 The light palette is the supplied qBittorrent Material system verbatim: cool neutral surfaces, one Google-blue action accent, and explicit semantic status colors. The dark palette uses Google's dark UI neutrals and dark-theme status colors while retaining the same role graph. Purple and decorative accent families are intentionally absent; `done` resolves to success and `info` resolves to primary.
 
