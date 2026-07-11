@@ -249,6 +249,21 @@ Install it (one-time) with:
 then re-run this script.
 "@
 }
+$VcVarsFile = Get-Item -LiteralPath $vcvars -ErrorAction Stop
+$VcVarsBuildDir = $VcVarsFile.Directory
+if ($null -eq $VcVarsBuildDir -or $VcVarsBuildDir.Name -ine 'Build') {
+    Die "Cannot derive the Visual Studio installation from $($VcVarsFile.FullName)."
+}
+$VcVarsAuxiliaryDir = $VcVarsBuildDir.Parent
+if ($null -eq $VcVarsAuxiliaryDir -or $VcVarsAuxiliaryDir.Name -ine 'Auxiliary') {
+    Die "Unexpected Visual Studio vcvars path: $($VcVarsFile.FullName)."
+}
+$VcDir = $VcVarsAuxiliaryDir.Parent
+if ($null -eq $VcDir -or $VcDir.Name -ine 'VC' -or $null -eq $VcDir.Parent) {
+    Die "Unexpected Visual Studio vcvars path: $($VcVarsFile.FullName)."
+}
+$env:VCPKG_VISUAL_STUDIO_PATH = $VcDir.Parent.FullName
+Info "Pinning vcpkg to the selected Visual Studio: $env:VCPKG_VISUAL_STUDIO_PATH"
 Import-VcVars $vcvars
 
 Ensure-Tool 'cmake' 'Kitware.CMake' 'CMake'
@@ -259,13 +274,28 @@ Ensure-Vcpkg
 if ($Jobs -le 0) { $Jobs = [Environment]::ProcessorCount }
 
 Info "Configuring (CMake + Ninja)..."
-cmake -B $BuildDir -S $Repo -G Ninja `
-    -DCMAKE_BUILD_TYPE=Release `
-    -DCMAKE_TOOLCHAIN_FILE="$VcpkgRoot/scripts/buildsystems/vcpkg.cmake" `
-    -DVCPKG_TARGET_TRIPLET=$Triplet `
-    -DVCPKG_INSTALLED_DIR="$VcpkgRoot/installed" `
-    -DVCPKG_MANIFEST_MODE=ON `
-    -DCMAKE_PREFIX_PATH="$QtPrefix"
+$CMakeExe = (Get-Command 'cmake.exe' -CommandType Application -ErrorAction Stop |
+    Select-Object -First 1).Source
+$NinjaExe = (Get-Command 'ninja.exe' -CommandType Application -ErrorAction Stop |
+    Select-Object -First 1).Source
+$VcpkgToolchain = Join-Path $VcpkgRoot 'scripts\buildsystems\vcpkg.cmake'
+$VcpkgInstalled = Join-Path $VcpkgRoot 'installed'
+$CMakeConfigureArgs = @(
+    '-B'
+    $BuildDir
+    '-S'
+    $Repo
+    '-G'
+    'Ninja'
+    '-DCMAKE_BUILD_TYPE=Release'
+    "-DCMAKE_MAKE_PROGRAM:FILEPATH=$NinjaExe"
+    "-DCMAKE_TOOLCHAIN_FILE:FILEPATH=$VcpkgToolchain"
+    "-DVCPKG_TARGET_TRIPLET:STRING=$Triplet"
+    "-DVCPKG_INSTALLED_DIR:PATH=$VcpkgInstalled"
+    '-DVCPKG_MANIFEST_MODE=ON'
+    "-DCMAKE_PREFIX_PATH:PATH=$QtPrefix"
+)
+& $CMakeExe @CMakeConfigureArgs
 if ($LASTEXITCODE -ne 0) { Die "CMake configure failed." }
 
 Info "Building (-j $Jobs)..."

@@ -570,7 +570,7 @@ bool WorkspaceManager::exportRepository(const QUrl &destinationFolder)
     if (!ok)
     {
         QString removeError;
-        removeTree(destination, &removeError);
+        (void)removeTree(destination, &removeError);
     }
     emit operationFinished(ok,
         ok ? tr("Complete Git repository exported with its history.") : error,
@@ -611,7 +611,7 @@ bool WorkspaceManager::importRepository(const QUrl &sourceFolder)
         || !loadSnapshotFromRoot(staging, &importedSnapshot, &error))
     {
         QString removeError;
-        removeTree(staging, &removeError);
+        (void)removeTree(staging, &removeError);
         emit operationFinished(false, error, QUrl::fromLocalFile(source));
         return false;
     }
@@ -620,7 +620,7 @@ bool WorkspaceManager::importRepository(const QUrl &sourceFolder)
     const QString currentName = QFileInfo(m_repositoryPath).fileName();
     if (!parentDir.rename(currentName, QFileInfo(backup).fileName()))
     {
-        removeTree(staging, nullptr);
+        (void)removeTree(staging, nullptr);
         emit operationFinished(false, tr("Could not create a safety backup of the current repository."), {});
         return false;
     }
@@ -628,7 +628,7 @@ bool WorkspaceManager::importRepository(const QUrl &sourceFolder)
     {
         const bool restored = parentDir.rename(QFileInfo(backup).fileName(), currentName);
         if (restored)
-            removeTree(staging, nullptr);
+            (void)removeTree(staging, nullptr);
         else
         {
             m_initializationBlocked = true;
