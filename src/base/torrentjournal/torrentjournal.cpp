@@ -20,6 +20,7 @@
 #include "base/settingsstorage.h"
 #include "base/tag.h"
 #include "torrentjournalserializer.h"
+#include "torrentundomanager.h"
 
 using namespace Qt::Literals::StringLiterals;
 using namespace TorrentJournalNS;
@@ -365,6 +366,21 @@ void TorrentJournal::onSessionRestored()
     {
         qCInfo(lcApp) << "Torrent journal:" << orphans.size()
             << "journaled torrents are not in the session (restorable via History)";
+
+        // Opt-in: with no real resume-data storage in this fork, the journal
+        // can double as the persistence layer and re-add everything it knows
+        // about on startup. Deferred so the session finishes settling first.
+        if (SettingsStorage::instance()->loadValue(u"TorrentJournal/AutoRestoreOnStartup"_s, false))
+        {
+            QTimer::singleShot(0, this, []
+            {
+                if (TorrentUndoManager *undoManager = TorrentUndoManager::instance())
+                {
+                    qCInfo(lcApp) << "Torrent journal: auto-restoring journaled torrents on startup";
+                    undoManager->restoreMissingTorrents();
+                }
+            });
+        }
     }
     emit statusChanged();
     Q_UNUSED(anyChanged);
