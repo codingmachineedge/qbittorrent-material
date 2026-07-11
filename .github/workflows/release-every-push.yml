@@ -10,6 +10,7 @@ on:
 # Branch-only filtering above excludes tag pushes, and GITHUB_TOKEN-generated
 # events do not recursively start another ordinary push workflow.
 permissions:
+  actions: write
   contents: write
 
 jobs:
@@ -157,3 +158,47 @@ jobs:
               --prerelease `
               --latest=false
           }
+
+      - name: Remove completed Actions artifacts
+        if: always()
+        shell: pwsh
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          $artifacts = @()
+          $page = 1
+          do {
+            $response = gh api `
+              "repos/$env:GITHUB_REPOSITORY/actions/artifacts?per_page=100&page=$page" |
+              ConvertFrom-Json
+            $batch = @($response.artifacts)
+            $artifacts += $batch
+            $page++
+          } while ($batch.Count -eq 100)
+
+          foreach ($artifact in $artifacts) {
+            $runStatus = gh api `
+              "repos/$env:GITHUB_REPOSITORY/actions/runs/$($artifact.workflow_run.id)" `
+              --jq '.status'
+            if ($runStatus -ne "completed") {
+              Write-Host "Leaving active artifact $($artifact.name) ($($artifact.id)) in place."
+              continue
+            }
+            gh api --method DELETE `
+              "repos/$env:GITHUB_REPOSITORY/actions/artifacts/$($artifact.id)"
+            Write-Host "Deleted completed artifact $($artifact.name) ($($artifact.id))."
+          }
+
+          $remaining = gh api `
+            "repos/$env:GITHUB_REPOSITORY/actions/artifacts?per_page=100" |
+            ConvertFrom-Json
+          $completedRemaining = @($remaining.artifacts | Where-Object {
+            $status = gh api `
+              "repos/$env:GITHUB_REPOSITORY/actions/runs/$($_.workflow_run.id)" `
+              --jq '.status'
+            $status -eq "completed"
+          })
+          if ($completedRemaining.Count -ne 0) {
+            throw "Completed Actions artifacts remain after cleanup: $($completedRemaining.Count)."
+          }
+          Write-Host "No completed Actions artifacts are retained."
