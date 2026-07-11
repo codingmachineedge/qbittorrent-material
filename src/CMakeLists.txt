@@ -189,6 +189,7 @@ else()
     set(QBT_ASSET_GLOBS
         "${QBT_RES_ROOT}/fonts/*.ttf"
         "${QBT_RES_ROOT}/fonts/*.otf"
+        "${QBT_RES_ROOT}/branding/*.svg"
         "${QBT_RES_ROOT}/icons/flags/*.svg"
         "${QBT_RES_ROOT}/icons/flags/*.png"
         "${QBT_RES_ROOT}/icons/tray/*.svg"
