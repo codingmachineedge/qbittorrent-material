@@ -27,7 +27,7 @@ function Get-DocumentCategory([string] $repositoryPath) {
         '^README\.md$' { return "Overview" }
         '^docs/wiki/' { return "Wiki" }
         'BUILDING|REQUIREMENTS|PAGES' { return "Get started" }
-        'SCREENSHOTS|SCREENS' { return "Interface" }
+        'SCREENSHOTS|SCREENS|WORKSPACE_TABS' { return "Interface" }
         'DESIGN_SYSTEM' { return "Design" }
         'ARCHITECTURE|CONTRACTS|ENGINE_API|FILE_PLAN' { return "Engineering" }
         'FEATURE_SPEC' { return "Product" }

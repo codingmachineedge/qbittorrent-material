@@ -32,6 +32,10 @@ MenuBar {
     component IconMenuItem: MenuItem {
         id: ctl
         property string glyph: ""
+        function displayText(value) {
+            return String(value).replace(/&&/g, "\uE000")
+                .replace(/&/g, "").replace(/\uE000/g, "&")
+        }
         implicitHeight: 40
         contentItem: RowLayout {
             spacing: Spacing.md
@@ -44,7 +48,7 @@ MenuBar {
                 Layout.leftMargin: Spacing.xs
             }
             Label {
-                text: ctl.text
+                text: ctl.displayText(ctl.text)
                 font: Typography.bodyMedium
                 color: Theme.color("onSurface")
                 opacity: ctl.enabled ? 1.0 : 0.4
@@ -153,6 +157,26 @@ MenuBar {
             MenuItem { action: menuBar.shell.actionSetLockPassword }
             MenuItem { action: menuBar.shell.actionClearLockPassword }
         }
+    }
+
+    // ---- Workspace ----------------------------------------------------------
+    Menu {
+        title: qsTr("&Workspace")
+        Material.elevation: 8
+        onOpened: Log.debug("ui", "Workspace menu opened")
+
+        IconMenuItem { action: menuBar.shell.actionWorkspaceNewTab; glyph: Icons.add }
+        IconMenuItem { action: menuBar.shell.actionWorkspaceCloseTab; glyph: Icons.close }
+        IconMenuItem { action: menuBar.shell.actionWorkspaceCustomizeTab; glyph: Icons.edit }
+        IconMenuItem { action: menuBar.shell.actionWorkspaceRenameApp; glyph: Icons.edit }
+        MenuSeparator {}
+        IconMenuItem { action: menuBar.shell.actionWorkspaceSync; glyph: Icons.refresh }
+        IconMenuItem { action: menuBar.shell.actionWorkspaceOpenRepository; glyph: Icons.folder_open }
+        MenuSeparator {}
+        IconMenuItem { action: menuBar.shell.actionWorkspaceImport; glyph: Icons.upload }
+        IconMenuItem { action: menuBar.shell.actionWorkspaceExport; glyph: Icons.save_alt }
+        IconMenuItem { action: menuBar.shell.actionWorkspaceImportRepository; glyph: Icons.upload }
+        IconMenuItem { action: menuBar.shell.actionWorkspaceExportRepository; glyph: Icons.save_alt }
     }
 
     // ---- Tools --------------------------------------------------------------

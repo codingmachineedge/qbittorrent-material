@@ -53,8 +53,13 @@ function Convert-WikiLinks([string] $content) {
         '../REQUIREMENTS.md' = 'Reference-Requirements'
         '../SCREENSHOTS.md' = 'Reference-Visual-Tour'
         'SCREENSHOTS.md' = 'Reference-Visual-Tour'
+        '../WORKSPACE_TABS.md' = 'Reference-Workspace-Tabs'
+        'WORKSPACE_TABS.md' = 'Reference-Workspace-Tabs'
+        'wiki/Workspace-Tabs.md' = 'Workspace-Tabs'
+        'wiki/Troubleshooting.md' = 'Troubleshooting'
         'Getting-Started.md' = 'Getting-Started'
         'Interface-Tour.md' = 'Interface-Tour'
+        'Workspace-Tabs.md' = 'Workspace-Tabs'
         'Search-Import-Export.md' = 'Search-Import-Export'
         'Releases.md' = 'Releases'
         'Architecture.md' = 'Architecture'
@@ -93,6 +98,7 @@ $referencePages = [ordered]@{
     'PAGES.md' = 'Reference-Documentation-Site.md'
     'REQUIREMENTS.md' = 'Reference-Requirements.md'
     'SCREENSHOTS.md' = 'Reference-Visual-Tour.md'
+    'WORKSPACE_TABS.md' = 'Reference-Workspace-Tabs.md'
 }
 
 foreach ($entry in $referencePages.GetEnumerator()) {
@@ -122,6 +128,7 @@ $sidebar = @'
 - [Home](Home)
 - [Getting started](Getting-Started)
 - [Interface tour](Interface-Tour)
+- [Workspace tabs](Workspace-Tabs)
 - [Search and portability](Search-Import-Export)
 - [FAQ](FAQ)
 
@@ -143,6 +150,7 @@ $sidebar = @'
 - [Documentation site](Reference-Documentation-Site)
 - [Requirements](Reference-Requirements)
 - [Visual tour](Reference-Visual-Tour)
+- [Workspace tabs](Reference-Workspace-Tabs)
 - [File plan](Reference-File-Plan)
 - [Screen blueprints](Reference-Screen-Blueprints)
 

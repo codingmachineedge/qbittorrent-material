@@ -169,6 +169,7 @@ target_link_libraries(qbittorrent
         Qt6::Svg
         Qt6::Sql
         Qt6::Widgets
+        libgit2::libgit2package
         LibtorrentRasterbar::torrent-rasterbar
 )
 

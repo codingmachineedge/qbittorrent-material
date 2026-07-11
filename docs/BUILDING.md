@@ -29,10 +29,10 @@ powershell -ExecutionPolicy Bypass -File .\run.ps1 -Clean -NoRun
 powershell -ExecutionPolicy Bypass -File .\run.ps1 -NoRun -Jobs 8
 ```
 
-The first build can take a while because the helper installs CMake, Ninja,
+The first build can take a while because the helper installs Git, CMake, Ninja,
 Python, and NSIS when necessary, downloads Qt 6.8.3 to `.qt`, and builds the
 vcpkg dependencies in `.vcpkg`. Visual Studio Build Tools must be installed by
-the user.
+the user; the remaining command-line dependencies are provisioned automatically.
 
 ## Windows: build an installer
 
@@ -58,8 +58,9 @@ Installer names follow this pattern:
 qBittorrent-Material-<version>-<build-id>-windows-x64.exe
 ```
 
-The package includes the Qt runtime, plugins, and QML imports required to run
-the installed application.
+The package includes the Qt runtime, plugins, QML imports, and libgit2 support
+required to run the installed application and its persistent local Workspace
+repository. End users do not need to install the Git command-line client.
 
 ## Visual smoke-test gallery
 
@@ -92,7 +93,9 @@ cmake --build build --parallel
 ```
 
 CMake requires Qt 6.6 or newer, libtorrent-rasterbar 2.0.7 or newer, Boost
-1.76 or newer, OpenSSL 3.0 or newer, and Zlib 1.2.11 or newer.
+1.76 or newer, OpenSSL 3.0 or newer, Zlib 1.2.11 or newer, and libgit2. The
+supported Windows helper supplies libgit2 through the repository's vcpkg
+manifest.
 
 ## Linux and macOS
 
@@ -112,6 +115,13 @@ workflow. It builds on `windows-2022` with MSVC 2022 and Qt 6.8.3, creates and
 smoke-tests the NSIS installer, and publishes it as a GitHub prerelease:
 
 - A GitHub prerelease containing the Windows x64 installer as its release asset.
+
+The installed-app gate removes every Git executable directory from `PATH`, then
+verifies that bundled libgit2 initializes and commits a clean repository. It
+also simulates an interrupted metadata save and confirms that the orphaned page
+body is restored as a committed recovered tab without data loss. A second crash
+window confirms that a tracked body left behind after an intentional close is
+removed and not resurrected.
 
 The workflow intentionally does not retain a separate Actions artifact.
 

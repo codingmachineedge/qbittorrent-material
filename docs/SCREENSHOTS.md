@@ -36,6 +36,37 @@ Sources, Content, and Speed tabs.
 
 ![Main workspace](images/app/08-main-workspace.png)
 
+## Persistent custom workspace
+
+These views were captured from the verified installed application. **LowLevel
+Workspace Studio** is a user-defined display name used to demonstrate renaming;
+it is still qBittorrent Material.
+
+The Workspace combines a browser-style tab strip, one plain-text page per tab,
+per-tab appearance, and visible local Git status.
+
+![Custom Workspace tabs](images/app/09-custom-workspace-tabs.png)
+
+Right-clicking a tab keeps page actions anchored to that tab in a compact,
+bordered menu.
+
+![Workspace tab context menu](images/app/10-tab-context-menu.png)
+
+Each page owns its name, installed font family and style, 6–144 point size,
+bold/italic state, and unrestricted HSV/alpha or hexadecimal font color.
+
+![Tab typography and color editor](images/app/11-tab-typography-color.png)
+
+The portability menu separates compact JSON snapshots from complete Git
+repository transfers that include history.
+
+![Workspace import and export menu](images/app/12-workspace-portability.png)
+
+After relaunch, the user display name, tabs, active page, content, typography,
+and color return from the managed repository.
+
+![Workspace restored after relaunch](images/app/13-restored-workspace.png)
+
 ## Status information
 
 The compact status bar remains visible at the bottom of the application shell.

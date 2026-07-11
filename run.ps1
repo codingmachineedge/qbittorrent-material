@@ -16,10 +16,10 @@
     - Visual Studio 2022 Build Tools (MSVC, C++). MUST be installed by you
       (Microsoft does not allow silent redistribution). If missing, the script
       prints the one-line winget command to get it.
-    - CMake >= 3.21, Ninja  -> installed via winget if missing
+    - Git, CMake >= 3.21, Ninja -> installed via winget if missing
     - Python 3              -> used to fetch Qt (aqtinstall)
     - Qt 6.8.3 (msvc2022_64) -> fetched into .\.qt via aqtinstall
-    - vcpkg + libtorrent/zlib -> cloned into .\.vcpkg and built
+    - vcpkg + libtorrent/libgit2/zlib -> cloned into .\.vcpkg and built
     - NSIS 3                -> installed via winget only when -Package is used
 #>
 [CmdletBinding()]
@@ -64,25 +64,61 @@ function Find-Python {
     return $null
 }
 
-# --- 0. winget helper for cmake/ninja -----------------------------------------
+# --- 0. winget helper for Git/CMake/Ninja -------------------------------------
 function Ensure-Tool($cmd, $wingetId, $friendly) {
+    if (Have $cmd) { return }
+    # Reuse tools bundled with an existing Visual Studio installation before
+    # downloading another copy. VS does not add these CMake paths globally.
+    $knownDirs = switch ($cmd) {
+        'cmake' {
+            @(
+                (Join-Path $env:ProgramFiles 'CMake\bin'),
+                (Join-Path $env:ProgramFiles 'Microsoft Visual Studio\18\Enterprise\Common7\IDE\CommonExtensions\Microsoft\CMake\CMake\bin'),
+                (Join-Path $env:ProgramFiles 'Microsoft Visual Studio\2022\Community\Common7\IDE\CommonExtensions\Microsoft\CMake\CMake\bin')
+            )
+        }
+        'ninja' {
+            @(
+                (Join-Path $env:LOCALAPPDATA 'Microsoft\WinGet\Links'),
+                (Join-Path $env:ProgramFiles 'Ninja'),
+                (Join-Path $env:ProgramFiles 'Microsoft Visual Studio\18\Enterprise\Common7\IDE\CommonExtensions\Microsoft\CMake\Ninja'),
+                (Join-Path $env:ProgramFiles 'Microsoft Visual Studio\2022\Community\Common7\IDE\CommonExtensions\Microsoft\CMake\Ninja')
+            )
+        }
+        'git' {
+            @(
+                (Join-Path $env:LOCALAPPDATA 'Programs\Git\cmd'),
+                (Join-Path $env:LOCALAPPDATA 'Microsoft\WinGet\Links'),
+                (Join-Path $env:ProgramFiles 'Git\cmd'),
+                (Join-Path ${env:ProgramFiles(x86)} 'Git\cmd')
+            )
+        }
+        default { @() }
+    }
+    $vswhere = "${env:ProgramFiles(x86)}\Microsoft Visual Studio\Installer\vswhere.exe"
+    if (Test-Path $vswhere) {
+        foreach ($install in @(& $vswhere -all -products * -property installationPath 2>$null)) {
+            if ($cmd -eq 'cmake') {
+                $knownDirs += (Join-Path $install 'Common7\IDE\CommonExtensions\Microsoft\CMake\CMake\bin')
+            }
+            elseif ($cmd -eq 'ninja') {
+                $knownDirs += (Join-Path $install 'Common7\IDE\CommonExtensions\Microsoft\CMake\Ninja')
+            }
+        }
+    }
+    foreach ($dir in $knownDirs) {
+        if ($dir -and (Test-Path (Join-Path $dir "$cmd.exe"))) {
+            $env:PATH = "$dir;$env:PATH"
+            break
+        }
+    }
     if (Have $cmd) { return }
     if (Have 'winget') {
         Info "Installing $friendly via winget..."
         winget install --id $wingetId --accept-source-agreements --accept-package-agreements -e --silent | Out-Host
     }
     # Most installers update the persistent PATH, not this PowerShell process.
-    # Add the known install directories before checking again.
-    $knownDirs = switch ($cmd) {
-        'cmake' { @((Join-Path $env:ProgramFiles 'CMake\bin')) }
-        'ninja' {
-            @(
-                (Join-Path $env:LOCALAPPDATA 'Microsoft\WinGet\Links'),
-                (Join-Path $env:ProgramFiles 'Ninja')
-            )
-        }
-        default { @() }
-    }
+    # Re-check the known install directories after the installer returns.
     foreach ($dir in $knownDirs) {
         if ($dir -and (Test-Path (Join-Path $dir "$cmd.exe"))) {
             $env:PATH = "$dir;$env:PATH"
@@ -165,7 +201,7 @@ function Ensure-Qt {
     if (-not (Test-Path (Join-Path $QtPrefix 'bin\qmake.exe'))) { Die "Qt install failed." }
 }
 
-# --- 3. vcpkg + libtorrent -----------------------------------------------------
+# --- 3. vcpkg + native libraries ----------------------------------------------
 function Ensure-Vcpkg {
     if (-not (Test-Path $VcpkgRoot)) {
         Info "Cloning vcpkg into $VcpkgRoot ..."
@@ -200,8 +236,10 @@ function Ensure-Vcpkg {
         --clean-after-build | Out-Host
     if ($LASTEXITCODE -ne 0) { Die 'vcpkg dependency restore failed.' }
 
-    $installed = Join-Path $installedRoot "$Triplet\lib\torrent-rasterbar.lib"
-    if (-not (Test-Path $installed)) { Die 'vcpkg completed but libtorrent was not installed.' }
+    $libtorrent = Join-Path $installedRoot "$Triplet\lib\torrent-rasterbar.lib"
+    $libgit2 = Join-Path $installedRoot "$Triplet\lib\git2.lib"
+    if (-not (Test-Path $libtorrent)) { Die 'vcpkg completed but libtorrent was not installed.' }
+    if (-not (Test-Path $libgit2)) { Die 'vcpkg completed but libgit2 was not installed.' }
 }
 
 # --- MAIN ----------------------------------------------------------------------
@@ -219,8 +257,24 @@ Install it (one-time) with:
 then re-run this script.
 "@
 }
+$VcVarsFile = Get-Item -LiteralPath $vcvars -ErrorAction Stop
+$VcVarsBuildDir = $VcVarsFile.Directory
+if ($null -eq $VcVarsBuildDir -or $VcVarsBuildDir.Name -ine 'Build') {
+    Die "Cannot derive the Visual Studio installation from $($VcVarsFile.FullName)."
+}
+$VcVarsAuxiliaryDir = $VcVarsBuildDir.Parent
+if ($null -eq $VcVarsAuxiliaryDir -or $VcVarsAuxiliaryDir.Name -ine 'Auxiliary') {
+    Die "Unexpected Visual Studio vcvars path: $($VcVarsFile.FullName)."
+}
+$VcDir = $VcVarsAuxiliaryDir.Parent
+if ($null -eq $VcDir -or $VcDir.Name -ine 'VC' -or $null -eq $VcDir.Parent) {
+    Die "Unexpected Visual Studio vcvars path: $($VcVarsFile.FullName)."
+}
+$env:VCPKG_VISUAL_STUDIO_PATH = $VcDir.Parent.FullName
+Info "Pinning vcpkg to the selected Visual Studio: $env:VCPKG_VISUAL_STUDIO_PATH"
 Import-VcVars $vcvars
 
+Ensure-Tool 'git' 'Git.Git' 'Git'
 Ensure-Tool 'cmake' 'Kitware.CMake' 'CMake'
 Ensure-Tool 'ninja' 'Ninja-build.Ninja' 'Ninja'
 Ensure-Qt
@@ -229,13 +283,28 @@ Ensure-Vcpkg
 if ($Jobs -le 0) { $Jobs = [Environment]::ProcessorCount }
 
 Info "Configuring (CMake + Ninja)..."
-cmake -B $BuildDir -S $Repo -G Ninja `
-    -DCMAKE_BUILD_TYPE=Release `
-    -DCMAKE_TOOLCHAIN_FILE="$VcpkgRoot/scripts/buildsystems/vcpkg.cmake" `
-    -DVCPKG_TARGET_TRIPLET=$Triplet `
-    -DVCPKG_INSTALLED_DIR="$VcpkgRoot/installed" `
-    -DVCPKG_MANIFEST_MODE=ON `
-    -DCMAKE_PREFIX_PATH="$QtPrefix"
+$CMakeExe = (Get-Command 'cmake.exe' -CommandType Application -ErrorAction Stop |
+    Select-Object -First 1).Source
+$NinjaExe = (Get-Command 'ninja.exe' -CommandType Application -ErrorAction Stop |
+    Select-Object -First 1).Source
+$VcpkgToolchain = Join-Path $VcpkgRoot 'scripts\buildsystems\vcpkg.cmake'
+$VcpkgInstalled = Join-Path $VcpkgRoot 'installed'
+$CMakeConfigureArgs = @(
+    '-B'
+    $BuildDir
+    '-S'
+    $Repo
+    '-G'
+    'Ninja'
+    '-DCMAKE_BUILD_TYPE=Release'
+    "-DCMAKE_MAKE_PROGRAM:FILEPATH=$NinjaExe"
+    "-DCMAKE_TOOLCHAIN_FILE:FILEPATH=$VcpkgToolchain"
+    "-DVCPKG_TARGET_TRIPLET:STRING=$Triplet"
+    "-DVCPKG_INSTALLED_DIR:PATH=$VcpkgInstalled"
+    '-DVCPKG_MANIFEST_MODE=ON'
+    "-DCMAKE_PREFIX_PATH:PATH=$QtPrefix"
+)
+& $CMakeExe @CMakeConfigureArgs
 if ($LASTEXITCODE -ne 0) { Die "CMake configure failed." }
 
 Info "Building (-j $Jobs)..."

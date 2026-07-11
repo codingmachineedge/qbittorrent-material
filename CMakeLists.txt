@@ -88,6 +88,7 @@ find_package(OpenSSL ${minOpenSSLVersion} REQUIRED)
 find_package(Boost ${minBoostVersion} REQUIRED)
 find_package(ZLIB ${minZlibVersion} REQUIRED)
 find_package(LibtorrentRasterbar ${minLibtorrentVersion} REQUIRED)
+find_package(libgit2 CONFIG REQUIRED)
 
 message(STATUS "qbittorrent-material: Qt ${Qt6_VERSION}, "
     "libtorrent ${LibtorrentRasterbar_VERSION}, DBus=${QBT_DBUS}")

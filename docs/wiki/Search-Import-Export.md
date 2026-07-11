@@ -36,3 +36,11 @@ Rules can target title, path, category, format, or body. Combine rules with **al
 - Export the current query, regex options, and filter rules as a portable search profile.
 
 Imported documents remain in this browser through local storage and can be cleared at any time. They are rendered as untrusted text; scripts and unsafe URLs are never executed.
+
+## Application Workspace exports are separate
+
+The desktop application's **Workspace** tab has its own JSON snapshot and
+complete Git repository export actions. Those formats contain personal
+workspace pages and appearance settings; this documentation site's wiki bundles
+contain searchable documents and browser search state. The two JSON formats are
+versioned independently and are not interchangeable. See [Workspace Tabs](Workspace-Tabs.md).

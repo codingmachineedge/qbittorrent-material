@@ -26,6 +26,35 @@ The lower responsive panel exposes General, Trackers, Peers, HTTP Sources, Conte
 
 ![Main workspace](images/app/08-main-workspace.png)
 
+## Build a personal workspace
+
+The always-available **Workspace** top-level tab contains a second,
+browser-style tab strip. Each tab opens one plain-text page and remembers its
+name, content, position, selected state, and individual typography. Create a
+page with **+** or `Ctrl+T`; close it with the tab button, a middle-click, or
+`Ctrl+W` while Workspace is active.
+
+Right-click a tab to edit its name and appearance, duplicate it, close the other
+tabs, or close it. The appearance dialog supports installed font families and
+styles, 6–144 point sizes, bold, italic, and an unrestricted HSV/alpha or hex
+font color. The Workspace header also exposes application renaming, local Git
+status, manual save-and-commit, repository access, and portability actions.
+
+Read [Workspace Tabs](Workspace-Tabs.md) for the complete workflow.
+
+**LowLevel Workspace Studio** is a user-defined display name shown to verify
+that renaming survives relaunch; it is not a separate edition.
+
+![Persistent Workspace tabs](images/app/09-custom-workspace-tabs.png)
+
+| Tab actions | Name and appearance |
+| --- | --- |
+| ![Workspace tab context menu](images/app/10-tab-context-menu.png) | ![Typography and unlimited color editor](images/app/11-tab-typography-color.png) |
+
+| Portable workspace | Restored state |
+| --- | --- |
+| ![JSON and complete Git repository actions](images/app/12-workspace-portability.png) | ![Workspace restored after relaunch](images/app/13-restored-workspace.png) |
+
 ## Session status
 
 Connection state, alternative speed state, free disk space, and live transfer rates remain visible in the compact footer.

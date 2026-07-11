@@ -10,6 +10,7 @@ This wiki is maintained in the main repository so the GitHub Wiki and the search
 
 - [Getting started](Getting-Started.md) — install a prerelease, build locally, and launch the app.
 - [Interface tour](Interface-Tour.md) — learn the navigation, filters, transfer table, properties, and status areas.
+- [Workspace tabs](Workspace-Tabs.md) — create persistent pages, customize typography, and move snapshots or complete local Git history.
 - [Search, filters, and portability](Search-Import-Export.md) — use regex search, the filter builder, and JSON/Markdown import and export.
 - [Releases and automation](Releases.md) — understand the installer pipeline and per-push prereleases.
 - [Architecture](Architecture.md) — explore the engine, controller, model, and QML boundaries.
@@ -22,3 +23,4 @@ This wiki is maintained in the main repository so the GitHub Wiki and the search
 2. Keep every first-party window and dialog in the Material design system.
 3. Make repeatable builds and self-contained Windows installers the default path.
 4. Treat documentation and screenshots as tested product surfaces.
+5. Keep personal workspace data local and portable by default.

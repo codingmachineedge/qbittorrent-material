@@ -24,6 +24,21 @@ A ground-up rewrite of [qBittorrent](https://www.qbittorrent.org/) with a **Qt 6
 Feature-by-feature rewrite in progress. See
 [`docs/FEATURE_SPEC.md`](docs/FEATURE_SPEC.md) for the full feature inventory.
 
+## Persistent custom workspace
+
+The built-in **Workspace** adds browser-style tabs for personal plain-text pages.
+Tab names, order, content, active page, and per-tab typography are restored on
+launch. Right-click a tab to choose any installed font and style, a 6–144 point
+size, bold or italic emphasis, and an unrestricted font color with alpha.
+
+The application display name can be changed without changing the executable or
+profile identity. Workspace edits save atomically and commit automatically to a
+managed local Git repository through bundled libgit2—no separate Git install or
+remote service is required. Export a compact JSON snapshot or the complete Git
+repository with its history, and import either format from the Workspace menu.
+
+See [Custom Workspace Tabs](docs/WORKSPACE_TABS.md) for the complete guide.
+
 ## Documentation website
 
 The [GitHub Pages site](https://codingmachineedge.github.io/qbittorrent-material/)
@@ -66,10 +81,26 @@ The full annotated gallery lives in [`docs/SCREENSHOTS.md`](docs/SCREENSHOTS.md)
 
 ![Application status bar](docs/images/app/06-statusbar.png)
 
+### Persistent Workspace
+
+The screenshots below come from the installed app. **LowLevel Workspace Studio**
+is a user-selected display name that demonstrates application renaming; it is
+not a separate edition or project rebrand.
+
+![Persistent browser-style Workspace tabs with a user-renamed application](docs/images/app/09-custom-workspace-tabs.png)
+
+| Tab context menu | Per-tab typography and unlimited color |
+| --- | --- |
+| ![Workspace tab context menu](docs/images/app/10-tab-context-menu.png) | ![Tab name, font, style, size, emphasis, and color controls](docs/images/app/11-tab-typography-color.png) |
+
+| JSON and complete Git portability | Restored after relaunch |
+| --- | --- |
+| ![Workspace JSON and complete Git repository portability menu](docs/images/app/12-workspace-portability.png) | ![Renamed application and persistent tabs restored after relaunch](docs/images/app/13-restored-workspace.png) |
+
 ## Building
 
-On Windows, the helper provisions Qt 6.8.3 and the remaining repository-local
-dependencies, then builds with MSVC 2022 and Ninja:
+On Windows, the helper provisions Git, CMake, Ninja, Python, Qt 6.8.3, vcpkg,
+and the remaining repository-local dependencies, then builds with MSVC 2022:
 
 ```powershell
 # Build and run

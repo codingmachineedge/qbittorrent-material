@@ -22,6 +22,7 @@ moc_*.h
 ui_*.h
 *.qmake.stash
 .qmake.cache
+aqtinstall.log
 
 # IDE
 .vscode/

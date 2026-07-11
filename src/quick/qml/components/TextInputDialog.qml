@@ -47,6 +47,9 @@ Popup {
     /*! Field placeholder. */
     property string placeholder: ""
 
+    /*! Optional automation/accessibility object name for the internal field. */
+    property string inputObjectName: ""
+
     /*! Optional QML validator assigned to the field. */
     property var validator: null
 
@@ -120,6 +123,7 @@ Popup {
 
         TextField {
             id: field
+            objectName: root.inputObjectName
             Layout.fillWidth: true
             placeholderText: root.placeholder
             selectByMouse: true
