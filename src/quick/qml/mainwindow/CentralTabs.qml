@@ -53,9 +53,11 @@ Item {
             central.activateTab(index)
     }
 
+    // Header owns the transfers filter field now; expose a hook the shell drives.
+    signal focusFilterRequested()
     function toggleFilterFocus() {
-        if (currentIndex === 0 && transfersLoader.item && transfersLoader.item.toggleFilterFocus)
-            transfersLoader.item.toggleFilterFocus()
+        if (currentIndex === 0)
+            central.focusFilterRequested()
     }
 
     function workspaceItem() {
@@ -113,20 +115,27 @@ Item {
         if (item) item.syncWorkspace()
     }
 
+    // The shared filter proxy — created here so the header search pill, the
+    // A/C status chips, and the B sidebar all drive the same model.
+    TorrentFilterProxyModel {
+        id: sharedProxy
+        sourceModel: TransferListModel
+    }
+    readonly property var proxy: sharedProxy
+
     RowLayout {
         anchors.fill: parent
         spacing: 0
 
-        AppNavigationSidebar {
-            Layout.preferredWidth: Spacing.navigationWidth
+        // Tonal Rail (A) / Card Flow (C): a left navigation rail. Split Dock (B)
+        // puts navigation in the header segments instead (design directions).
+        NavRail {
+            visible: !Theme.isSplitDock
             Layout.fillHeight: true
-            shell: central.shell
-            currentIndex: central.currentIndex
-            transfersCount: central.transfersCount
-            rssUnread: central.rssUnread
-            transferProxy: transfersLoader.item ? transfersLoader.item.proxy : null
-            onNavigateRequested: (index) => central.requestDestination(index)
-            onOptionsRequested: central.shell.showOptions()
+            navModel: central.navModel
+            currentTab: central.currentIndex
+            onNavRequested: (index) => central.requestDestination(index)
+            onAddRequested: central.shell.addTorrentFile()
         }
 
         Rectangle {
@@ -139,13 +148,12 @@ Item {
                 anchors.fill: parent
                 currentIndex: central.currentIndex
 
-                Loader {
-                    id: transfersLoader
-                    active: true
-                    sourceComponent: TransfersTab {
-                        shell: central.shell
-                        sidebarVisible: false
-                    }
+                // 0 — Transfers (redesigned, per UI style).
+                TransfersPage {
+                    id: transfersPage
+                    shell: central.shell
+                    filterProxy: sharedProxy
+                    onDeleteRequested: central.shell.removeSelected()
                 }
 
                 Loader {
@@ -178,6 +186,15 @@ Item {
             }
         }
     }
+
+    // Navigation model shared by the rails (A/C) and the header segments (B).
+    readonly property var navModel: [
+        { label: qsTr("Transfers"), icon: "download", page: 0, badge: 0 },
+        { label: qsTr("Search"), icon: "travel_explore", page: 1, badge: 0 },
+        { label: qsTr("RSS"), icon: "rss_feed", page: 2, badge: central.rssUnread },
+        { label: qsTr("Log"), icon: "article", page: 3, badge: 0 },
+        { label: qsTr("Notes"), icon: "edit_note", page: 4, badge: 0 }
+    ]
 
     Component.onCompleted: Log.debug("ui", "Design-system workspace shell ready")
 }

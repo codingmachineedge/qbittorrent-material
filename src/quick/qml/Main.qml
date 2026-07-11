@@ -50,6 +50,7 @@ ApplicationWindow {
     readonly property bool captureMode: captureOutput.length > 0
     readonly property int capturePage: parseInt(argumentValue("--capture-page", "0")) || 0
     readonly property string captureTheme: argumentValue("--capture-theme", "light")
+    readonly property string captureStyle: argumentValue("--capture-style", "")
     readonly property string captureDialog: argumentValue("--capture-dialog", "")
     readonly property int captureWidth: parseInt(argumentValue("--capture-width", "1440")) || 1440
     readonly property int captureHeight: parseInt(argumentValue("--capture-height", "900")) || 900
@@ -263,6 +264,28 @@ ApplicationWindow {
     }
 
     // --- Edit ---
+    property alias actionUndo: actionUndo
+    Action {
+        id: actionUndo
+        text: JournalController.canUndo
+            ? qsTr("&Undo %1").arg(JournalController.lastActionDescription)
+            : qsTr("&Undo")
+        shortcut: StandardKey.Undo
+        // Never steal Ctrl+Z from a focused text editor (e.g. the Workspace notes).
+        enabled: JournalController.canUndo && !JournalController.busy
+                 && !(root.activeFocusItem && (root.activeFocusItem.canUndo !== undefined))
+        onTriggered: {
+            Log.info("ui", "Action: Undo last journaled change")
+            JournalController.undoLast()
+        }
+    }
+    property alias actionShowHistory: actionShowHistory
+    Action {
+        id: actionShowHistory
+        text: qsTr("&History")
+        shortcut: "Ctrl+H"
+        onTriggered: root.togglePanel("history")
+    }
     property alias actionStart: actionStart
     Action {
         id: actionStart
@@ -662,10 +685,21 @@ ApplicationWindow {
     //  Chrome: compact application bar / persistent nav / status footer
     // =========================================================================
 
-    header: AppToolBar {
-        id: appToolBar
+    // The redesigned 64px header (Material Redesign). The legacy AppToolBar
+    // still ships but is superseded by AppHeader; its verbs live on in the
+    // header's overflow AppMenuBar.
+    header: AppHeader {
+        id: appHeader
         shell: root
         visible: root.toolbarVisible
+        currentTab: root.currentTabIndex
+        filterProxy: centralTabs.proxy
+        rssUnread: centralTabs.rssUnread
+        unreadNotifications: 0   // TODO(#11): NotificationController.unreadCount
+        activePanel: root.activePanel
+        onNavRequested: (index) => root.switchToTab(index)
+        onPanelRequested: (panel) => root.togglePanel(panel)
+        onRegexBuilderRequested: root.togglePanel("regex")
     }
 
     footer: AppStatusBar {
@@ -682,6 +716,51 @@ ApplicationWindow {
         searchEnabled: root.searchTabEnabled
         rssEnabled: root.rssTabEnabled
         logEnabled: root.executionLogEnabled
+        onFocusFilterRequested: appHeader.focusFilter()
+    }
+
+    // -- Redesigned right-anchored sheets (non-blocking) ----------------------
+    property string activePanel: ""   // "", "history", "settings", "notifications", "regex", "add"
+
+    function togglePanel(panel) {
+        root.activePanel = (root.activePanel === panel) ? "" : panel
+    }
+    function closePanel() { root.activePanel = "" }
+
+    HistorySheet {
+        id: historySheet
+        parent: centralTabs
+        open: root.activePanel === "history"
+        onCloseRequested: root.closePanel()
+        onNotifyRequested: (m) => snackbar.show(m)
+        onRestoreConfirm: (commitId, laterCount) => {
+            restoreConfirmDialog.commitId = commitId
+            restoreConfirmDialog.laterCount = laterCount
+            restoreConfirmDialog.open()
+        }
+    }
+
+    SettingsSheet {
+        id: settingsSheet
+        parent: centralTabs
+        open: root.activePanel === "settings"
+        onCloseRequested: root.closePanel()
+        onOpenHistoryRequested: root.activePanel = "history"
+        onOpenFullOptionsRequested: { root.closePanel(); root.showOptions() }
+    }
+
+    ConfirmDialog {
+        id: restoreConfirmDialog
+        parent: Overlay.overlay
+        property string commitId: ""
+        property int laterCount: 0
+        title: qsTr("Restore to this point")
+        text: laterCount === 1
+            ? qsTr("This will revert 1 later action, recreating or removing torrents as needed.")
+            : qsTr("This will revert %1 later actions, recreating or removing torrents as needed.").arg(laterCount)
+        acceptText: qsTr("Restore")
+        destructive: true
+        onAccepted: JournalController.restoreTo(restoreConfirmDialog.commitId)
     }
 
     // =========================================================================
@@ -776,6 +855,7 @@ ApplicationWindow {
     Shortcut { sequences: ["Alt+3"]; onActivated: root.switchToTab(2) }
     Shortcut { sequences: ["Alt+4"]; onActivated: root.switchToTab(3) }
     Shortcut { sequences: ["Alt+5"]; onActivated: root.switchToTab(4) }
+    Shortcut { sequences: ["Escape"]; enabled: root.activePanel.length > 0; onActivated: root.closePanel() }
     Shortcut {
         sequences: [StandardKey.Find, "Ctrl+E"]
         enabled: root.currentTabIndex === 0
@@ -819,6 +899,23 @@ ApplicationWindow {
         function onShowMainWindowRequested() { root.showAndRaise() }
         function onToggleMainWindowRequested() { root.toggleVisibility() }
         function onHideMainWindowRequested() { root.hide() }
+    }
+
+    // Global undo snackbar: every undoable journaled action offers a one-tap
+    // UNDO. The commit id is captured per-message so a queued snackbar always
+    // undoes the entry it was shown for.
+    Connections {
+        target: JournalController
+        function onActionJournaled(commitId, description, undoable) {
+            if (undoable)
+                snackbar.show(description, qsTr("Undo"), () => JournalController.undoEntry(commitId))
+            else
+                snackbar.show(description)
+        }
+        function onOperationFinished(success, message) {
+            if (message && message.length > 0)
+                snackbar.show(message)
+        }
     }
 
     Connections {
@@ -1112,6 +1209,9 @@ ApplicationWindow {
             root.executionLogEnabled = root.executionLogEnabled || root.capturePage === 3
             ThemeManager.colorScheme = root.captureTheme === "dark"
                 ? ThemeManager.Dark : ThemeManager.Light
+            if (root.captureStyle === "A") ThemeManager.uiStyle = ThemeManager.TonalRail
+            else if (root.captureStyle === "B") ThemeManager.uiStyle = ThemeManager.SplitDock
+            else if (root.captureStyle === "C") ThemeManager.uiStyle = ThemeManager.CardFlow
             captureSetupTimer.start()
         }
 
