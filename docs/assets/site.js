@@ -1538,6 +1538,50 @@
     }
   }
 
+  // Point the download buttons straight at the newest Windows installer .exe.
+  // Every push publishes a *prerelease* (never marked "latest"), so the
+  // /releases/latest endpoint returns nothing — the releases LIST must be
+  // queried and the newest "*-windows-x64.exe" asset chosen. On any failure
+  // (offline, API rate limit) the buttons keep their /releases fallback href.
+  function resolveInstallerLink() {
+    var links = document.querySelectorAll(".js-installer-link");
+    if (!links.length || typeof fetch !== "function") return;
+    var api = "https://api.github.com/repos/codingmachineedge/qbittorrent-material/releases?per_page=15";
+    fetch(api, { headers: { Accept: "application/vnd.github+json" } })
+      .then(function (response) {
+        if (!response.ok) throw new Error("releases request failed: " + response.status);
+        return response.json();
+      })
+      .then(function (releases) {
+        if (!Array.isArray(releases)) return;
+        var asset = null;
+        var releaseTag = "";
+        for (var i = 0; i < releases.length && !asset; i++) {
+          var release = releases[i];
+          if (release.draft) continue;
+          var assets = release.assets || [];
+          for (var j = 0; j < assets.length; j++) {
+            if (/-windows-x64\.exe$/i.test(assets[j].name || "")) {
+              asset = assets[j];
+              releaseTag = release.tag_name || release.name || "";
+              break;
+            }
+          }
+        }
+        if (!asset || !asset.browser_download_url) return;
+        Array.prototype.forEach.call(links, function (link) {
+          link.href = asset.browser_download_url;
+          link.setAttribute("download", "");
+          var label = link.getAttribute("data-installer-label") || "Download";
+          link.title = "Download the Windows installer directly"
+            + (releaseTag ? " · " + releaseTag : "");
+          link.setAttribute("aria-label", label + " — direct .exe download"
+            + (releaseTag ? " (" + releaseTag + ")" : ""));
+        });
+      })
+      .catch(function () { /* keep the /releases fallback href */ });
+  }
+
   function initialize() {
     // The documentation wiki lives on its own page (wiki.html). If a legacy
     // "#wiki/..." deep link lands on a page without the wiki shell (the
@@ -1557,6 +1601,7 @@
     var explicitDocumentRoute = handleRoute();
     if (!explicitDocumentRoute && (state.query || state.filters.length)) performSearch(false);
     registerServiceWorker();
+    resolveInstallerLink();
   }
 
   if (document.readyState === "loading") document.addEventListener("DOMContentLoaded", initialize);
