@@ -12,6 +12,8 @@ build-<workflow-run-number>-<8-character-commit>
 
 The installer is uploaded directly as a GitHub Release asset. The workflow intentionally retains no ordinary Actions artifact.
 
+GitHub Pages can create a transient internal deployment artifact when `master/docs` changes. The installer workflow's final cleanup step removes completed Actions artifacts after every push, while leaving the tested installer safely attached to its GitHub Release.
+
 ## Pages publishing
 
 GitHub Pages publishes directly from `master/docs`. That keeps the documentation deployment static and artifact-free. The generated `content.generated.js` file is committed so the browser needs no build tool or API at runtime.

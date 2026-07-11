@@ -67,7 +67,7 @@ The exporter writes curated pages, complete references, JSON blueprints rendered
 
 ## Publishing
 
-GitHub Pages uses `master` and `/docs` as its source. This branch-based configuration is deliberate: it avoids the Pages upload artifact and keeps the existing installer workflow's no-artifact guarantee intact.
+GitHub Pages uses `master` and `/docs` as its source. This branch-based configuration keeps the published site auditable without a repository-maintained Pages upload workflow. GitHub may create a short-lived internal `github-pages` artifact during deployment; the installer workflow removes completed Actions artifacts at the end of every run, so none are retained.
 
 The site includes `.nojekyll`, a web manifest, an offline service worker, project-root-aware `404.html`, and linked sitemap metadata. Pages refreshes automatically after `master` changes.
 
