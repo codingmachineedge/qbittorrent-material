@@ -48,8 +48,8 @@ Dialog {
     modal: true
     parent: Overlay.overlay
     anchors.centerIn: parent
-    width: Math.min(480, (parent ? parent.width : 480) * 0.9)
-    padding: Spacing.lg
+    width: Math.min(520, (parent ? parent.width : 520) * 0.9)
+    padding: Spacing.xl
 
     Material.elevation: 24
     Material.roundedScale: Material.MediumScale
@@ -57,6 +57,8 @@ Dialog {
     background: Rectangle {
         radius: Spacing.radiusDialog
         color: Theme.color("surface")
+        border.width: 1
+        border.color: Theme.color("outline")
     }
 
     onOpened: {
@@ -67,7 +69,7 @@ Dialog {
 
     header: Label {
         text: root.title
-        font: Typography.headlineSmall
+        font: Typography.sectionTitle
         color: Theme.color("onSurface")
         elide: Text.ElideRight
         padding: Spacing.lg
@@ -92,7 +94,7 @@ Dialog {
                 text: root.torrentsCount === 1
                       ? qsTr("Are you sure you want to remove '%1' from the transfer list?").arg(root.torrentName)
                       : qsTr("Are you sure you want to remove these %1 torrents from the transfer list?").arg(root.torrentsCount)
-                font: Typography.bodyMedium
+                font: Typography.bodyLarge
                 color: Theme.color("onSurfaceVariant")
                 wrapMode: Text.WordWrap
                 Layout.fillWidth: true

@@ -1270,10 +1270,16 @@ void WorkspaceManager::loadWorkspace()
         }
     }
 
+    // An explicit workspace root is an isolated/portable workspace. Do not
+    // import the normal user's QSettings display-name override into it (capture
+    // profiles and portable workspaces must start from canonical product state).
+    const bool isolatedWorkspace = !qEnvironmentVariable("QBT_WORKSPACE_ROOT").trimmed().isEmpty();
     QSettings settings;
-    snapshot.appDisplayName = normalizedName(
-        settings.value(QStringLiteral("Workspace/AppDisplayName"), QString::fromLatin1(ProductDisplayName)).toString(),
-        80, QString::fromLatin1(ProductDisplayName));
+    snapshot.appDisplayName = isolatedWorkspace
+        ? QString::fromLatin1(ProductDisplayName)
+        : normalizedName(
+            settings.value(QStringLiteral("Workspace/AppDisplayName"), QString::fromLatin1(ProductDisplayName)).toString(),
+            80, QString::fromLatin1(ProductDisplayName));
     Tab welcome;
     welcome.id = newTabId();
     welcome.name = tr("Welcome");
@@ -1327,10 +1333,15 @@ bool WorkspaceManager::saveNow(const QString &commitMessage, QString *error)
     setDirty(false);
     updateRepositoryStatus();
 
-    QSettings settings;
-    settings.setValue(QStringLiteral("Workspace/AppDisplayName"), m_appDisplayName);
-    settings.setValue(QStringLiteral("Workspace/ActiveTabId"), activeTabId());
-    settings.sync();
+    // Portable/explicit roots carry this metadata in workspace.json and must
+    // not rewrite the normal user's global QSettings profile.
+    if (qEnvironmentVariable("QBT_WORKSPACE_ROOT").trimmed().isEmpty())
+    {
+        QSettings settings;
+        settings.setValue(QStringLiteral("Workspace/AppDisplayName"), m_appDisplayName);
+        settings.setValue(QStringLiteral("Workspace/ActiveTabId"), activeTabId());
+        settings.sync();
+    }
     return true;
 }
 

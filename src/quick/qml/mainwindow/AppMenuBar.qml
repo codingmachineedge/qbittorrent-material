@@ -16,16 +16,42 @@ import QtQuick.Layouts
 import qBittorrent
 
 /*!
-    AppMenuBar — the top-level Material menu bar (File / Edit / View / Tools /
-    Plugins / Help). Every item is driven by a shared \c Action declared in
-    Main.qml (\c shell), so the menu, toolbar and tray menu all trigger the exact
-    same verbs and stay in sync. Icons are rendered with \c MDIcon glyphs.
+    AppMenuBar — the compact application-menu button used by the 64 px shell
+    bar. It keeps the complete File / Edit / View / Workspace / Tools / Plugins /
+    Help command hierarchy without adding a second row of desktop chrome.
+    Every item is still driven by the shared \c Action objects from Main.qml.
 */
-MenuBar {
+ToolButton {
     id: menuBar
 
     /// The Main.qml root, exposing the shared Action objects + shell state.
     required property var shell
+
+    implicitWidth: 40
+    implicitHeight: 40
+    display: AbstractButton.IconOnly
+    flat: true
+    Accessible.name: qsTr("Application menu")
+
+    contentItem: MDIcon {
+        icon: Icons.more_vert
+        size: 20
+        color: Theme.color("onSurfaceVariant")
+        anchors.centerIn: parent
+    }
+
+    background: Rectangle {
+        radius: height / 2
+        color: menuBar.down || menuBar.hovered ? Theme.color("surfaceWarm") : "transparent"
+        border.width: menuBar.activeFocus ? 2 : 0
+        border.color: Theme.color("primary")
+    }
+
+    ToolTip.visible: hovered
+    ToolTip.text: qsTr("Application menu")
+    ToolTip.delay: 500
+
+    onClicked: applicationMenu.popup()
 
     // A menu item that renders a leading Material Symbols glyph next to its label.
     // (Checkable items keep the default checkmark indicator, so they omit the glyph.)
@@ -57,6 +83,11 @@ MenuBar {
             }
         }
     }
+
+    Menu {
+        id: applicationMenu
+        y: menuBar.height
+        Material.elevation: 8
 
     // ---- File ---------------------------------------------------------------
     Menu {
@@ -226,5 +257,6 @@ MenuBar {
         MenuSeparator {}
         IconMenuItem { action: menuBar.shell.actionDonateMoney; glyph: Icons.volunteer_activism }
         IconMenuItem { action: menuBar.shell.actionAbout; glyph: Icons.info }
+    }
     }
 }

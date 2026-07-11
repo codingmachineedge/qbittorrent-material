@@ -57,6 +57,12 @@ QtObject {
         map are applied. Always returns a valid color.
     */
     function color(id) {
+        // Reading isDark makes every binding that calls color() subscribe to
+        // ThemeManager.themeChanged. Without this explicit dependency, an
+        // invokable C++ lookup can retain colors from the previous scheme even
+        // while Material.theme has already switched.
+        if (isDark)
+            return ThemeManager.color(id);
         return ThemeManager.color(id);
     }
 
@@ -103,12 +109,18 @@ QtObject {
     readonly property color onPrimary: color("onPrimary")
     readonly property color primaryContainer: color("primaryContainer")
     readonly property color onPrimaryContainer: color("onPrimaryContainer")
+    readonly property color primaryHover: color("primaryHover")
+    readonly property color primaryPressed: color("primaryPressed")
     readonly property color primaryEmphasis: color("primaryEmphasis")
 
     readonly property color secondary: color("secondary")
     readonly property color onSecondary: color("onSecondary")
+    readonly property color secondaryContainer: color("secondaryContainer")
+    readonly property color onSecondaryContainer: color("onSecondaryContainer")
     readonly property color tertiary: color("tertiary")
     readonly property color onTertiary: color("onTertiary")
+    readonly property color tertiaryContainer: color("tertiaryContainer")
+    readonly property color onTertiaryContainer: color("onTertiaryContainer")
 
     readonly property color surface: color("surface")
     readonly property color surfaceVariant: color("surfaceVariant")
@@ -119,6 +131,8 @@ QtObject {
 
     readonly property color outline: color("outline")
     readonly property color outlineVariant: color("outlineVariant")
+    readonly property color focusRing: color("focusRing")
+    readonly property color scrim: color("scrim")
 
     readonly property color error: color("error")
     readonly property color onError: color("onError")
@@ -134,8 +148,20 @@ QtObject {
     readonly property color muted: color("muted")
     readonly property color severe: color("severe")
 
-    //! The Material accent used at the window root.
-    readonly property color accent: primary
+    // Canonical design-system semantics. These resolve through named ids rather
+    // than copying role values, so config.json may override either spelling.
+    readonly property color canvas: color("canvas")
+    readonly property color surfaceWarm: color("surfaceWarm")
+    readonly property color selectedSurface: color("selectedSurface")
+    readonly property color foreground: color("foreground")
+    readonly property color foregroundSecondary: color("foregroundSecondary")
+    readonly property color border: color("border")
+    readonly property color borderSoft: color("borderSoft")
+    readonly property color accent: color("accent")
+    readonly property color accentOn: color("accentOn")
+    readonly property color danger: color("danger")
+    readonly property color onDanger: color("onDanger")
+    readonly property color dangerContainer: color("dangerContainer")
 
     // ---- Interaction-state overlays (Material state layers) --------------------
     // Alpha overlays applied on hover/press/selection per DESIGN_SYSTEM §3.
@@ -149,13 +175,20 @@ QtObject {
     // ---- Elevation tokens (Material `elevation`) ------------------------------
     readonly property int elevationPage: 0
     readonly property int elevationRail: 0
-    readonly property int elevationCard: 1
-    readonly property int elevationCardExpanded: 2
+    readonly property int elevationCard: 0
+    readonly property int elevationCardExpanded: 0
     readonly property int elevationToolbar: 0
-    readonly property int elevationMenu: 8
-    readonly property int elevationSnackbar: 6
-    readonly property int elevationDialog: 24
-    readonly property int elevationFab: 6
+    readonly property int elevationMenu: 3
+    readonly property int elevationSnackbar: 3
+    readonly property int elevationDialog: 3
+    readonly property int elevationFab: 3
+
+    // Source-system elevation is border-led: panels are flat and only transient
+    // layers use the restrained 3px/8px/18% shadow recipe.
+    readonly property int elevationPanel: 0
+    readonly property int elevationRaised: 3
+    readonly property int raisedShadowBlur: 8
+    readonly property real raisedShadowOpacity: 0.18
 
     Component.onCompleted: Log.debug("theme", "Theme singleton ready; isDark=" + isDark)
 

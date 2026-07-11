@@ -15,13 +15,17 @@
 #include <QObject>
 #include <QString>
 #include <QStringList>
+#include <QSet>
 #include <QVariant>
+#include <QVariantList>
 #include <QVariantMap>
 
 #include <qqmlintegration.h>
 
 class QQmlEngine;
 class QJSEngine;
+class AdvancedSettingsModel;
+class WatchedFoldersModel;
 
 /**
  * @file optionscontroller.h
@@ -40,9 +44,10 @@ class QJSEngine;
  * .cpp). The controller is intentionally engine-typed on write so setting keys and
  * enum numeric values stay identical to legacy qBittorrent.
  *
- * The Advanced tab and the watched-folders view are backed by their own dedicated
- * models (@c AdvancedSettingsModel, @c WatchedFoldersModel); the Options QML calls
- * their `apply()`/`reset()` alongside this controller's.
+ * The Advanced tab and watched-folders view are backed by dedicated models
+ * (@c AdvancedSettingsModel, @c WatchedFoldersModel) owned by this controller.
+ * Their staged state participates in this controller's `modified`, `apply()` and
+ * `reset()` contract, so QML has one atomic transaction for the entire dialog.
  *
  * Language is special: it maps to the @c I18n singleton. On @ref apply, if the
  * staged `language` differs, the controller persists it and emits
@@ -63,6 +68,12 @@ class OptionsController : public QObject
     Q_PROPERTY(bool restartRequired READ isRestartRequired NOTIFY restartRequiredChanged)
     /// Persisted index of the last-viewed tab (`GUI/Preferences/LastViewedPage`).
     Q_PROPERTY(int lastViewedTab READ lastViewedTab WRITE setLastViewedTab NOTIFY lastViewedTabChanged)
+    /// Monotonic cursor used to make value(key) QML bindings reactive.
+    Q_PROPERTY(int revision READ revision NOTIFY revisionChanged)
+    /// Staged watched-folders list used by the Downloads page.
+    Q_PROPERTY(QObject *watchedFoldersModel READ watchedFoldersModel CONSTANT)
+    /// Whether the staged Web UI API key is non-empty.
+    Q_PROPERTY(bool apiKeyValid READ apiKeyValid NOTIFY apiKeyValidChanged)
 
 public:
     /// Tab order — mirrors the legacy `OptionsDialog::Tabs` enum exactly.
@@ -85,8 +96,11 @@ public:
 
     explicit OptionsController(QObject *parent = nullptr);
 
-    bool isModified() const { return m_modified; }
+    bool isModified() const;
     bool isRestartRequired() const { return m_restartRequired; }
+    int revision() const { return m_revision; }
+    QObject *watchedFoldersModel() const;
+    bool apiKeyValid() const;
 
     int lastViewedTab() const;
     void setLastViewedTab(int tab);
@@ -113,10 +127,40 @@ public:
     /// Helper for the Connection tab "Random" port button.
     Q_INVOKABLE int randomPort() const;
 
+    /// Network choices for the Advanced page. Each item has `text` and `value`.
+    Q_INVOKABLE QVariantList networkInterfaces() const;
+    Q_INVOKABLE QVariantList networkInterfaceAddresses() const;
+
+    // Watched-folder staging facade. The view deliberately talks only to this
+    // controller so its Apply/OK/Cancel semantics cannot diverge from the rest
+    // of the dialog.
+    Q_INVOKABLE QVariantMap watchedFolderOptions(int row) const;
+    Q_INVOKABLE bool addWatchedFolder(const QString &path, const QVariantMap &options = {});
+    Q_INVOKABLE void setWatchedFolderOptions(int row, const QVariantMap &options);
+    Q_INVOKABLE void removeWatchedFolder(int row);
+
+    // Web UI API-key actions are staged until Apply/OK.
+    Q_INVOKABLE QString maskedApiKey() const;
+    Q_INVOKABLE void rotateApiKey();
+    Q_INVOKABLE void deleteApiKey();
+    Q_INVOKABLE bool copyApiKeyToClipboard() const;
+
+    // Best-effort actions exposed by option pages.
+    Q_INVOKABLE void reloadIPFilter();
+    Q_INVOKABLE void sendTestEmail();
+    Q_INVOKABLE void openDynDNSRegistration();
+
 signals:
     void modifiedChanged();
     void restartRequiredChanged();
     void lastViewedTabChanged();
+    void revisionChanged();
+    void apiKeyValidChanged();
+
+    /// Result of validating/reloading the staged IP-filter file.
+    void ipFilterParsed(bool error, int ruleCount);
+    /// Human-readable feedback for best-effort actions (`testEmail`, `dynDNS`).
+    void actionFeedback(const QString &action, bool success, const QString &message);
 
     /// Emitted by @ref apply after a successful commit.
     void applied();
@@ -146,6 +190,7 @@ private:
     void applySearch();
     void applyRSS();
     void applyWebUI();
+    void applyPassthroughValues();
 
     // Cross-tab validation run before any writes (mirrors `applySettings()`).
     bool validate();
@@ -155,8 +200,14 @@ private:
     void stage(const QString &key, const QVariant &value);
     void markModified();
     void markRestartRequired();
+    void bumpRevision();
+    int advancedRowForKey(const QString &key) const;
 
     QVariantMap m_values;   ///< the staging map (all tabs)
+    QSet<QString> m_passthroughKeys; ///< exact config keys staged generically
+    WatchedFoldersModel *m_watchedFoldersModel = nullptr;
+    AdvancedSettingsModel *m_advancedSettingsModel = nullptr;
     bool m_modified = false;
     bool m_restartRequired = false;
+    int m_revision = 0;
 };

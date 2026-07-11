@@ -41,16 +41,18 @@ Dialog {
     anchors.centerIn: parent
 
     // Cap to 90% of the window; the pages scroll internally.
-    width: Math.min(940, (parent ? parent.width : 940) * 0.95)
-    height: Math.min(720, (parent ? parent.height : 720) * 0.95)
+    width: Math.min(1040, (parent ? parent.width : 1040) * 0.95)
+    height: Math.min(760, (parent ? parent.height : 760) * 0.95)
     padding: 0
 
-    Material.elevation: 24
+    Material.elevation: 0
     Material.roundedScale: Material.MediumScale
 
     background: Rectangle {
         radius: Spacing.radiusDialog
         color: Theme.color("surface")
+        border.width: Spacing.outlineWidth
+        border.color: Theme.color("outline")
     }
 
     // The rail entries; each maps 1:1 to a StackLayout page by index (mirrors the
@@ -92,13 +94,42 @@ Dialog {
         OptionsController.reset()
     }
 
-    header: Label {
-        text: root.title
-        font: Typography.headlineSmall
-        color: Theme.color("onSurface")
-        elide: Text.ElideRight
-        padding: Spacing.lg
-        bottomPadding: Spacing.sm
+    header: Rectangle {
+        implicitHeight: optionsHeading.implicitHeight + Spacing.xl * 2
+        color: "transparent"
+
+        ColumnLayout {
+            id: optionsHeading
+            anchors.fill: parent
+            anchors.leftMargin: Spacing.pagePadding
+            anchors.rightMargin: Spacing.pagePadding
+            anchors.topMargin: Spacing.xl
+            anchors.bottomMargin: Spacing.xl
+            spacing: Spacing.xs
+
+            Label {
+                Layout.fillWidth: true
+                text: root.title
+                font: Typography.pageTitle
+                color: Theme.color("onSurface")
+                elide: Text.ElideRight
+            }
+
+            Label {
+                Layout.fillWidth: true
+                text: qsTr("Application behavior, connection, download, BitTorrent, RSS, and advanced controls.")
+                font: Typography.metadata
+                color: Theme.color("muted")
+                wrapMode: Text.WordWrap
+            }
+        }
+
+        Rectangle {
+            anchors.bottom: parent.bottom
+            width: parent.width
+            height: Spacing.outlineWidth
+            color: Theme.color("outlineVariant")
+        }
     }
 
     contentItem: RowLayout {
@@ -107,13 +138,13 @@ Dialog {
         // ---- NavigationRail-style left list -----------------------------------
         Rectangle {
             Layout.fillHeight: true
-            Layout.preferredWidth: 176
-            color: Theme.color("surfaceVariant")
+            Layout.preferredWidth: 220
+            color: Theme.color("surfaceWarm")
 
             // Right divider (rail elevation 0 + outline per DESIGN_SYSTEM §3).
             Rectangle {
                 anchors.right: parent.right
-                width: 1
+                width: Spacing.outlineWidth
                 height: parent.height
                 color: Theme.color("outlineVariant")
             }
@@ -121,8 +152,8 @@ Dialog {
             ListView {
                 id: rail
                 anchors.fill: parent
-                anchors.margins: Spacing.sm
-                spacing: Spacing.xs
+                anchors.margins: Spacing.lg
+                spacing: Spacing.sm
                 clip: true
                 currentIndex: 0
                 model: root.pages
@@ -139,17 +170,21 @@ Dialog {
                     required property int index
                     required property var modelData
                     width: ListView.view.width
-                    height: Spacing.touchTarget + Spacing.xs
+                    height: Spacing.controlHeight
                     highlighted: rail.currentIndex === index
                     onClicked: rail.currentIndex = index
 
                     background: Rectangle {
-                        radius: Spacing.radiusChip
+                        radius: Spacing.radiusControl
                         color: railItem.highlighted
                                ? Theme.color("primaryContainer")
                                : (railItem.hovered
-                                  ? Qt.rgba(Theme.onSurface.r, Theme.onSurface.g, Theme.onSurface.b, Theme.hoverOpacity)
+                                  ? Theme.color("surface")
                                   : "transparent")
+
+                        Behavior on color {
+                            ColorAnimation { duration: Spacing.motionFast }
+                        }
                     }
 
                     contentItem: RowLayout {
@@ -227,11 +262,24 @@ Dialog {
     }
 
     footer: DialogButtonBox {
-        padding: Spacing.lg
-        topPadding: Spacing.sm
+        padding: Spacing.xl
+        topPadding: Spacing.lg
         spacing: Spacing.sm
 
+        background: Rectangle {
+            color: "transparent"
+            border.width: 0
+
+            Rectangle {
+                anchors.top: parent.top
+                width: parent.width
+                height: Spacing.outlineWidth
+                color: Theme.color("outlineVariant")
+            }
+        }
+
         Button {
+            implicitHeight: Spacing.controlHeight
             text: qsTr("Cancel")
             flat: true
             DialogButtonBox.buttonRole: DialogButtonBox.RejectRole
@@ -239,6 +287,7 @@ Dialog {
         }
 
         Button {
+            implicitHeight: Spacing.controlHeight
             text: qsTr("Apply")
             flat: true
             enabled: OptionsController.modified
@@ -250,6 +299,7 @@ Dialog {
         }
 
         Button {
+            implicitHeight: Spacing.controlHeight
             text: qsTr("OK")
             highlighted: true
             DialogButtonBox.buttonRole: DialogButtonBox.AcceptRole

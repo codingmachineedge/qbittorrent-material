@@ -37,9 +37,9 @@ namespace
     {
         switch (style)
         {
-        case 1:  return u":/icons/tray/qbittorrent-tray-light.png"_qs;
-        case 2:  return u":/icons/tray/qbittorrent-tray-dark.png"_qs;
-        default: return u":/icons/tray/qbittorrent-tray.png"_qs;
+        case 1:
+        case 2:  return u":/branding/logo-monochrome.svg"_qs;
+        default: return u":/branding/logo-mark.svg"_qs;
         }
     }
 }

@@ -1,77 +1,99 @@
 # qBittorrent Material visual tour
 
-These screenshots were captured from the installed Windows package using a fresh,
-empty test profile. They show the shipped Qt Quick Material interface without
-including any personal torrents, paths, or tracker data.
+The native Windows captures use an isolated, empty test profile. They show the
+real Qt Quick interface without personal torrents, paths, tracker data, or
+account details. The stable `01`–`13` filenames are retained for existing links;
+their captions below describe the current full-screen capture set.
 
-## Full dashboard
+## Capture matrix
 
-![Full qBittorrent Material dashboard](images/app/01-main-window.png)
+| File | Target | Theme | Surface |
+| --- | ---: | --- | --- |
+| `01-main-window.png` | 960×900 | Light | Transfers and complete shell |
+| `02-toolbar-and-filter.png` | 960×900 | Dark | Transfers and complete shell |
+| `03-filter-sidebar.png` | 960×640 | Light | Compact Transfers shell |
+| `04-transfer-list.png` | 960×768 | Light | Transfers table and filters |
+| `05-properties-tabs.png` | 960×768 | Dark | Transfers properties |
+| `06-statusbar.png` | 960×900 | Light | Execution Log |
+| `07-navigation-and-toolbar.png` | 960×900 | Dark | Search |
+| `08-main-workspace.png` | 960×900 | Light | RSS reader |
+| `09-custom-workspace-tabs.png` | 960×900 | Light | Personal Workspace |
+| `10-tab-context-menu.png` | 960×900 | Light | Options |
+| `11-tab-typography-color.png` | 960×900 | Dark | Options |
+| `12-workspace-portability.png` | 960×768 | Light | Download from URLs dialog |
+| `13-restored-workspace.png` | 960×768 | Dark | About qBittorrent dialog |
 
-## Navigation and filtering
+## Shared desktop shell
 
-The top-level menus, Material toolbar, global filter, and transfer-list filter
-are visible in the navigation strip.
+Every workspace uses the same compact geometry: a 64px command bar, persistent
+248px grouped navigation, 24px content gutters, flat bordered panels with 24px
+corners, 40px controls, and a 32px status footer. Operational values use
+monospace type, while pale-blue selection and explicit labels keep state clear.
 
-![Navigation and Material toolbar](images/app/07-navigation-and-toolbar.png)
+System mode follows the operating system. Light and Dark can also be selected
+explicitly; the first two Transfers captures show both palettes.
 
-![Toolbar and transfer filters](images/app/02-toolbar-and-filter.png)
+![Light Transfers workspace](images/app/01-main-window.png)
 
-The status sidebar exposes the familiar qBittorrent workflow states while using
-the Material palette and spacing system.
+![Dark Transfers workspace](images/app/02-toolbar-and-filter.png)
 
-![Status filters sidebar](images/app/03-filter-sidebar.png)
+The 960×640 capture verifies that the native desktop hierarchy remains usable
+at the supported compact window size without pretending to be a phone layout.
 
-## Transfer workspace
+![Compact Transfers workspace](images/app/03-filter-sidebar.png)
 
-The main table starts empty in a fresh profile and retains the prominent search,
-column, and overflow controls expected in a production torrent client.
+## Transfers and properties
 
-![Transfer list](images/app/04-transfer-list.png)
+Transfers keeps state/category navigation, filtering, row actions, progress,
+speed, peers, ETA, and selection in one dense operational surface.
 
-The lower panel groups per-torrent data into General, Trackers, Peers, HTTP
-Sources, Content, and Speed tabs.
+![Transfers table and filters](images/app/04-transfer-list.png)
 
-![Torrent property tabs](images/app/05-properties-tabs.png)
+The lower detail region preserves General, Trackers, Peers, HTTP Sources,
+Content, and Speed without leaving the selected torrent context.
 
-![Main workspace](images/app/08-main-workspace.png)
+![Dark Transfers properties](images/app/05-properties-tabs.png)
 
-## Persistent custom workspace
+## Search, RSS, and Execution Log
 
-These views were captured from the verified installed application. **LowLevel
-Workspace Studio** is a user-defined display name used to demonstrate renaming;
-it is still qBittorrent Material.
+Execution Log provides timestamped runtime messages with text and severity
+filters while retaining the persistent shell and status footer.
 
-The Workspace combines a browser-style tab strip, one plain-text page per tab,
-per-tab appearance, and visible local Git status.
+![Execution Log workspace](images/app/06-statusbar.png)
 
-![Custom Workspace tabs](images/app/09-custom-workspace-tabs.png)
+Search combines query controls, installed-plugin scope, result filtering, and
+download actions in the dark palette.
 
-Right-clicking a tab keeps page actions anchored to that tab in a compact,
-bordered menu.
+![Dark Search workspace](images/app/07-navigation-and-toolbar.png)
 
-![Workspace tab context menu](images/app/10-tab-context-menu.png)
+RSS uses feed/article panes and keeps release actions close to automation
+context.
 
-Each page owns its name, installed font family and style, 6–144 point size,
-bold/italic state, and unrestricted HSV/alpha or hexadecimal font color.
+![RSS reader workspace](images/app/08-main-workspace.png)
 
-![Tab typography and color editor](images/app/11-tab-typography-color.png)
+## Personal Workspace
 
-The portability menu separates compact JSON snapshots from complete Git
-repository transfers that include history.
+Workspace provides persistent browser-style plain-text pages with per-tab
+appearance and local Git-backed history. It is a first-class destination beside
+Transfers, Search, RSS, and Execution Log.
 
-![Workspace import and export menu](images/app/12-workspace-portability.png)
+![Persistent personal Workspace](images/app/09-custom-workspace-tabs.png)
 
-After relaunch, the user display name, tabs, active page, content, typography,
-and color return from the managed repository.
+## Options and dialogs
 
-![Workspace restored after relaunch](images/app/13-restored-workspace.png)
+Options keeps its settings categories and staged Apply/Cancel workflow inside a
+large Material dialog. The paired captures verify Light and Dark rendering.
 
-## Status information
+![Options dialog in Light mode](images/app/10-tab-context-menu.png)
 
-The compact status bar remains visible at the bottom of the application shell.
+![Options dialog in Dark mode](images/app/11-tab-typography-color.png)
 
-![Status bar](images/app/06-statusbar.png)
+The remaining captures cover shared dialog foundations: 24px corners,
+restrained elevation, 40px actions, visible labels, and keyboard-safe focus.
+
+![Download from URLs dialog](images/app/12-workspace-portability.png)
+
+![About qBittorrent dialog in Dark mode](images/app/13-restored-workspace.png)
 
 ## Documentation experience
 
@@ -82,7 +104,7 @@ phones and tablets.
 ![Material documentation landing page](images/site/01-landing-desktop.png)
 
 The complete project corpus is searchable inside the page. Results are grouped
-by document and highlight the matching text without sending the query anywhere.
+by document and highlight matching text without sending the query anywhere.
 
 ![Embedded wiki search](images/site/02-wiki-search.png)
 

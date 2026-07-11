@@ -276,7 +276,7 @@ Dialog {
 
     NewPluginUrlDialog {
         id: urlDialog
-        onAccepted: (url) => {
+        onUrlAccepted: (url) => {
             Log.info("search", "New plugin URL accepted: " + url)
             SearchController.installPluginFromUrl(url)
         }

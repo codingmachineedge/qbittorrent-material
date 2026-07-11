@@ -65,6 +65,7 @@ class PropertiesController final : public QObject
     Q_PROPERTY(QObject *trackerModel READ trackerModel CONSTANT FINAL)
     Q_PROPERTY(QObject *webSeedModel READ webSeedModel CONSTANT FINAL)
     Q_PROPERTY(QObject *speedPlotModel READ speedPlotModel CONSTANT FINAL)
+    Q_PROPERTY(QObject *contentHandler READ contentHandler NOTIFY currentTorrentChanged FINAL)
 
     // --- General tab (all already formatted + translated) ---
     Q_PROPERTY(QString name READ name NOTIFY generalChanged FINAL)
@@ -136,6 +137,7 @@ public:
     [[nodiscard]] QObject *trackerModel() const;
     [[nodiscard]] QObject *webSeedModel() const;
     [[nodiscard]] QObject *speedPlotModel() const;
+    [[nodiscard]] QObject *contentHandler() const;
 
     // --- General tab getters ---
     [[nodiscard]] QString name() const { return m_name; }

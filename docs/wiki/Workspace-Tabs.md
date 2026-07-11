@@ -6,7 +6,7 @@ and every change is saved into a managed local Git repository.
 
 ## Quick start
 
-1. Select the top-level **Workspace** tab or press `Alt+5`.
+1. Select **Workspace** in the persistent application navigation or press `Alt+5`.
 2. Select **+** or press `Ctrl+T` to add a page.
 3. Write in the page editor; the status changes while the edit is being saved.
 4. Right-click the tab and choose **Name & appearance**.
@@ -19,10 +19,6 @@ restored the next time the application starts.
 
 ![Persistent browser-style Workspace tabs](images/app/09-custom-workspace-tabs.png)
 
-**LowLevel Workspace Studio** is the user-selected application display name in
-these screenshots. It demonstrates renaming and does not identify another
-edition or project.
-
 ## Browser-style tab actions
 
 - Click a tab to select it.
@@ -32,16 +28,12 @@ edition or project.
 - Close every tab if you want an empty workspace; select **Create tab** to begin
   again.
 
-![Workspace tab context menu](images/app/10-tab-context-menu.png)
-
 ## Rename the app
 
 Choose **Workspace > Rename application** or **Rename app** in the workspace
 header. The new display name is remembered in the window title, Workspace
 header, and tray tooltip. The executable name, installer, application profile,
 and repository path do not change.
-
-![Per-tab typography and unrestricted font color](images/app/11-tab-typography-color.png)
 
 ## Local Git saving
 
@@ -66,8 +58,6 @@ an interrupted close and removed without reopening the tab.
 | **Import workspace JSON** | To replace the live workspace but continue using its current local history |
 | **Import complete Git repository** | To activate an exported workspace and history while retaining the previous repository as a hidden recovery copy |
 
-![JSON snapshot and complete Git repository portability](images/app/12-workspace-portability.png)
-
 Both import actions ask for confirmation because they replace the current tabs.
 JSON imports require every tab's full text, commit pending edits before the
 replacement, and roll back to the previous workspace if the imported state
@@ -91,8 +81,6 @@ that cannot be saved are never accepted in memory.
 These hidden folders are in the parent of the managed repository. Open the
 managed repository, move up one directory, and enable hidden items to inspect
 them. Keep recovery copies until the active pages and history are verified.
-
-![Renamed application and tab state restored after relaunch](images/app/13-restored-workspace.png)
 
 Workspace Git is local only. It does not push to GitHub or another remote.
 

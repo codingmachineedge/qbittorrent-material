@@ -36,7 +36,7 @@ Item {
 
     // Peer-country resolution toggle (legacy setting key preserved verbatim).
     readonly property bool resolveCountries:
-        Preferences.value("Preferences/Bittorrent/ResolvePeerCountries", true) === true
+        Preferences.value("Preferences/Connection/ResolvePeerCountries", false) === true
 
     // Keep the model's async refresh gated on this tab being visible.
     onVisibleChanged: {

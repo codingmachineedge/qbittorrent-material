@@ -43,11 +43,16 @@ Dialog {
     /*! Preferences key for the "Don't ask again" opt-in ("" disables it). */
     property string rememberKey: ""
 
+    /*! Value stored at rememberKey when "Don't ask again" is selected.
+        Most opt-out keys store true; legacy positive "confirm..." keys store
+        false. */
+    property bool rememberValue: true
+
     modal: true
     parent: Overlay.overlay
     anchors.centerIn: parent
-    width: Math.min(implicitWidth, (parent ? parent.width : 600) * 0.9)
-    padding: Spacing.lg
+    width: Math.min(520, (parent ? parent.width : 600) * 0.9)
+    padding: Spacing.xl
 
     Material.elevation: 24
     Material.roundedScale: Material.MediumScale
@@ -55,11 +60,14 @@ Dialog {
     background: Rectangle {
         radius: Spacing.radiusDialog
         color: Theme.color("surface")
+        border.width: 1
+        border.color: Theme.color("outline")
     }
 
     // Short-circuit when the user previously chose "Don't ask again".
     function open() {
-        if (rememberKey.length && Preferences.value(rememberKey, false) === true) {
+        if (rememberKey.length
+                && Preferences.value(rememberKey, !rememberValue) === rememberValue) {
             Log.debug("ui", "ConfirmDialog '" + title + "' auto-accepted (remembered)")
             accepted()
             return
@@ -70,7 +78,7 @@ Dialog {
 
     header: Label {
         text: root.title
-        font: Typography.headlineSmall
+        font: Typography.sectionTitle
         color: Theme.color("onSurface")
         elide: Text.ElideRight
         padding: Spacing.lg
@@ -94,7 +102,7 @@ Dialog {
 
             Label {
                 text: root.text
-                font: Typography.bodyMedium
+                font: Typography.bodyLarge
                 color: Theme.color("onSurfaceVariant")
                 wrapMode: Text.WordWrap
                 Layout.fillWidth: true
@@ -133,7 +141,7 @@ Dialog {
     onAccepted: {
         Log.info("ui", "ConfirmDialog '" + title + "' accepted")
         if (rememberCheck.checked && rememberKey.length) {
-            Preferences.setValue(rememberKey, true)
+            Preferences.setValue(rememberKey, rememberValue)
             Log.debug("ui", "ConfirmDialog remembered choice under key " + rememberKey)
         }
     }

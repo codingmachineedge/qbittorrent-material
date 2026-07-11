@@ -108,16 +108,16 @@ Column {
             required property string value
             required property string label
             implicitWidth: root.width
-            implicitHeight: 32
+            implicitHeight: Spacing.controlHeight
             indentation: Spacing.md
 
             readonly property bool filterActive: (del.type === root.selectedType)
                 && ((del.type !== 2) || (del.value === root.selectedValue))
 
             background: Rectangle {
-                color: del.filterActive ? Qt.alpha(Theme.color("primary"), 0.12)
-                                    : (del.hovered ? Qt.alpha(Theme.color("onSurface"), 0.08) : "transparent")
-                radius: Spacing.radiusChip
+                color: del.filterActive ? Theme.color("surfaceWarm")
+                                    : (del.hovered ? Theme.color("surfaceWarm") : "transparent")
+                radius: Spacing.radiusControl
             }
 
             contentItem: Row {

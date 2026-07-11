@@ -21,7 +21,7 @@ import qBittorrent
 
     Seeds the field from the clipboard when it looks like a supported \c .py URL,
     otherwise \c http://. Validates that the entered link ends with \c .py before
-    emitting \c accepted(string url).
+    emitting \c urlAccepted(string url).
 */
 Dialog {
     id: root
@@ -37,10 +37,7 @@ Dialog {
     Material.roundedScale: Material.MediumScale
 
     /*! Emitted with a validated ( *.py ) URL. */
-    signal accepted(string url)
-
-    /*! Emitted on cancel. */
-    signal rejected()
+    signal urlAccepted(string url)
 
     background: Rectangle {
         radius: Spacing.radiusDialog
@@ -71,7 +68,7 @@ Dialog {
             return
         }
         Log.info("search", "Plugin URL accepted: " + url)
-        root.accepted(url)
+        root.urlAccepted(url)
         root.close()
     }
 
@@ -111,7 +108,7 @@ Dialog {
             text: qsTr("Cancel")
             flat: true
             DialogButtonBox.buttonRole: DialogButtonBox.RejectRole
-            onClicked: { root.rejected(); root.close() }
+            onClicked: root.reject()
         }
         Button {
             text: qsTr("OK")

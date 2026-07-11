@@ -21,11 +21,13 @@
 #include <QQmlApplicationEngine>
 #include <QQmlContext>
 #include <QStandardPaths>
+#include <QTimer>
 #include <QTranslator>
 #include <QVariantMap>
 
 #include "base/logging.h"
 #include "base/logger.h"
+#include "base/path.h"
 #include "base/profile.h"
 #include "base/settingsstorage.h"
 #include "app/appcontroller.h"
@@ -60,6 +62,11 @@
 #define QBT_HAS_DOWNLOAD_MANAGER 1
 #endif
 
+#if __has_include("base/torrentfileswatcher.h")
+#include "base/torrentfileswatcher.h"
+#define QBT_HAS_TORRENT_FILES_WATCHER 1
+#endif
+
 #if __has_include("base/utils/i18n/funnytranslator.h")
 #include "base/utils/i18n/funnytranslator.h"
 #define QBT_HAS_FUNNY_TRANSLATOR 1
@@ -79,8 +86,16 @@ namespace
     /// on the same host don't collide).
     QString computeInstanceId()
     {
-        const QString seed = QStandardPaths::writableLocation(QStandardPaths::AppConfigLocation)
+        QString seed = QStandardPaths::writableLocation(QStandardPaths::AppConfigLocation)
             + u'|' + qEnvironmentVariable("USER", qEnvironmentVariable("USERNAME"));
+        // Isolated profiles are independent instances. This keeps deterministic
+        // documentation capture and test profiles from activating a user's
+        // normal qBittorrent Material session.
+        for (const QString &arg : QCoreApplication::arguments())
+        {
+            if (arg.startsWith(u"--profile-root="_s))
+                seed += u'|' + arg;
+        }
         const QByteArray digest =
             QCryptographicHash::hash(seed.toUtf8(), QCryptographicHash::Sha1).toHex().left(16);
         return u"qbittorrent-material-"_qs + QString::fromLatin1(digest);
@@ -225,6 +240,29 @@ int Application::run()
     registerContext();
     loadMainQml();
 
+    // Documentation captures are intentionally self-terminating. QML performs
+    // the page/theme/dialog setup and normally captures after the scene has
+    // settled; this C++ timer is a fail-safe so a QML handler error can never
+    // leave a headless capture process running indefinitely.
+    QString captureOutput;
+    for (const QString &arg : QCoreApplication::arguments())
+    {
+        if (arg.startsWith(u"--capture-ui="_s))
+        {
+            captureOutput = arg.sliced(13);
+            break;
+        }
+    }
+    if (!captureOutput.isEmpty())
+    {
+        QTimer::singleShot(4000, this, [this, captureOutput]
+        {
+            const bool saved = m_appController && m_appController->captureMainWindow(captureOutput);
+            qCInfo(lcApp) << "Documentation capture fail-safe finished; saved =" << saved;
+            QCoreApplication::exit(saved ? 0 : 2);
+        });
+    }
+
     connect(this, &QCoreApplication::aboutToQuit, this, &Application::cleanup);
 
     qCInfo(lcApp) << "Entering Qt event loop";
@@ -267,7 +305,16 @@ void Application::initEngine()
     // Order matters: Logger and Profile first, then the settings store, then
     // Preferences (reads the store), then the BitTorrent session (reads prefs).
     Logger::initInstance();
-    Profile::initInstance({}, {}, false);  // default per-user profile location
+    Path profileRoot;
+    QString configurationName;
+    for (const QString &arg : QCoreApplication::arguments())
+    {
+        if (arg.startsWith(u"--profile-root="_s))
+            profileRoot = Path(arg.sliced(15));
+        else if (arg.startsWith(u"--configuration="_s))
+            configurationName = arg.sliced(16);
+    }
+    Profile::initInstance(profileRoot, configurationName, false);
     SettingsStorage::initInstance();
     qCDebug(lcEngine) << "Profile + SettingsStorage ready";
 
@@ -300,6 +347,13 @@ void Application::initEngine()
     qCInfo(lcEngine) << "BitTorrent::Session initialized";
 #else
     qCWarning(lcEngine) << "BitTorrent::Session header not present at build time";
+#endif
+
+#ifdef QBT_HAS_TORRENT_FILES_WATCHER
+    // Options owns the watched-folders model, so the backing engine singleton
+    // must exist before the QML module instantiates OptionsController.
+    TorrentFilesWatcher::initInstance();
+    qCDebug(lcEngine) << "TorrentFilesWatcher ready";
 #endif
 
 #ifdef QBT_HAS_RSS

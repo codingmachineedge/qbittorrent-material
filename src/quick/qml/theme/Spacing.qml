@@ -29,48 +29,89 @@ QtObject {
     id: spacing
 
     // ---- Spacing scale (px) ----------------------------------------------------
-    // Canonical names (CONTRACTS §1.3) plus the descriptive aliases used in the
-    // DESIGN_SYSTEM (xs4/sm8/...) — both resolve to the same value.
+    // Canonical 4px rhythm. The legacy short names remain source-compatible;
+    // explicit spaceNN aliases make the complete 4/8/12/16/20/24/32/48 scale
+    // available to new shell and component work.
     readonly property int xs: 4
     readonly property int sm: 8
     readonly property int md: 12
     readonly property int lg: 16
+    readonly property int space20: 20
     readonly property int xl: 24
     readonly property int xxl: 32
+    readonly property int space48: 48
 
     readonly property int xs4: xs
     readonly property int sm8: sm
     readonly property int md12: md
     readonly property int lg16: lg
+    readonly property int space4: xs
+    readonly property int space8: sm
+    readonly property int space12: md
+    readonly property int space16: lg
     readonly property int xl24: xl
     readonly property int xxl32: xxl
+    readonly property int space24: xl
+    readonly property int space32: xxl
 
     // ---- Corner radii ----------------------------------------------------------
+    //! Legacy nested-card radius; dominant workspace panels use radiusPanel.
     readonly property int radiusCard: 12
-    readonly property int radiusDialog: 16
+    readonly property int radiusControl: 12
+    readonly property int radiusPanel: 24
+    readonly property int radiusDialog: 24
     readonly property int radiusChip: 8
     readonly property int radiusField: 4
+    readonly property int radiusPill: 9999
 
     // ---- Elevation tokens (Material `elevation`) ------------------------------
     readonly property int elevationPage: 0
     readonly property int elevationRail: 0
-    readonly property int elevationCard: 1
-    readonly property int elevationCardExpanded: 2
+    readonly property int elevationCard: 0
+    readonly property int elevationCardExpanded: 0
     readonly property int elevationToolbar: 0
-    readonly property int elevationMenu: 8
-    readonly property int elevationSnackbar: 6
-    readonly property int elevationDialog: 24
-    readonly property int elevationFab: 6
+    readonly property int elevationMenu: 3
+    readonly property int elevationSnackbar: 3
+    readonly property int elevationDialog: 3
+    readonly property int elevationFab: 3
+
+    // ---- Shell geometry -------------------------------------------------------
+    readonly property int topBarHeight: 64
+    readonly property int navigationWidth: 248
+    readonly property int statusBarHeight: 32
+    readonly property int controlHeight: 40
+    readonly property int pagePadding: 24
+    readonly property int panelHeaderPaddingVertical: 16
+    readonly property int panelHeaderPaddingHorizontal: 20
+    readonly property int tableCellPaddingVertical: 14
+    readonly property int tableCellPaddingHorizontal: 20
+    readonly property int dialogWidth: 520
+    readonly property int progressHeight: 6
+    readonly property int outlineWidth: 1
+    readonly property int focusRingWidth: 4
+    readonly property int raisedShadowOffsetY: 3
+    readonly property int raisedShadowBlur: 8
+    readonly property real raisedShadowOpacity: 0.18
+
+    // ---- Motion ---------------------------------------------------------------
+    readonly property int motionFast: 150
+    readonly property int motionBase: 250
+    readonly property int motionProgress: 480
+    readonly property int motionRowStagger: 45
+    //! Easing.BezierSpline control points for cubic-bezier(.2, 0, 0, 1).
+    readonly property var easeStandard: [0.2, 0.0, 0.0, 1.0, 1.0, 1.0]
 
     // ---- Common component metrics ---------------------------------------------
     //! Standard touch target / row height for list & toolbar controls.
-    readonly property int touchTarget: 40
-    //! Default table row height.
-    readonly property int rowHeight: 36
+    readonly property int touchTarget: controlHeight
+    //! Source table row: 14px type with 14px vertical cell padding.
+    readonly property int rowHeight: 48
     //! Standard icon size.
     readonly property int iconSize: 24
     //! Compact icon size (dense toolbars / cells).
     readonly property int iconSizeSmall: 20
+    //! Source-backed outline symbol size.
+    readonly property int iconSizeOutline: 18
 
     Component.onCompleted: Log.debug("theme", "Spacing singleton ready")
 }

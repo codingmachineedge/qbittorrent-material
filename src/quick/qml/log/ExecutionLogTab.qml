@@ -28,6 +28,15 @@ import qBittorrent
 Item {
     id: root
 
+    readonly property bool documentationCapture: {
+        const argumentsList = Qt.application.arguments
+        for (let index = 0; index < argumentsList.length; ++index) {
+            if (String(argumentsList[index]).startsWith("--capture-ui="))
+                return true
+        }
+        return false
+    }
+
     // ---- Models (owned at the tab so they persist across inner tab switches) --
 
     LogMessageModel {
@@ -45,92 +54,222 @@ Item {
         id: peerModel
     }
 
+    // Documentation builds must never publish a user's network addresses,
+    // paths, tracker names, or other runtime details. Keep the real logger
+    // model untouched for normal sessions and render a small deterministic
+    // fixture only while --capture-ui is active.
+    ListModel {
+        id: documentationLogModel
+
+        ListElement {
+            time: "09:41:02"
+            message: "Application session initialized"
+            logLevel: "Info"
+        }
+        ListElement {
+            time: "09:41:03"
+            message: "Listening on the configured network interface"
+            logLevel: "Normal"
+        }
+        ListElement {
+            time: "09:41:04"
+            message: "Transfer queue is ready"
+            logLevel: "Normal"
+        }
+        ListElement {
+            time: "09:41:05"
+            message: "RSS refresh completed"
+            logLevel: "Info"
+        }
+    }
+
     // ---- Layout ---------------------------------------------------------------
+
+    Rectangle {
+        anchors.fill: parent
+        color: Theme.color("background")
+    }
 
     ColumnLayout {
         anchors.fill: parent
-        spacing: 0
+        anchors.margins: Spacing.pagePadding
+        spacing: Spacing.lg
 
-        TabBar {
-            id: tabBar
-
+        // ---- Page heading -------------------------------------------------
+        ColumnLayout {
             Layout.fillWidth: true
-            Material.elevation: Spacing.elevationToolbar
+            spacing: Spacing.xs
 
-            TabButton {
-                id: generalTabButton
-
-                contentItem: RowLayout {
-                    spacing: Spacing.sm
-
-                    Item { Layout.fillWidth: true }
-
-                    MDIcon {
-                        icon: Icons.article
-                        size: Spacing.iconSizeSmall
-                        color: generalTabButton.checked ? Theme.color("primary") : Theme.color("onSurfaceVariant")
-                        Layout.alignment: Qt.AlignVCenter
-                    }
-
-                    Label {
-                        text: qsTr("General log")
-                        font: Typography.titleSmall
-                        color: generalTabButton.checked ? Theme.color("primary") : Theme.color("onSurfaceVariant")
-                        Layout.alignment: Qt.AlignVCenter
-                    }
-
-                    Item { Layout.fillWidth: true }
-                }
+            Label {
+                Layout.fillWidth: true
+                text: qsTr("Execution log")
+                font: Typography.pageTitle
+                color: Theme.color("onBackground")
+                elide: Text.ElideRight
             }
 
-            TabButton {
-                id: blockedTabButton
-
-                contentItem: RowLayout {
-                    spacing: Spacing.sm
-
-                    Item { Layout.fillWidth: true }
-
-                    MDIcon {
-                        icon: Icons.block
-                        size: Spacing.iconSizeSmall
-                        color: blockedTabButton.checked ? Theme.color("primary") : Theme.color("onSurfaceVariant")
-                        Layout.alignment: Qt.AlignVCenter
-                    }
-
-                    Label {
-                        text: qsTr("Blocked IPs")
-                        font: Typography.titleSmall
-                        color: blockedTabButton.checked ? Theme.color("primary") : Theme.color("onSurfaceVariant")
-                        Layout.alignment: Qt.AlignVCenter
-                    }
-
-                    Item { Layout.fillWidth: true }
-                }
+            Label {
+                Layout.fillWidth: true
+                text: qsTr("Inspect application, network, and session events from the current run.")
+                font: Typography.metadata
+                color: Theme.color("muted")
+                wrapMode: Text.WordWrap
             }
-
-            onCurrentIndexChanged: Log.debug("ui", "Execution Log inner tab -> " + currentIndex)
         }
 
-        // Divider under the tab bar (toolbars carry a bottom divider).
+        // ---- Dominant log surface -----------------------------------------
         Rectangle {
-            Layout.fillWidth: true
-            implicitHeight: 1
-            color: Theme.color("outlineVariant")
-        }
-
-        StackLayout {
+            id: logPanel
             Layout.fillWidth: true
             Layout.fillHeight: true
-            currentIndex: tabBar.currentIndex
+            color: Theme.color("surface")
+            border.width: Spacing.outlineWidth
+            border.color: Theme.color("outline")
+            radius: Spacing.radiusPanel
+            clip: true
 
-            GeneralLogView {
-                model: filterProxy
-                emptyText: qsTr("No log messages to display")
+            Behavior on color {
+                ColorAnimation {
+                    duration: Spacing.motionFast
+                    easing.type: Easing.BezierSpline
+                    easing.bezierCurve: Spacing.easeStandard
+                }
             }
 
-            BlockedIPsView {
-                model: peerModel
+            ColumnLayout {
+                anchors.fill: parent
+                anchors.margins: Spacing.outlineWidth
+                spacing: 0
+
+                TabBar {
+                    id: tabBar
+
+                    Layout.fillWidth: true
+                    Layout.leftMargin: Spacing.lg
+                    Layout.rightMargin: Spacing.lg
+                    Layout.topMargin: Spacing.lg
+                    Layout.bottomMargin: Spacing.md
+                    Layout.preferredHeight: Spacing.controlHeight
+                    Layout.minimumHeight: Spacing.controlHeight
+                    Layout.maximumHeight: Spacing.controlHeight
+                    spacing: Spacing.sm
+                    Material.elevation: 0
+                    background: Rectangle {
+                        color: "transparent"
+                    }
+
+                    TabButton {
+                        id: generalTabButton
+                        implicitHeight: Spacing.controlHeight
+
+                        background: Rectangle {
+                            radius: Spacing.radiusControl
+                            color: generalTabButton.checked
+                                ? Theme.color("primaryContainer")
+                                : (generalTabButton.hovered
+                                    ? Qt.alpha(Theme.color("onSurface"), Theme.hoverOpacity)
+                                    : "transparent")
+
+                            Behavior on color {
+                                ColorAnimation {
+                                    duration: Spacing.motionFast
+                                    easing.type: Easing.BezierSpline
+                                    easing.bezierCurve: Spacing.easeStandard
+                                }
+                            }
+                        }
+
+                        contentItem: RowLayout {
+                            spacing: Spacing.sm
+
+                            Item { Layout.fillWidth: true }
+
+                            MDIcon {
+                                icon: Icons.article
+                                size: Spacing.iconSizeSmall
+                                color: generalTabButton.checked ? Theme.color("primary") : Theme.color("onSurfaceVariant")
+                                Layout.alignment: Qt.AlignVCenter
+                            }
+
+                            Label {
+                                text: qsTr("General log")
+                                font: Typography.titleSmall
+                                color: generalTabButton.checked ? Theme.color("primary") : Theme.color("onSurfaceVariant")
+                                Layout.alignment: Qt.AlignVCenter
+                            }
+
+                            Item { Layout.fillWidth: true }
+                        }
+                    }
+
+                    TabButton {
+                        id: blockedTabButton
+                        implicitHeight: Spacing.controlHeight
+
+                        background: Rectangle {
+                            radius: Spacing.radiusControl
+                            color: blockedTabButton.checked
+                                ? Theme.color("primaryContainer")
+                                : (blockedTabButton.hovered
+                                    ? Qt.alpha(Theme.color("onSurface"), Theme.hoverOpacity)
+                                    : "transparent")
+
+                            Behavior on color {
+                                ColorAnimation {
+                                    duration: Spacing.motionFast
+                                    easing.type: Easing.BezierSpline
+                                    easing.bezierCurve: Spacing.easeStandard
+                                }
+                            }
+                        }
+
+                        contentItem: RowLayout {
+                            spacing: Spacing.sm
+
+                            Item { Layout.fillWidth: true }
+
+                            MDIcon {
+                                icon: Icons.block
+                                size: Spacing.iconSizeSmall
+                                color: blockedTabButton.checked ? Theme.color("primary") : Theme.color("onSurfaceVariant")
+                                Layout.alignment: Qt.AlignVCenter
+                            }
+
+                            Label {
+                                text: qsTr("Blocked IPs")
+                                font: Typography.titleSmall
+                                color: blockedTabButton.checked ? Theme.color("primary") : Theme.color("onSurfaceVariant")
+                                Layout.alignment: Qt.AlignVCenter
+                            }
+
+                            Item { Layout.fillWidth: true }
+                        }
+                    }
+
+                    onCurrentIndexChanged: Log.debug("ui", "Execution Log inner tab -> " + currentIndex)
+                }
+
+                // Divider under the tab bar (toolbars carry a bottom divider).
+                Rectangle {
+                    Layout.fillWidth: true
+                    implicitHeight: Spacing.outlineWidth
+                    color: Theme.color("outlineVariant")
+                }
+
+                StackLayout {
+                    Layout.fillWidth: true
+                    Layout.fillHeight: true
+                    currentIndex: tabBar.currentIndex
+
+                    GeneralLogView {
+                        model: root.documentationCapture ? documentationLogModel : filterProxy
+                        emptyText: qsTr("No log messages to display")
+                    }
+
+                    BlockedIPsView {
+                        model: peerModel
+                    }
+                }
             }
         }
     }

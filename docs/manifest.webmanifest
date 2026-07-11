@@ -2,7 +2,7 @@
   "id": "./",
   "name": "qBittorrent Material Documentation",
   "short_name": "qBT Material",
-  "description": "The landing page, searchable documentation, visual tour, and project wiki for qBittorrent Material.",
+  "description": "The native qBittorrent Material rewrite, searchable documentation, 13-view visual tour, and project wiki.",
   "lang": "en",
   "dir": "ltr",
   "start_url": "./",
@@ -29,8 +29,99 @@
   ],
   "screenshots": [
     {
+      "src": "images/app/01-main-window.png",
+      "sizes": "960x900",
+      "type": "image/png",
+      "form_factor": "wide",
+      "label": "Light Transfers workspace in the complete Material shell"
+    },
+    {
+      "src": "images/app/02-toolbar-and-filter.png",
+      "sizes": "960x900",
+      "type": "image/png",
+      "form_factor": "wide",
+      "label": "Dark Transfers workspace"
+    },
+    {
+      "src": "images/app/03-filter-sidebar.png",
+      "sizes": "960x640",
+      "type": "image/png",
+      "form_factor": "wide",
+      "label": "Compact Transfers desktop shell"
+    },
+    {
+      "src": "images/app/04-transfer-list.png",
+      "sizes": "960x768",
+      "type": "image/png",
+      "form_factor": "wide",
+      "label": "Transfers table and filters"
+    },
+    {
+      "src": "images/app/05-properties-tabs.png",
+      "sizes": "960x768",
+      "type": "image/png",
+      "form_factor": "wide",
+      "label": "Dark Transfers properties workspace"
+    },
+    {
+      "src": "images/app/06-statusbar.png",
+      "sizes": "960x900",
+      "type": "image/png",
+      "form_factor": "wide",
+      "label": "Execution Log workspace"
+    },
+    {
+      "src": "images/app/07-navigation-and-toolbar.png",
+      "sizes": "960x900",
+      "type": "image/png",
+      "form_factor": "wide",
+      "label": "Dark Search workspace"
+    },
+    {
+      "src": "images/app/08-main-workspace.png",
+      "sizes": "960x900",
+      "type": "image/png",
+      "form_factor": "wide",
+      "label": "RSS reader workspace"
+    },
+    {
+      "src": "images/app/09-custom-workspace-tabs.png",
+      "sizes": "960x900",
+      "type": "image/png",
+      "form_factor": "wide",
+      "label": "Persistent personal Workspace"
+    },
+    {
+      "src": "images/app/10-tab-context-menu.png",
+      "sizes": "960x900",
+      "type": "image/png",
+      "form_factor": "wide",
+      "label": "Options dialog in Light mode"
+    },
+    {
+      "src": "images/app/11-tab-typography-color.png",
+      "sizes": "960x900",
+      "type": "image/png",
+      "form_factor": "wide",
+      "label": "Options dialog in Dark mode"
+    },
+    {
+      "src": "images/app/12-workspace-portability.png",
+      "sizes": "960x768",
+      "type": "image/png",
+      "form_factor": "wide",
+      "label": "Download from URLs dialog"
+    },
+    {
+      "src": "images/app/13-restored-workspace.png",
+      "sizes": "960x768",
+      "type": "image/png",
+      "form_factor": "wide",
+      "label": "About qBittorrent dialog in Dark mode"
+    },
+    {
       "src": "images/site/01-landing-desktop.png",
-      "sizes": "1440x1000",
+      "sizes": "1071x1000",
       "type": "image/png",
       "form_factor": "wide",
       "label": "qBittorrent Material documentation home"
@@ -41,55 +132,6 @@
       "type": "image/png",
       "form_factor": "narrow",
       "label": "Responsive Material documentation home"
-    },
-    {
-      "src": "images/app/01-main-window.png",
-      "sizes": "852x602",
-      "type": "image/png",
-      "form_factor": "wide",
-      "label": "qBittorrent Material main workspace"
-    },
-    {
-      "src": "images/app/03-filter-sidebar.png",
-      "sizes": "250x486",
-      "type": "image/png",
-      "form_factor": "narrow",
-      "label": "Transfer filter navigation"
-    },
-    {
-      "src": "images/app/09-custom-workspace-tabs.png",
-      "sizes": "2048x1280",
-      "type": "image/png",
-      "form_factor": "wide",
-      "label": "Persistent Workspace tabs with a user-renamed application"
-    },
-    {
-      "src": "images/app/10-tab-context-menu.png",
-      "sizes": "2048x1280",
-      "type": "image/png",
-      "form_factor": "wide",
-      "label": "Workspace tab context actions"
-    },
-    {
-      "src": "images/app/11-tab-typography-color.png",
-      "sizes": "1721x1033",
-      "type": "image/png",
-      "form_factor": "wide",
-      "label": "Per-tab typography and unlimited font color"
-    },
-    {
-      "src": "images/app/12-workspace-portability.png",
-      "sizes": "2048x1280",
-      "type": "image/png",
-      "form_factor": "wide",
-      "label": "Workspace JSON and complete Git repository portability"
-    },
-    {
-      "src": "images/app/13-restored-workspace.png",
-      "sizes": "1380x891",
-      "type": "image/png",
-      "form_factor": "wide",
-      "label": "Renamed application and persistent pages restored after relaunch"
     }
   ],
   "shortcuts": [

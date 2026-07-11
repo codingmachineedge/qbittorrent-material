@@ -180,7 +180,7 @@ QColor ThemeManager::color(const QString &id) const
 
     // 5. Never return an invalid color.
     qCWarning(lcTheme) << "Unknown color id" << id << "- falling back to onSurface";
-    return palette.value(u"onSurface"_s, dark ? QColor(0xe6, 0xed, 0xf3) : QColor(0x1f, 0x23, 0x28));
+    return palette.value(u"onSurface"_s, dark ? QColor(0xe8, 0xea, 0xed) : QColor(0x20, 0x21, 0x24));
 }
 
 QString ThemeManager::trayIconName() const
@@ -241,7 +241,10 @@ bool ThemeManager::loadColorOverrides(const QString &jsonPath)
 
 void ThemeManager::buildPalette()
 {
-    // ---- Base Material 3 roles (light / dark), seeded from DESIGN_SYSTEM. ----
+    // ---- Base Material roles -------------------------------------------------
+    // Light values are the canonical qBittorrent Material design-system tokens.
+    // Dark values are their Google Material dark counterparts: neutral chrome,
+    // a single blue action accent, and the Google dark status palette.
     const auto put = [this](const QString &id, const QString &light, const QString &dark)
     {
         m_lightPalette.insert(id, parseColor(light));
@@ -249,68 +252,96 @@ void ThemeManager::buildPalette()
     };
 
     // Primary family.
-    put(u"primary"_s, u"#0969da"_s, u"#58a6ff"_s);
-    put(u"onPrimary"_s, u"#ffffff"_s, u"#0d1117"_s);
-    put(u"primaryContainer"_s, u"#ddf4ff"_s, u"#0c2d6b"_s);
-    put(u"onPrimaryContainer"_s, u"#0a3069"_s, u"#cae8ff"_s);
-    put(u"primaryEmphasis"_s, u"#0550ae"_s, u"#1f6feb"_s);
+    put(u"primary"_s, u"#1a73e8"_s, u"#8ab4f8"_s);
+    put(u"onPrimary"_s, u"#ffffff"_s, u"#202124"_s);
+    put(u"primaryContainer"_s, u"#e8f0fe"_s, u"#394457"_s);
+    put(u"onPrimaryContainer"_s, u"#1a73e8"_s, u"#aecbfa"_s);
+    // Oklab mixes from the source contract: accent + 8%/14% black.
+    put(u"primaryHover"_s, u"#1666d0"_s, u"#9bbdf8"_s);
+    put(u"primaryPressed"_s, u"#135dbe"_s, u"#aecbfa"_s);
+    put(u"primaryEmphasis"_s, u"#135dbe"_s, u"#aecbfa"_s);
 
-    // Secondary / tertiary (mapped to qBittorrent accent families for coherence).
-    put(u"secondary"_s, u"#8250df"_s, u"#a371f7"_s);
-    put(u"onSecondary"_s, u"#ffffff"_s, u"#0d1117"_s);
-    put(u"tertiary"_s, u"#1a7f37"_s, u"#3fb950"_s);
-    put(u"onTertiary"_s, u"#ffffff"_s, u"#0d1117"_s);
+    // The system has one decorative accent. Secondary stays neutral and
+    // tertiary carries the semantic success family rather than adding purple.
+    put(u"secondary"_s, u"#3c4043"_s, u"#bdc1c6"_s);
+    put(u"onSecondary"_s, u"#ffffff"_s, u"#202124"_s);
+    put(u"secondaryContainer"_s, u"#f8fafd"_s, u"#303134"_s);
+    put(u"onSecondaryContainer"_s, u"#3c4043"_s, u"#bdc1c6"_s);
+    put(u"tertiary"_s, u"#188038"_s, u"#81c995"_s);
+    put(u"onTertiary"_s, u"#ffffff"_s, u"#202124"_s);
+    put(u"tertiaryContainer"_s, u"#e6f4ea"_s, u"#1e3a2a"_s);
+    put(u"onTertiaryContainer"_s, u"#188038"_s, u"#81c995"_s);
 
     // Surfaces / text.
-    put(u"surface"_s, u"#ffffff"_s, u"#0d1117"_s);
-    put(u"surfaceVariant"_s, u"#f6f8fa"_s, u"#161b22"_s);
-    put(u"onSurface"_s, u"#1f2328"_s, u"#e6edf3"_s);
-    put(u"onSurfaceVariant"_s, u"#57606a"_s, u"#8b949e"_s);
-    put(u"background"_s, u"#ffffff"_s, u"#0d1117"_s);
-    put(u"onBackground"_s, u"#1f2328"_s, u"#e6edf3"_s);
+    put(u"surface"_s, u"#ffffff"_s, u"#292a2d"_s);
+    put(u"surfaceVariant"_s, u"#f8fafd"_s, u"#303134"_s);
+    put(u"onSurface"_s, u"#202124"_s, u"#e8eaed"_s);
+    put(u"onSurfaceVariant"_s, u"#5f6368"_s, u"#9aa0a6"_s);
+    put(u"secondaryText"_s, u"#3c4043"_s, u"#bdc1c6"_s);
+    put(u"background"_s, u"#f8fafd"_s, u"#202124"_s);
+    put(u"onBackground"_s, u"#202124"_s, u"#e8eaed"_s);
 
     // Lines.
-    put(u"outline"_s, u"#d0d7de"_s, u"#30363d"_s);
-    put(u"outlineVariant"_s, u"#eaeef2"_s, u"#21262d"_s);
+    put(u"outline"_s, u"#dadce0"_s, u"#5f6368"_s);
+    put(u"outlineVariant"_s, u"#edf0f2"_s, u"#3c4043"_s);
+    put(u"focusRing"_s, u"#3d1a73e8"_s, u"#528ab4f8"_s);
+    put(u"scrim"_s, u"#59202124"_s, u"#99000000"_s);
 
     // Error.
-    put(u"error"_s, u"#cf222e"_s, u"#f85149"_s);
-    put(u"onError"_s, u"#ffffff"_s, u"#0d1117"_s);
-    put(u"errorContainer"_s, u"#ffebe9"_s, u"#4c1a1c"_s);
-    put(u"onErrorContainer"_s, u"#82071e"_s, u"#ffc1bc"_s);
+    put(u"error"_s, u"#d93025"_s, u"#f28b82"_s);
+    put(u"onError"_s, u"#ffffff"_s, u"#202124"_s);
+    put(u"errorContainer"_s, u"#fce8e6"_s, u"#4a2525"_s);
+    put(u"onErrorContainer"_s, u"#d93025"_s, u"#f28b82"_s);
 
     // ---- qBittorrent extended roles. ----
-    put(u"success"_s, u"#1a7f37"_s, u"#3fb950"_s);
-    put(u"onSuccess"_s, u"#ffffff"_s, u"#0d1117"_s);
-    put(u"successContainer"_s, u"#dafbe1"_s, u"#0f2f17"_s);
-    put(u"onSuccessContainer"_s, u"#0a3d1a"_s, u"#aff5b4"_s);
+    put(u"success"_s, u"#188038"_s, u"#81c995"_s);
+    put(u"onSuccess"_s, u"#ffffff"_s, u"#202124"_s);
+    put(u"successContainer"_s, u"#e6f4ea"_s, u"#1e3a2a"_s);
+    put(u"onSuccessContainer"_s, u"#188038"_s, u"#81c995"_s);
 
-    put(u"successEmphasis"_s, u"#2da44e"_s, u"#238636"_s);
-    put(u"onSuccessEmphasis"_s, u"#ffffff"_s, u"#ffffff"_s);
+    put(u"successEmphasis"_s, u"#188038"_s, u"#81c995"_s);
+    put(u"onSuccessEmphasis"_s, u"#ffffff"_s, u"#202124"_s);
 
-    put(u"warning"_s, u"#7d4e00"_s, u"#845306"_s);
-    put(u"onWarning"_s, u"#ffffff"_s, u"#0d1117"_s);
-    put(u"warningContainer"_s, u"#fff8c5"_s, u"#3b2300"_s);
-    put(u"onWarningContainer"_s, u"#5c3d00"_s, u"#f2cc60"_s);
+    put(u"warning"_s, u"#f9ab00"_s, u"#fdd663"_s);
+    put(u"onWarning"_s, u"#202124"_s, u"#202124"_s);
+    put(u"warningContainer"_s, u"#fef7e0"_s, u"#4a3f1d"_s);
+    put(u"onWarningContainer"_s, u"#b06000"_s, u"#fdd663"_s);
 
-    put(u"done"_s, u"#8250df"_s, u"#a371f7"_s);
-    put(u"onDone"_s, u"#ffffff"_s, u"#0d1117"_s);
-    put(u"doneContainer"_s, u"#fbefff"_s, u"#2b1a45"_s);
-    put(u"onDoneContainer"_s, u"#3c1e70"_s, u"#e2c5ff"_s);
+    // Completed/done is success in this system; purple is intentionally absent.
+    put(u"done"_s, u"#188038"_s, u"#81c995"_s);
+    put(u"onDone"_s, u"#ffffff"_s, u"#202124"_s);
+    put(u"doneContainer"_s, u"#e6f4ea"_s, u"#1e3a2a"_s);
+    put(u"onDoneContainer"_s, u"#188038"_s, u"#81c995"_s);
 
-    put(u"info"_s, u"#0969da"_s, u"#58a6ff"_s); // == primary
-    put(u"onInfo"_s, u"#ffffff"_s, u"#0d1117"_s);
+    put(u"info"_s, u"#1a73e8"_s, u"#8ab4f8"_s); // == primary
+    put(u"onInfo"_s, u"#ffffff"_s, u"#202124"_s);
 
-    put(u"muted"_s, u"#57606a"_s, u"#8b949e"_s); // == onSurfaceVariant
+    put(u"muted"_s, u"#5f6368"_s, u"#9aa0a6"_s); // == onSurfaceVariant
 
-    put(u"severe"_s, u"#bc4c00"_s, u"#db6d28"_s);
-    put(u"onSevere"_s, u"#ffffff"_s, u"#0d1117"_s);
+    put(u"severe"_s, u"#f9ab00"_s, u"#fdd663"_s); // == warning
+    put(u"onSevere"_s, u"#202124"_s, u"#202124"_s);
 
     qCDebug(lcTheme) << "Palette built:" << m_lightPalette.size() << "roles";
 }
 
 void ThemeManager::buildNamedIdMap()
 {
+    // Canonical design-token aliases. Resolution remains recursive so a user
+    // override on either the semantic name (surfaceWarm) or its Material role
+    // (primaryContainer) is honored without duplicating palette state.
+    m_namedIdMap.insert(u"canvas"_s, u"background"_s);
+    m_namedIdMap.insert(u"surfaceWarm"_s, u"primaryContainer"_s);
+    m_namedIdMap.insert(u"selectedSurface"_s, u"primaryContainer"_s);
+    m_namedIdMap.insert(u"foreground"_s, u"onSurface"_s);
+    m_namedIdMap.insert(u"foregroundSecondary"_s, u"secondaryText"_s);
+    m_namedIdMap.insert(u"border"_s, u"outline"_s);
+    m_namedIdMap.insert(u"borderSoft"_s, u"outlineVariant"_s);
+    m_namedIdMap.insert(u"accent"_s, u"primary"_s);
+    m_namedIdMap.insert(u"accentOn"_s, u"onPrimary"_s);
+    m_namedIdMap.insert(u"danger"_s, u"error"_s);
+    m_namedIdMap.insert(u"onDanger"_s, u"onError"_s);
+    m_namedIdMap.insert(u"dangerContainer"_s, u"errorContainer"_s);
+
     // Transfer-list row TEXT color per TorrentState (DESIGN_SYSTEM §1).
     m_namedIdMap.insert(u"ForcedDownloading"_s, u"success"_s);
     m_namedIdMap.insert(u"Downloading"_s, u"success"_s);

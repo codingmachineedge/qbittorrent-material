@@ -78,13 +78,13 @@ Column {
             required property var model
             readonly property bool selected: root.proxy && (root.proxy.statusFilter === model.value)
             width: root.width
-            height: 32
+            height: Spacing.controlHeight
             padding: Spacing.xs
 
             background: Rectangle {
-                color: rowItem.selected ? Qt.alpha(Theme.color("primary"), 0.12)
-                                        : (rowItem.hovered ? Qt.alpha(Theme.color("onSurface"), 0.08) : "transparent")
-                radius: Spacing.radiusChip
+                color: rowItem.selected ? Theme.color("surfaceWarm")
+                                        : (rowItem.hovered ? Theme.color("surfaceWarm") : "transparent")
+                radius: Spacing.radiusControl
             }
 
             contentItem: Row {

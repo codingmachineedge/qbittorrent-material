@@ -496,4 +496,12 @@ Flickable {
             }
         }
     }
+
+    Connections {
+        target: OptionsController
+        function onActionFeedback(action, success, message) {
+            if (action === "testEmail")
+                Snackbar.show(message)
+        }
+    }
 }

@@ -42,10 +42,20 @@ ToolButton {
 
     display: AbstractButton.IconOnly
     flat: true
-    padding: Spacing.xs
+    padding: 0
 
-    implicitWidth: Math.max(size + Spacing.sm * 2, 32)
-    implicitHeight: Math.max(size + Spacing.sm * 2, 32)
+    implicitWidth: Math.max(size + Spacing.sm * 2, Spacing.controlHeight)
+    implicitHeight: Math.max(size + Spacing.sm * 2, Spacing.controlHeight)
+
+    background: Rectangle {
+        radius: height / 2
+        color: root.checked
+            ? Theme.color("primaryContainer")
+            : (root.down || root.hovered ? Theme.color("surfaceWarm") : "transparent")
+        border.width: root.activeFocus ? 2 : 0
+        border.color: Theme.color("primary")
+        Behavior on color { ColorAnimation { duration: Spacing.motionFast } }
+    }
 
     contentItem: MDIcon {
         icon: root.symbol

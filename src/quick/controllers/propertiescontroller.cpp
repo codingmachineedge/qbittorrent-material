@@ -114,6 +114,11 @@ QObject *PropertiesController::speedPlotModel() const
     return m_speedPlotModel;
 }
 
+QObject *PropertiesController::contentHandler() const
+{
+    return m_torrent;
+}
+
 void PropertiesController::setCurrentTorrentId(const QString &id)
 {
     if (m_currentTorrentId == id)

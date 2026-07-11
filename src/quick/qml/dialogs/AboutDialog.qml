@@ -149,7 +149,7 @@ Dialog {
                         spacing: Spacing.lg
 
                         Image {
-                            source: "qrc:/icons/tray/qbittorrent-tray.png"
+                            source: "qrc:/branding/logo-mark.svg"
                             sourceSize.width: 64
                             sourceSize.height: 64
                             fillMode: Image.PreserveAspectFit

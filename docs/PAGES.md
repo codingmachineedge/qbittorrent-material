@@ -82,6 +82,19 @@ The site includes `.nojekyll`, a web manifest, an offline service worker, projec
 | --- | --- | --- |
 | ![Wiki search results](images/site/02-wiki-search.png) | ![Regex builder](images/site/03-regex-builder.png) | ![Mobile landing page](images/site/04-mobile-landing.png) |
 
+## Native application screenshots
+
+The Pages gallery and root README share the stable `docs/images/app/01`–`13`
+filenames. They cover the shared 64px command bar, 248px navigation, 32px
+status footer, Transfers, Search, RSS, Execution Log, Workspace, Options, and
+representative dialogs in Light and Dark modes.
+
+The current raster dimensions are 960×900 for `01`, `02`, and `06`–`11`;
+960×640 for `03`; and 960×768 for `04`, `05`, `12`, and `13`. Keep the intrinsic
+`width`/`height` attributes in `index.html` and the `sizes` entries in
+`manifest.webmanifest` synchronized with the actual files whenever the gallery
+is refreshed; the capture surface may clamp a requested native window size.
+
 ## Visual QA checklist
 
 1. Desktop width at 1440×1000 or larger.
@@ -92,4 +105,4 @@ The site includes `.nojekyll`, a web manifest, an offline service worker, projec
 6. Plain, regex, invalid-regex, filtered, and empty-result searches.
 7. Markdown/JSON import, wiki export, and search-profile round trip.
 8. Internal document links, table of contents, copy-code buttons, and gallery lightbox.
-9. Workspace guide search, internal links, and all five verified installed-app captures.
+9. Workspace guide search, internal links, and all 13 native application captures.

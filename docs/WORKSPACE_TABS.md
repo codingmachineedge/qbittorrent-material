@@ -11,7 +11,7 @@ client is not required.
 
 ## Open and navigate the workspace
 
-Select **Workspace** in the top-level application tabs or press `Alt+5`. The row
+Select **Workspace** in the persistent application navigation or press `Alt+5`. The row
 inside that view behaves like a browser tab strip:
 
 - Select a tab to open its page.
@@ -25,12 +25,6 @@ Closing every tab is supported. The empty view offers a **Create tab** action to
 start again. A workspace can contain up to 100 tabs.
 
 ![Persistent browser-style Workspace tabs](images/app/09-custom-workspace-tabs.png)
-
-> **LowLevel Workspace Studio** in these screenshots is a user-selected display
-> name that demonstrates the rename feature. It is not a separate application
-> edition or project rebrand.
-
-![Tab actions anchored to the selected page](images/app/10-tab-context-menu.png)
 
 ## Rename the application display
 
@@ -57,8 +51,6 @@ page stores these settings independently:
 The color editor is unrestricted: adjust hue, saturation, value, and alpha, or
 enter `#RRGGBB` or `#AARRGGBB` directly. Its preview shows the combined font and
 color settings before **Apply** is selected.
-
-![Per-tab name, font, style, size, emphasis, and color controls](images/app/11-tab-typography-color.png)
 
 Pages use a plain-text editor. Their repository files use the `.md` extension so
 they remain convenient to inspect and diff, but the application does not render
@@ -101,8 +93,6 @@ The portability menu and the **Workspace** application menu offer two formats:
 | --- | --- | --- |
 | Workspace JSON | Display name, active tab, ordered pages, content, timestamps, and appearance | A compact snapshot or exchange with another profile |
 | Complete Git repository | `workspace.json`, page files, README, and the entire `.git` history | Backup, migration, or continued version history on another computer |
-
-![Workspace JSON and complete Git repository portability menu](images/app/12-workspace-portability.png)
 
 ### Export or import JSON
 
@@ -180,11 +170,6 @@ them. Do not remove a `.workspace-backup-*`, `.workspace-recovery-*`,
 active workspace is verified and any needed files or history have been copied
 somewhere safe.
 
-The restored-state capture below shows the renamed application, ordered tabs,
-active page, typography, and content available again after relaunch.
-
-![Workspace state restored after relaunch](images/app/13-restored-workspace.png)
-
 ## Validation and privacy
 
 Workspace data stays on the local computer unless it is explicitly exported or
@@ -208,7 +193,7 @@ replacing a workspace you care about.
 
 | Shortcut | Action |
 | --- | --- |
-| `Alt+5` | Open the top-level Workspace view |
+| `Alt+5` | Open the Workspace navigation destination |
 | `Ctrl+T` | Create a workspace tab |
 | `Ctrl+W` | Close the active workspace tab when Workspace is active |
 | `Ctrl+S` | Save and commit pending workspace changes when Workspace is active |

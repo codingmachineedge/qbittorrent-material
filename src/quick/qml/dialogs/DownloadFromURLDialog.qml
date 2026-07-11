@@ -31,6 +31,9 @@ Dialog {
     /*! Emitted with the cleaned, de-duplicated list of links. */
     signal urlsAccepted(var urls)
 
+    /*! Disabled by deterministic documentation captures to protect clipboard data. */
+    property bool allowClipboardAutopaste: true
+
     title: qsTr("Download from URLs")
     modal: true
     parent: Overlay.overlay
@@ -115,7 +118,8 @@ Dialog {
     onOpened: {
         Log.debug("ui", "DownloadFromURLDialog opened")
         urlsArea.clear()
-        autoPasteClipboard()
+        if (root.allowClipboardAutopaste)
+            autoPasteClipboard()
         urlsArea.forceActiveFocus()
     }
 

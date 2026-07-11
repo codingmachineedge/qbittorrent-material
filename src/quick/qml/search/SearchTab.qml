@@ -94,10 +94,70 @@ Item {
         }
     }
 
+    Rectangle {
+        anchors.fill: parent
+        color: Theme.color("background")
+    }
+
     ColumnLayout {
         anchors.fill: parent
-        anchors.margins: Spacing.md
-        spacing: Spacing.md
+        anchors.margins: Spacing.pagePadding
+        spacing: Spacing.lg
+
+        RowLayout {
+            Layout.fillWidth: true
+            spacing: Spacing.lg
+
+            ColumnLayout {
+                Layout.fillWidth: true
+                spacing: Spacing.xs
+
+                Label {
+                    Layout.fillWidth: true
+                    text: qsTr("Search")
+                    font: Typography.pageTitle
+                    color: Theme.color("onSurface")
+                    elide: Text.ElideRight
+                }
+
+                Label {
+                    Layout.fillWidth: true
+                    text: qsTr("Find releases through installed search plugins.")
+                    font: Typography.metadata
+                    color: Theme.color("muted")
+                    wrapMode: Text.WordWrap
+                }
+            }
+
+            Button {
+                Layout.preferredHeight: Spacing.controlHeight
+                flat: true
+                text: qsTr("Search plugins…")
+                contentItem: RowLayout {
+                    spacing: Spacing.xs
+                    MDIcon { icon: Icons.extension; size: 18; color: Theme.color("primary") }
+                    Label { text: qsTr("Search plugins…"); font: Typography.labelLarge; color: Theme.color("primary") }
+                }
+                onClicked: {
+                    Log.info("search", "Search plugins dialog opened")
+                    pluginsDialog.open()
+                }
+            }
+        }
+
+        Rectangle {
+            Layout.fillWidth: true
+            Layout.fillHeight: true
+            radius: Spacing.radiusPanel
+            color: Theme.color("surface")
+            border.width: Spacing.outlineWidth
+            border.color: Theme.color("outline")
+            clip: true
+
+            ColumnLayout {
+                anchors.fill: parent
+                anchors.margins: Spacing.space20
+                spacing: Spacing.md
 
         // ---- Query bar ----------------------------------------------------
         RowLayout {
@@ -107,6 +167,7 @@ Item {
             TextField {
                 id: searchField
                 Layout.fillWidth: true
+                Layout.preferredHeight: Spacing.controlHeight
                 enabled: SearchController.pluginsInstalled && SearchController.pythonAvailable
                 placeholderText: qsTr("Search…")
                 selectByMouse: true
@@ -129,7 +190,7 @@ Item {
                 Menu {
                     id: historyMenu
                     y: searchField.height
-                    Material.elevation: 8
+                    Material.elevation: Spacing.elevationMenu
                     Repeater {
                         model: SearchController.history
                         delegate: MenuItem {
@@ -155,7 +216,8 @@ Item {
 
             ComboBox {
                 id: categoryCombo
-                Layout.preferredWidth: 180
+                Layout.preferredWidth: root.width >= 1120 ? 220 : 160
+                Layout.preferredHeight: Spacing.controlHeight
                 enabled: searchField.enabled
                 textRole: "label"
                 valueRole: "value"
@@ -164,7 +226,8 @@ Item {
 
             ComboBox {
                 id: scopeCombo
-                Layout.preferredWidth: 180
+                Layout.preferredWidth: root.width >= 1120 ? 220 : 160
+                Layout.preferredHeight: Spacing.controlHeight
                 enabled: searchField.enabled
                 textRole: "label"
                 valueRole: "value"
@@ -186,6 +249,7 @@ Item {
 
             Button {
                 id: searchButton
+                Layout.preferredHeight: Spacing.controlHeight
                 visible: !root.showStop
                 enabled: searchField.enabled
                 highlighted: true
@@ -201,6 +265,7 @@ Item {
 
             Button {
                 id: stopButton
+                Layout.preferredHeight: Spacing.controlHeight
                 visible: root.showStop
                 text: qsTr("Stop")
                 Material.accent: Theme.color("error")
@@ -212,6 +277,12 @@ Item {
             }
         }
 
+        Rectangle {
+            Layout.fillWidth: true
+            implicitHeight: Spacing.outlineWidth
+            color: Theme.color("outlineVariant")
+        }
+
         // ---- Content: empty page OR results tabs --------------------------
         Loader {
             id: contentLoader
@@ -220,22 +291,6 @@ Item {
             sourceComponent: SearchController.pluginsInstalled ? resultsComponent : emptyComponent
         }
 
-        // ---- Bottom bar ---------------------------------------------------
-        RowLayout {
-            Layout.fillWidth: true
-            Item { Layout.fillWidth: true }
-            Button {
-                flat: true
-                text: qsTr("Search plugins…")
-                contentItem: RowLayout {
-                    spacing: Spacing.xs
-                    MDIcon { icon: Icons.extension; size: 18; color: Theme.color("primary") }
-                    Label { text: qsTr("Search plugins…"); font: Typography.labelLarge; color: Theme.color("primary") }
-                }
-                onClicked: {
-                    Log.info("search", "Search plugins dialog opened")
-                    pluginsDialog.open()
-                }
             }
         }
     }
@@ -257,7 +312,13 @@ Item {
             TabBar {
                 id: resultsBar
                 Layout.fillWidth: true
+                Layout.preferredHeight: Spacing.controlHeight
                 visible: SearchController.tabs.length > 0
+                Material.elevation: 0
+                background: Rectangle {
+                    radius: Spacing.radiusControl
+                    color: Theme.color("surfaceWarm")
+                }
                 currentIndex: {
                     var tabs = SearchController.tabs
                     for (var i = 0; i < tabs.length; ++i)
@@ -268,9 +329,11 @@ Item {
                 Repeater {
                     model: SearchController.tabs
                     delegate: TabButton {
+                        id: resultTabButton
                         required property var modelData
                         required property int index
                         width: Math.min(220, implicitWidth)
+                        implicitHeight: Spacing.controlHeight
                         onClicked: {
                             root.currentTabId = modelData.id
                             root.currentTabPattern = SearchController.tabPattern(modelData.id)
@@ -280,6 +343,17 @@ Item {
                         ToolTip.text: SearchController.statusText(modelData.status)
                         ToolTip.visible: hovered
                         ToolTip.delay: 600
+
+                        background: Rectangle {
+                            radius: Spacing.radiusControl
+                            color: resultTabButton.checked
+                                ? Theme.color("primaryContainer")
+                                : (resultTabButton.hovered ? Theme.color("surface") : "transparent")
+
+                            Behavior on color {
+                                ColorAnimation { duration: Spacing.motionFast }
+                            }
+                        }
 
                         contentItem: RowLayout {
                             spacing: Spacing.xs

@@ -35,11 +35,24 @@ import qBittorrent
 Item {
     id: view
 
+    clip: true
+
     /*! The shared sort/filter proxy (set by \l TransfersTab). */
     property var proxy: null
 
     /*! Name of the current (focused) torrent — published by the Name cell. */
     property string currentName: ""
+
+    function focusFilter() { filterField.forceActiveFocus() }
+
+    Rectangle {
+        anchors.fill: parent
+        z: -1
+        radius: Spacing.radiusPanel
+        color: Theme.color("surface")
+        border.width: 1
+        border.color: Theme.color("outline")
+    }
 
     // ---- Column inventory (matches TransferListModel::Column order) --------
     // `role` == the model role name (must match TransferListModel::roleNames);
@@ -295,46 +308,76 @@ Item {
         anchors.fill: parent
         spacing: 0
 
-        // Compact filter / tools bar above the table.
-        RowLayout {
+        // Panel header: filtering and column controls stay aligned to the table.
+        Item {
             Layout.fillWidth: true
-            Layout.margins: Spacing.xs
-            spacing: Spacing.sm
+            Layout.preferredHeight: Spacing.controlHeight + (2 * Spacing.lg)
 
-            FilterTextField {
-                id: filterField
-                Layout.fillWidth: true
-                placeholder: qsTr("Filter torrent list…")
-                // Initialized once from the proxy (not bound, to avoid a
-                // feedback loop): the field is the source of truth for text.
-                Component.onCompleted: {
-                    if (view.proxy) {
-                        text = view.proxy.textFilter;
-                        regexEnabled = view.proxy.useRegex;
+            RowLayout {
+                anchors.fill: parent
+                anchors.leftMargin: Spacing.xl
+                anchors.rightMargin: Spacing.xl
+                spacing: Spacing.md
+
+                FilterTextField {
+                    id: filterField
+                    Layout.preferredWidth: 360
+                    Layout.maximumWidth: 480
+                    placeholder: qsTr("Filter torrent list")
+                    Component.onCompleted: {
+                        if (view.proxy) {
+                            text = view.proxy.textFilter;
+                            regexEnabled = view.proxy.useRegex;
+                        }
+                    }
+                    onTextChanged: {
+                        if (!view.proxy)
+                            return;
+                        Log.debug("ui", "Transfer name filter -> '" + text + "'");
+                        view.proxy.textFilter = text;
+                    }
+                    onRegexEnabledChanged: {
+                        if (!view.proxy)
+                            return;
+                        Log.debug("ui", "Transfer name filter regex -> " + regexEnabled);
+                        view.proxy.useRegex = regexEnabled;
                     }
                 }
-                onTextChanged: {
-                    if (!view.proxy)
-                        return;
-                    Log.debug("ui", "Transfer name filter -> '" + text + "'");
-                    view.proxy.textFilter = text;
-                }
-                onRegexEnabledChanged: {
-                    if (!view.proxy)
-                        return;
-                    Log.debug("ui", "Transfer name filter regex -> " + regexEnabled);
-                    view.proxy.useRegex = regexEnabled;
+
+                Item { Layout.fillWidth: true }
+
+                Button {
+                    id: columnsButton
+                    text: qsTr("Columns")
+                    implicitHeight: Spacing.controlHeight
+                    leftPadding: Spacing.lg
+                    rightPadding: Spacing.lg
+                    contentItem: RowLayout {
+                        spacing: Spacing.sm
+                        MDIcon {
+                            icon: Icons.more_vert
+                            size: 18
+                            color: Theme.color("onSurfaceVariant")
+                        }
+                        Label {
+                            text: columnsButton.text
+                            font: Typography.labelLarge
+                            color: Theme.color("onSurface")
+                        }
+                    }
+                    onClicked: {
+                        Log.debug("ui", "Opening column visibility menu");
+                        columnMenu.columns = view.columns;
+                        columnMenu.popup();
+                    }
                 }
             }
 
-            IconButton {
-                symbol: Icons.more_vert
-                tooltip: qsTr("Column visibility")
-                onClicked: {
-                    Log.debug("ui", "Opening column visibility menu");
-                    columnMenu.columns = view.columns;
-                    columnMenu.popup();
-                }
+            Rectangle {
+                anchors.bottom: parent.bottom
+                width: parent.width
+                height: 1
+                color: Theme.color("outlineVariant")
             }
         }
 
@@ -347,7 +390,7 @@ Item {
             columns: view.columns
             persistKey: "TransferList"
             rowHeight: Spacing.rowHeight
-            headerHeight: Spacing.rowHeight
+            headerHeight: Spacing.controlHeight
 
             delegateFor: (col) => {
                 if (col.role === "progress")
@@ -370,6 +413,33 @@ Item {
                 Log.debug("ui", "Transfer context requested for row " + row);
                 rowMenu.popup(pos.x, pos.y);
             }
+        }
+    }
+
+    ColumnLayout {
+        anchors.centerIn: parent
+        anchors.verticalCenterOffset: Spacing.xl
+        spacing: Spacing.sm
+        visible: view.proxy && view.proxy.count === 0
+        z: 2
+
+        MDIcon {
+            icon: Icons.download
+            size: 36
+            color: Theme.color("outline")
+            Layout.alignment: Qt.AlignHCenter
+        }
+        Label {
+            text: qsTr("No torrents match this view")
+            font: Typography.titleMedium
+            color: Theme.color("onSurfaceVariant")
+            Layout.alignment: Qt.AlignHCenter
+        }
+        Label {
+            text: qsTr("Add a torrent or clear the active filters to continue.")
+            font: Typography.metadata
+            color: Theme.color("muted")
+            Layout.alignment: Qt.AlignHCenter
         }
     }
 
@@ -463,6 +533,7 @@ Item {
         title: qsTr("Remove all tags")
         text: qsTr("Are you sure you want to remove all tags from the selected torrents?")
         rememberKey: "Preferences/Advanced/confirmRemoveAllTags"
+        rememberValue: false
         onAccepted: TransferController.removeAllTags()
     }
 

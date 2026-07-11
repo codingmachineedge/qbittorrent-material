@@ -165,8 +165,10 @@ Flickable {
                         enabled: OptionsController.apiKeyValid
                         onClicked: {
                             Log.info("ui", "WebUI: copy API key")
-                            OptionsController.copyApiKeyToClipboard()
-                            Snackbar.show(qsTr("API key copied to clipboard"))
+                            if (OptionsController.copyApiKeyToClipboard())
+                                Snackbar.show(qsTr("API key copied to clipboard"))
+                            else
+                                Snackbar.show(qsTr("Could not copy the API key"))
                         }
                     }
                     IconButton {
@@ -412,6 +414,14 @@ Flickable {
                 OptionsController.deleteApiKey()
             else
                 OptionsController.rotateApiKey()   // also used for first generation
+        }
+    }
+
+    Connections {
+        target: OptionsController
+        function onActionFeedback(action, success, message) {
+            if (action === "dynDNS")
+                Snackbar.show(message)
         }
     }
 }

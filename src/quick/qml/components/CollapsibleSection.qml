@@ -81,29 +81,36 @@ ColumnLayout {
         id: headerRow
         Layout.fillWidth: true
         padding: Spacing.sm
+        implicitHeight: Spacing.controlHeight
+
+        background: Rectangle {
+            radius: Spacing.radiusControl
+            color: headerRow.hovered || headerRow.down
+                ? Theme.color("surfaceWarm") : "transparent"
+        }
 
         contentItem: RowLayout {
             spacing: Spacing.sm
 
             MDIcon {
                 icon: Icons.expand_more
-                size: 20
+                size: 18
                 color: Theme.color("onSurfaceVariant")
                 rotation: root.expanded ? 0 : -90
-                Behavior on rotation { NumberAnimation { duration: 150; easing.type: Easing.OutCubic } }
+                Behavior on rotation { NumberAnimation { duration: Spacing.motionFast; easing.type: Easing.OutCubic } }
             }
 
             MDIcon {
                 visible: root.icon.length > 0
                 icon: root.icon
-                size: 20
+                size: 18
                 color: Theme.color("onSurfaceVariant")
             }
 
             Label {
-                text: root.title
-                font: Typography.titleSmall
-                color: Theme.color("onSurface")
+                text: String(root.title).toUpperCase()
+                font: Typography.navLabel
+                color: Theme.color("muted")
                 elide: Text.ElideRight
                 Layout.fillWidth: true
             }
@@ -122,7 +129,7 @@ ColumnLayout {
         Layout.fillWidth: true
         clip: true
         implicitHeight: root.expanded ? body.implicitHeight : 0
-        Behavior on implicitHeight { NumberAnimation { duration: 160; easing.type: Easing.OutCubic } }
+        Behavior on implicitHeight { NumberAnimation { duration: Spacing.motionFast; easing.type: Easing.OutCubic } }
 
         ColumnLayout {
             id: body

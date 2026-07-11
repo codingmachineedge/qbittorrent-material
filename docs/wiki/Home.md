@@ -1,8 +1,10 @@
 # qBittorrent Material Wiki
 
-Welcome to the living handbook for qBittorrent Material: a C++20 and Qt 6/QML rewrite of qBittorrent with a fully Material interface.
+Welcome to the living handbook for qBittorrent Material: a native C++20 and Qt 6/QML rewrite of qBittorrent with a data-first Material interface.
 
 This wiki is maintained in the main repository so the GitHub Wiki and the searchable documentation site share the same source. Use the site search for plain text, regular expressions, field filters, saved search profiles, and imported Markdown.
+
+The completed desktop shell uses a 64px command bar, persistent 248px navigation, and a compact 32px footer. Transfers, Search, RSS, Execution Log, and the personal Workspace are native Qt Quick workspaces. Their content follows a consistent 24px page gutter, flat 24px-radius panels, 40px controls, and compact tables and split views. Choose **System**, **Light**, or **Dark** without changing the underlying workflows or data models.
 
 ![qBittorrent Material dashboard](images/app/01-main-window.png)
 
@@ -20,7 +22,7 @@ This wiki is maintained in the main repository so the GitHub Wiki and the search
 ## Project principles
 
 1. Preserve qBittorrent behavior and configuration compatibility.
-2. Keep every first-party window and dialog in the Material design system.
+2. Keep every native workspace and first-party workflow in one coherent Material design system.
 3. Make repeatable builds and self-contained Windows installers the default path.
 4. Treat documentation and screenshots as tested product surfaces.
 5. Keep personal workspace data local and portable by default.

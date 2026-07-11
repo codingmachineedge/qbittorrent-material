@@ -60,23 +60,63 @@ Item {
         }
     }
 
+    Rectangle {
+        anchors.fill: parent
+        color: Theme.color("background")
+    }
+
     ColumnLayout {
         anchors.fill: parent
-        spacing: 0
+        anchors.margins: Spacing.pagePadding
+        spacing: Spacing.lg
+
+        ColumnLayout {
+            Layout.fillWidth: true
+            spacing: Spacing.xs
+
+            Label {
+                Layout.fillWidth: true
+                text: qsTr("Workspace")
+                font: Typography.pageTitle
+                color: Theme.color("onSurface")
+                elide: Text.ElideRight
+            }
+
+            Label {
+                Layout.fillWidth: true
+                text: qsTr("Keep persistent local pages with individual typography and versioned Git history.")
+                font: Typography.metadata
+                color: Theme.color("muted")
+                wrapMode: Text.WordWrap
+            }
+        }
 
         Rectangle {
             Layout.fillWidth: true
-            implicitHeight: workspaceHeader.implicitHeight + Spacing.md * 2
-            color: Theme.color("surfaceVariant")
+            Layout.fillHeight: true
+            radius: Spacing.radiusPanel
+            color: Theme.color("surface")
+            border.width: Spacing.outlineWidth
+            border.color: Theme.color("outline")
+            clip: true
+
+            ColumnLayout {
+                anchors.fill: parent
+                spacing: 0
+
+        Rectangle {
+            Layout.fillWidth: true
+            implicitHeight: workspaceHeader.implicitHeight + Spacing.lg * 2
+            color: Theme.color("surface")
             border.width: 0
 
             RowLayout {
                 id: workspaceHeader
                 anchors.fill: parent
-                anchors.leftMargin: Spacing.lg
-                anchors.rightMargin: Spacing.sm
-                anchors.topMargin: Spacing.md
-                anchors.bottomMargin: Spacing.md
+                anchors.leftMargin: Spacing.space20
+                anchors.rightMargin: Spacing.lg
+                anchors.topMargin: Spacing.lg
+                anchors.bottomMargin: Spacing.lg
                 spacing: Spacing.md
 
                 Image {
@@ -95,7 +135,7 @@ Item {
                         text: WorkspaceManager.appDisplayName
                         textFormat: Text.PlainText
                         elide: Text.ElideRight
-                        font: Typography.titleMedium
+                        font: Typography.sectionTitle
                         color: Theme.color("onSurface")
                         Layout.fillWidth: true
                     }
@@ -104,7 +144,7 @@ Item {
                         text: WorkspaceManager.repositoryStatus
                         textFormat: Text.PlainText
                         elide: Text.ElideMiddle
-                        font: Typography.bodySmall
+                        font: Typography.metadata
                         color: !WorkspaceManager.writable
                             ? Theme.color("error")
                             : (WorkspaceManager.dirty
@@ -119,6 +159,7 @@ Item {
                     visible: root.width >= 720
                     enabled: WorkspaceManager.writable
                     flat: true
+                    Layout.preferredHeight: Spacing.controlHeight
                     text: qsTr("Rename app")
                     icon.source: ""
                     onClicked: root.renameApplication()
@@ -150,12 +191,13 @@ Item {
 
         Rectangle {
             Layout.fillWidth: true
-            implicitHeight: 48
-            color: Theme.color("surface")
+            implicitHeight: Spacing.controlHeight + Spacing.sm
+            color: Theme.color("surfaceWarm")
             border.width: 0
 
             RowLayout {
                 anchors.fill: parent
+                anchors.margins: Spacing.xs
                 spacing: 0
 
                 ListView {
@@ -184,6 +226,17 @@ Item {
                         objectName: "workspaceTab_" + tabId
                         Accessible.name: qsTr("Workspace tab %1").arg(name)
                         onClicked: WorkspaceManager.activeIndex = index
+
+                        background: Rectangle {
+                            radius: Spacing.radiusControl
+                            color: tabButton.checked
+                                ? Theme.color("primaryContainer")
+                                : (tabButton.hovered ? Theme.color("surface") : "transparent")
+
+                            Behavior on color {
+                                ColorAnimation { duration: Spacing.motionFast }
+                            }
+                        }
 
                         contentItem: RowLayout {
                             spacing: Spacing.xs
@@ -235,7 +288,7 @@ Item {
                 }
 
                 Rectangle {
-                    Layout.preferredWidth: 1
+                    Layout.preferredWidth: Spacing.outlineWidth
                     Layout.fillHeight: true
                     color: Theme.color("outlineVariant")
                 }
@@ -244,7 +297,7 @@ Item {
                     id: addTabButton
                     objectName: "workspaceAddTabButton"
                     Accessible.name: qsTr("New workspace tab")
-                    Layout.preferredWidth: 48
+                    Layout.preferredWidth: Spacing.controlHeight
                     Layout.fillHeight: true
                     symbol: Icons.add
                     tooltip: qsTr("New tab (Ctrl+T)")
@@ -256,7 +309,7 @@ Item {
 
         Rectangle {
             Layout.fillWidth: true
-            Layout.preferredHeight: 1
+            Layout.preferredHeight: Spacing.outlineWidth
             color: Theme.color("outlineVariant")
         }
 
@@ -319,7 +372,7 @@ Item {
                     Layout.fillWidth: true
                     text: qsTr("Open your first page")
                     horizontalAlignment: Text.AlignHCenter
-                    font: Typography.headlineSmall
+                    font: Typography.sectionTitle
                     color: Theme.color("onSurface")
                 }
                 Label {
@@ -332,11 +385,14 @@ Item {
                 }
                 Button {
                     Layout.alignment: Qt.AlignHCenter
+                    Layout.preferredHeight: Spacing.controlHeight
                     text: qsTr("Create tab")
                     highlighted: true
                     enabled: WorkspaceManager.writable
                     onClicked: root.createTab()
                 }
+            }
+        }
             }
         }
     }
@@ -350,7 +406,7 @@ Item {
             implicitWidth: 260
             radius: Spacing.radiusCard
             color: Theme.color("surface")
-            border.width: 1
+            border.width: Spacing.outlineWidth
             border.color: Theme.color("outlineVariant")
         }
 
@@ -386,7 +442,7 @@ Item {
             implicitWidth: 360
             radius: Spacing.radiusCard
             color: Theme.color("surface")
-            border.width: 1
+            border.width: Spacing.outlineWidth
             border.color: Theme.color("outlineVariant")
         }
         MenuItem {

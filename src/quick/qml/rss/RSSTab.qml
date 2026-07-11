@@ -46,21 +46,60 @@ Item {
         articlesList.currentRow = -1
     }
 
+    Rectangle {
+        anchors.fill: parent
+        color: Theme.color("background")
+    }
+
     ColumnLayout {
         anchors.fill: parent
-        spacing: 0
+        anchors.margins: Spacing.pagePadding
+        spacing: Spacing.lg
+
+        // ---- Page heading -------------------------------------------------
+        ColumnLayout {
+            Layout.fillWidth: true
+            spacing: Spacing.xs
+
+            Label {
+                Layout.fillWidth: true
+                text: qsTr("RSS reader")
+                font: Typography.pageTitle
+                color: Theme.color("onBackground")
+                elide: Text.ElideRight
+            }
+
+            Label {
+                Layout.fillWidth: true
+                text: qsTr("Monitor feeds and route matching releases through download rules.")
+                font: Typography.metadata
+                color: Theme.color("muted")
+                wrapMode: Text.WordWrap
+            }
+        }
 
         // ---- Warning banner (fetching disabled) ---------------------------
         Rectangle {
             Layout.fillWidth: true
             visible: !RSSController.processingEnabled
-            implicitHeight: visible ? warnLabel.implicitHeight + Spacing.md : 0
-            color: Qt.alpha(Theme.color("warning"), 0.15)
+            implicitHeight: visible ? warnLabel.implicitHeight + (Spacing.md * 2) : 0
+            color: Qt.alpha(Theme.color("warning"), Theme.isDark ? 0.20 : 0.12)
+            border.width: Spacing.outlineWidth
+            border.color: Qt.alpha(Theme.color("warning"), 0.55)
+            radius: Spacing.radiusControl
+
+            Behavior on implicitHeight {
+                NumberAnimation {
+                    duration: Spacing.motionBase
+                    easing.type: Easing.BezierSpline
+                    easing.bezierCurve: Spacing.easeStandard
+                }
+            }
 
             Label {
                 id: warnLabel
                 anchors.fill: parent
-                anchors.margins: Spacing.sm
+                anchors.margins: Spacing.md
                 text: qsTr("Fetching of RSS feeds is disabled now! You can enable it in application settings.")
                 color: Theme.color("warning")
                 font: Qt.font({
@@ -75,111 +114,151 @@ Item {
             }
         }
 
-        // ---- Toolbar ------------------------------------------------------
-        RSSToolbar {
-            id: toolbar
-            Layout.fillWidth: true
-            selectedPath: feedsTree.currentPath
-            onNewSubscription: feedDialog.openForAdd(RSSController.newSubscriptionDestination(feedsTree.currentPath))
-            onMarkItemsRead: RSSController.markItemRead(feedsTree.currentPath)
-            onUpdateAll: RSSController.refreshAll()
-            onOpenDownloader: rulesDialog.open()
-            onFilterChanged: (text) => articleModel.setFilter(text)
-        }
-
-        // ---- Three-pane split ---------------------------------------------
-        SplitView {
-            id: sideSplit
+        // ---- Dominant RSS workspace surface -------------------------------
+        Rectangle {
+            id: rssPanel
             Layout.fillWidth: true
             Layout.fillHeight: true
-            orientation: Qt.Horizontal
+            color: Theme.color("surface")
+            border.width: Spacing.outlineWidth
+            border.color: Theme.color("outline")
+            radius: Spacing.radiusPanel
+            clip: true
 
-            Settings {
-                id: sidePersist
-                category: "RSSWidget/SideSplit"
-                property alias feedsWidth: feedsPane.implicitWidth
-            }
-
-            // Feeds tree pane.
-            Item {
-                id: feedsPane
-                SplitView.preferredWidth: 240
-                SplitView.minimumWidth: 150
-
-                FeedsTree {
-                    id: feedsTree
-                    anchors.fill: parent
-                    model: feedModel
-                    onSelectionChanged: root._selectFeed(currentPath, currentStickyKind)
-                    onActivated: (path) => {
-                        // Double-click a feed → rename (legacy behavior).
-                        if (RSSController.isFeed(path))
-                            renameDialog.openFor(path)
-                    }
-                    onContextRequested: (pos) => {
-                        feedsMenu.updateState()
-                        feedsMenu.popup(feedsTree, pos)
-                    }
+            Behavior on color {
+                ColorAnimation {
+                    duration: Spacing.motionFast
+                    easing.type: Easing.BezierSpline
+                    easing.bezierCurve: Spacing.easeStandard
                 }
             }
 
-            // Articles + preview pane.
             ColumnLayout {
-                SplitView.fillWidth: true
+                anchors.fill: parent
+                anchors.margins: Spacing.outlineWidth
                 spacing: 0
 
-                Label {
+                // ---- Toolbar ----------------------------------------------
+                RSSToolbar {
+                    id: toolbar
                     Layout.fillWidth: true
-                    Layout.margins: Spacing.sm
-                    text: qsTr("Torrents: (double-click to download)")
-                    font: Typography.titleSmall
-                    color: Theme.color("onSurfaceVariant")
+                    Layout.preferredHeight: Spacing.controlHeight
+                    Layout.minimumHeight: Spacing.controlHeight
+                    Layout.maximumHeight: Spacing.controlHeight
+                    selectedPath: feedsTree.currentPath
+                    background: Rectangle {
+                        color: Theme.color("surfaceWarm")
+                    }
+                    onNewSubscription: feedDialog.openForAdd(RSSController.newSubscriptionDestination(feedsTree.currentPath))
+                    onMarkItemsRead: RSSController.markItemRead(feedsTree.currentPath)
+                    onUpdateAll: RSSController.refreshAll()
+                    onOpenDownloader: rulesDialog.open()
+                    onFilterChanged: (text) => articleModel.setFilter(text)
                 }
 
+                Rectangle {
+                    Layout.fillWidth: true
+                    implicitHeight: Spacing.outlineWidth
+                    color: Theme.color("outlineVariant")
+                }
+
+                // ---- Three-pane split -------------------------------------
                 SplitView {
-                    id: mainSplit
+                    id: sideSplit
                     Layout.fillWidth: true
                     Layout.fillHeight: true
+                    Layout.margins: Spacing.lg
                     orientation: Qt.Horizontal
 
                     Settings {
-                        category: "RSSWidget/MainSplit"
-                        property alias articlesWidth: articlesPane.implicitWidth
+                        id: sidePersist
+                        category: "RSSWidget/SideSplit"
+                        property alias feedsWidth: feedsPane.implicitWidth
                     }
 
+                    // Feeds tree pane.
                     Item {
-                        id: articlesPane
-                        SplitView.preferredWidth: 320
-                        SplitView.minimumWidth: 180
+                        id: feedsPane
+                        SplitView.preferredWidth: 220
+                        SplitView.minimumWidth: 150
 
-                        ArticlesList {
-                            id: articlesList
+                        FeedsTree {
+                            id: feedsTree
                             anchors.fill: parent
-                            model: articleModel
-                            stickyView: root.stickyView
-                            onCurrentArticleChanged: (row) => {
-                                articlePreview.showFeed = root.stickyView
-                                articlePreview.article = row >= 0 ? articleModel.get(row) : ({})
-                            }
-                            onArticleActivated: (row) => {
-                                const a = articleModel.get(row)
-                                articleModel.markRead(row)
-                                RSSController.downloadTorrent(a.torrentUrl)
+                            model: feedModel
+                            onSelectionChanged: root._selectFeed(currentPath, currentStickyKind)
+                            onActivated: (path) => {
+                                // Double-click a feed → rename (legacy behavior).
+                                if (RSSController.isFeed(path))
+                                    renameDialog.openFor(path)
                             }
                             onContextRequested: (pos) => {
-                                const a = articleModel.get(articlesList.currentRow)
-                                articlesMenu.hasTorrent = a.torrentUrl && a.torrentUrl.length > 0
-                                articlesMenu.hasLink = a.link && a.link.length > 0
-                                if (articlesMenu.hasTorrent || articlesMenu.hasLink)
-                                    articlesMenu.popup(articlesList, pos)
+                                feedsMenu.updateState()
+                                feedsMenu.popup(feedsTree, pos)
                             }
                         }
                     }
 
-                    ArticlePreview {
-                        id: articlePreview
+                    // Articles + preview pane.
+                    ColumnLayout {
                         SplitView.fillWidth: true
-                        SplitView.minimumWidth: 180
+                        spacing: Spacing.sm
+
+                        Label {
+                            Layout.fillWidth: true
+                            Layout.leftMargin: Spacing.sm
+                            Layout.rightMargin: Spacing.sm
+                            text: qsTr("Torrents: (double-click to download)")
+                            font: Typography.labelMedium
+                            color: Theme.color("onSurfaceVariant")
+                        }
+
+                        SplitView {
+                            id: mainSplit
+                            Layout.fillWidth: true
+                            Layout.fillHeight: true
+                            orientation: Qt.Horizontal
+
+                            Settings {
+                                category: "RSSWidget/MainSplit"
+                                property alias articlesWidth: articlesPane.implicitWidth
+                            }
+
+                            Item {
+                                id: articlesPane
+                                SplitView.preferredWidth: 290
+                                SplitView.minimumWidth: 180
+
+                                ArticlesList {
+                                    id: articlesList
+                                    anchors.fill: parent
+                                    model: articleModel
+                                    stickyView: root.stickyView
+                                    onCurrentArticleChanged: (row) => {
+                                        articlePreview.showFeed = root.stickyView
+                                        articlePreview.article = row >= 0 ? articleModel.get(row) : ({})
+                                    }
+                                    onArticleActivated: (row) => {
+                                        const a = articleModel.get(row)
+                                        articleModel.markRead(row)
+                                        RSSController.downloadTorrent(a.torrentUrl)
+                                    }
+                                    onContextRequested: (pos) => {
+                                        const a = articleModel.get(articlesList.currentRow)
+                                        articlesMenu.hasTorrent = a.torrentUrl && a.torrentUrl.length > 0
+                                        articlesMenu.hasLink = a.link && a.link.length > 0
+                                        if (articlesMenu.hasTorrent || articlesMenu.hasLink)
+                                            articlesMenu.popup(articlesList, pos)
+                                    }
+                                }
+                            }
+
+                            ArticlePreview {
+                                id: articlePreview
+                                SplitView.fillWidth: true
+                                SplitView.minimumWidth: 180
+                            }
+                        }
                     }
                 }
             }

@@ -81,7 +81,7 @@ Item {
     property var selectedRows: []
 
     /*! Draw alternating row backgrounds. */
-    property bool alternatingRows: true
+    property bool alternatingRows: false
 
     /*! Role the table is currently sorted by ("" = unsorted). */
     property string sortRole: ""
@@ -90,8 +90,8 @@ Item {
     property int sortOrder: Qt.AscendingOrder
 
     /*! Visual metrics. */
-    property int headerHeight: 36
-    property int rowHeight: 32
+    property int headerHeight: Spacing.controlHeight
+    property int rowHeight: Spacing.rowHeight
     property int minColumnWidth: 40
 
     /*! Emitted on double-click / Enter over a row. */
@@ -360,7 +360,7 @@ Item {
                 id: headerBar
                 width: root._totalWidth
                 height: root.headerHeight
-                color: Theme.color("surfaceVariant")
+                color: Theme.color("surface")
 
                 Row {
                     anchors.fill: parent
@@ -378,13 +378,13 @@ Item {
                                 anchors.left: parent.left
                                 anchors.right: resizeHandle.left
                                 anchors.verticalCenter: parent.verticalCenter
-                                anchors.leftMargin: Spacing.sm
+                                    anchors.leftMargin: Spacing.lg
                                 spacing: Spacing.xs
 
                                 Label {
-                                    text: model.title
-                                    font: Typography.bodyMedium
-                                    color: Theme.color("onSurfaceVariant")
+                                    text: String(model.title).toUpperCase()
+                                    font: Typography.tableHeader
+                                    color: Theme.color("muted")
                                     elide: Text.ElideRight
                                     width: Math.max(0, headerCell.width - Spacing.sm - resizeHandle.width -
                                                     (sortIndicator.visible ? sortIndicator.width + Spacing.xs : 0))
@@ -508,9 +508,9 @@ Item {
                     property int rowIndex: index
 
                     color: root.isRowSelected(index)
-                           ? Qt.alpha(Theme.color("primary"), 0.12)
+                           ? Theme.color("surfaceWarm")
                            : (rowHover.hovered
-                              ? Qt.alpha(Theme.color("onSurface"), 0.08)
+                              ? Theme.color("surfaceWarm")
                               : (root.alternatingRows && (index % 2 === 1)
                                  ? Qt.alpha(Theme.color("surfaceVariant"), 0.4)
                                  : "transparent"))
@@ -582,7 +582,12 @@ Item {
                     }
                 }
 
+                focus: true
                 Keys.onReturnPressed: if (root.currentRow >= 0) root.activated(root.currentRow)
+                Keys.onSpacePressed: {
+                    if (root.currentRow >= 0)
+                        root._selectRow(root.currentRow, Qt.NoModifier)
+                }
             }
         }
     }

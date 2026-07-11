@@ -42,7 +42,6 @@ class AppController : public QObject
     Q_PROPERTY(bool lockPasswordSet READ isLockPasswordSet NOTIFY lockedChanged)
 
 public:
-    explicit AppController(QObject *parent = nullptr);
     ~AppController() override;
 
     /// QML singleton factory — returns the app-owned instance (never a new one).
@@ -86,6 +85,10 @@ public:
     /// Forward an arbitrary add source (path/magnet/URL) to the add pipeline.
     Q_INVOKABLE void addTorrentFromSource(const QString &source);
 
+    /// Save the rendered main Qt Quick window to a PNG. This is used by the
+    /// repository's deterministic documentation-capture mode.
+    Q_INVOKABLE bool captureMainWindow(const QString &filePath) const;
+
     /// Handle an activation payload forwarded by a secondary instance.
     void handleActivationRequest(const QString &payload);
 
@@ -110,6 +113,13 @@ signals:
     void notify(const QString &message);
 
 private:
+    friend class Application;
+
+    // Application owns the single instance. Keeping construction private makes
+    // qmltyperegistrar select create() instead of silently constructing a
+    // second controller (and splitting shell state between two objects).
+    explicit AppController(QObject *parent = nullptr);
+
     [[nodiscard]] static QString storedPasswordHash();
 
     bool m_locked = false;

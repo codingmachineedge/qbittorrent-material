@@ -1,12 +1,6 @@
 /*
  * qBittorrent (Material rewrite) — a BitTorrent client
  * Copyright (C) 2026  qBittorrent-Material contributors
- *
- * This program is free software; you can redistribute it and/or modify
- * it under the terms of the GNU General Public License as published by
- * the Free Software Foundation; either version 2 of the License, or
- * (at your option) any later version.
- *
  * SPDX-License-Identifier: GPL-3.0-or-later
  */
 
@@ -16,191 +10,165 @@ import QtQuick.Layouts
 import qBittorrent
 
 /*!
-    AppToolBar — the Material top toolbar. Buttons trigger the shared Actions
-    declared in Main.qml (\c shell). A right-click opens \c ToolbarContextMenu to
-    pick the text position (icons only / text only / beside / under / follow),
-    persisted to \c Preferences::setToolbarTextPosition. On the far right sits the
-    transfer-list filter box + "Filter by" column combo (shown on the Transfers
-    tab only), then the Options and Lock buttons.
+    The persistent 64 px application bar from the qBittorrent Material design
+    system. Product identity, the complete application menu, high-frequency
+    transfer actions, live throughput, settings, and lock state stay in stable
+    positions while workspaces change below it.
 */
 ToolBar {
     id: toolBar
 
-    /// The Main.qml root, exposing the shared Action objects + shell state.
     required property var shell
 
-    /// Toolbar button text position: 0 icons only, 1 text only, 2 text beside,
-    /// 3 text under, 4 follow system style. Mirrors Qt::ToolButtonStyle order.
-    property int textPosition: 0
-
+    implicitHeight: Spacing.topBarHeight
     Material.elevation: 0
 
-    // Bottom divider (toolbars are elevation 0 + a divider per DESIGN_SYSTEM §3).
-    Rectangle {
-        anchors.bottom: parent.bottom
-        width: parent.width
-        height: 1
-        color: Theme.color("outlineVariant")
-    }
-
-    // Right-click anywhere on the toolbar background -> text-position menu.
-    TapHandler {
-        acceptedButtons: Qt.RightButton
-        onTapped: (eventPoint) => {
-            Log.debug("ui", "Toolbar context menu requested")
-            contextMenu.popup()
+    background: Rectangle {
+        color: Theme.color("surface")
+        Rectangle {
+            anchors.bottom: parent.bottom
+            width: parent.width
+            height: 1
+            color: Theme.color("outline")
         }
     }
 
-    ToolbarContextMenu {
-        id: contextMenu
-        currentPosition: toolBar.textPosition
-        onPositionSelected: (pos) => toolBar.applyTextPosition(pos)
-    }
-
-    // A toolbar button that renders an MDIcon glyph and, per textPosition, a label.
-    component TbButton: ToolButton {
-        id: tb
+    component ToolbarButton: ToolButton {
+        id: control
         property string glyph: ""
         property var boundAction: null
         action: boundAction
-        display: AbstractButton.IconOnly   // we lay out the content ourselves
-        ToolTip.visible: hovered && (toolBar.textPosition === 0 || toolBar.textPosition === 4)
-        ToolTip.text: boundAction ? boundAction.text.replace(/&/g, "").replace(/\.\.\.$/, "") : ""
-        ToolTip.delay: 500
-        contentItem: Grid {
-            columns: (toolBar.textPosition === 3) ? 1 : 2
-            rows: (toolBar.textPosition === 3) ? 2 : 1
-            flow: (toolBar.textPosition === 3) ? Grid.TopToBottom : Grid.LeftToRight
-            columnSpacing: Spacing.sm
-            rowSpacing: 2
-            horizontalItemAlignment: Grid.AlignHCenter
-            verticalItemAlignment: Grid.AlignVCenter
-            MDIcon {
-                visible: toolBar.textPosition !== 1
-                icon: tb.glyph
-                size: 20
-                opacity: tb.enabled ? 1.0 : 0.4
-                color: Theme.color("onSurface")
-            }
-            Label {
-                visible: toolBar.textPosition !== 0 && toolBar.textPosition !== 4
-                text: tb.boundAction ? tb.boundAction.text.replace(/&/g, "").replace(/\.\.\.$/, "") : ""
-                font: Typography.labelLarge
-                color: Theme.color("onSurface")
-                opacity: tb.enabled ? 1.0 : 0.4
+        display: AbstractButton.IconOnly
+        flat: true
+        implicitWidth: Spacing.controlHeight
+        implicitHeight: Spacing.controlHeight
+        Accessible.name: boundAction
+            ? String(boundAction.text).replace(/&/g, "").replace(/\.\.\.$/, "")
+            : ""
+
+        contentItem: MDIcon {
+            icon: control.glyph
+            size: 20
+            fill: control.checked
+            color: control.enabled
+                ? (control.checked ? Theme.color("primary") : Theme.color("onSurfaceVariant"))
+                : Theme.color("outline")
+            anchors.centerIn: parent
+        }
+
+        background: Rectangle {
+            radius: height / 2
+            color: control.down || control.hovered
+                ? Theme.color("primaryContainer") : "transparent"
+            border.width: control.activeFocus ? 2 : 0
+            border.color: Theme.color("primary")
+            Behavior on color {
+                ColorAnimation { duration: Spacing.motionFast }
             }
         }
+
+        ToolTip.visible: hovered
+        ToolTip.text: Accessible.name
+        ToolTip.delay: 500
     }
 
-    component TbSeparator: ToolSeparator {}
+    component BarDivider: Rectangle {
+        Layout.preferredWidth: 1
+        Layout.preferredHeight: 28
+        color: Theme.color("outlineVariant")
+    }
 
     RowLayout {
         anchors.fill: parent
-        anchors.leftMargin: Spacing.sm
-        anchors.rightMargin: Spacing.sm
-        spacing: Spacing.xs
+        anchors.leftMargin: Spacing.xl
+        anchors.rightMargin: Spacing.xl
+        spacing: Spacing.sm
 
-        TbButton { boundAction: toolBar.shell.actionOpen; glyph: Icons.note_add }
-        TbButton { boundAction: toolBar.shell.actionDownloadFromURL; glyph: Icons.add_link }
-        TbButton { boundAction: toolBar.shell.actionDelete; glyph: Icons.deleteIcon }
-        TbSeparator {}
-        TbButton { boundAction: toolBar.shell.actionStart; glyph: Icons.play_arrow }
-        TbButton { boundAction: toolBar.shell.actionStop; glyph: Icons.pause }
-        TbButton { boundAction: toolBar.shell.actionOpenDestinationFolder; glyph: Icons.folder_open }
-        TbButton {
-            boundAction: toolBar.shell.actionTopQueuePos
-            glyph: Icons.vertical_align_top
-            visible: toolBar.shell.queueingEnabled
-        }
-        TbButton {
-            boundAction: toolBar.shell.actionIncreaseQueuePos
-            glyph: Icons.arrow_upward
-            visible: toolBar.shell.queueingEnabled
-        }
-        TbButton {
-            boundAction: toolBar.shell.actionDecreaseQueuePos
-            glyph: Icons.arrow_downward
-            visible: toolBar.shell.queueingEnabled
-        }
-        TbButton {
-            boundAction: toolBar.shell.actionBottomQueuePos
-            glyph: Icons.vertical_align_bottom
-            visible: toolBar.shell.queueingEnabled
-        }
-        TbSeparator {}
-        TbButton { boundAction: toolBar.shell.actionCreateTorrent; glyph: Icons.build }
-
-        // Flexible stretch spacer.
-        Item { Layout.fillWidth: true }
-
-        // Transfer-list filter (only on the Transfers tab, §3).
         RowLayout {
-            spacing: Spacing.sm
-            visible: toolBar.shell.currentTabIndex === 0
+            spacing: 4
+            Layout.rightMargin: Spacing.sm
 
-            FilterTextField {
-                id: filterField
-                Layout.preferredWidth: 200
-                placeholder: qsTr("Filter torrents...")
-                regexEnabled: false
-                onTextChanged: toolBar.applyTransferFilter()
-                onRegexEnabledChanged: {
-                    Log.debug("ui", "Transfer filter regex -> " + regexEnabled)
-                    Preferences.setRegexAsFilteringPatternForTransferList(regexEnabled)
-                    Preferences.apply()
-                    toolBar.applyTransferFilter()
-                }
+            Label {
+                readonly property bool canonicalName:
+                    WorkspaceManager.appDisplayName === "qBittorrent Material"
+                text: canonicalName ? "qBittorrent" : WorkspaceManager.appDisplayName
+                font: Typography.brand
+                color: Theme.color("onSurface")
+                elide: Text.ElideRight
+                Layout.maximumWidth: 260
             }
             Label {
-                text: qsTr("Filter by:")
-                font: Typography.bodyMedium
-                color: Theme.color("onSurfaceVariant")
+                visible: WorkspaceManager.appDisplayName === "qBittorrent Material"
+                text: "Material"
+                font: Typography.brand
+                color: Theme.color("primary")
             }
-            ComboBox {
-                id: filterColumnCombo
-                Layout.preferredWidth: 150
-                textRole: "label"
-                model: [
-                    { label: qsTr("Name"), column: "name" },
-                    { label: qsTr("Save Path"), column: "savePath" },
-                    { label: qsTr("Info Hash v1"), column: "infohashV1" },
-                    { label: qsTr("Info Hash v2"), column: "infohashV2" }
-                ]
-                onActivated: {
-                    Log.debug("ui", "Transfer filter column -> " + currentIndex)
-                    toolBar.applyTransferFilter()
+        }
+
+        AppMenuBar {
+            shell: toolBar.shell
+        }
+
+        BarDivider {}
+
+        ToolbarButton { boundAction: toolBar.shell.actionOpen; glyph: Icons.note_add }
+        ToolbarButton { boundAction: toolBar.shell.actionDownloadFromURL; glyph: Icons.add_link }
+        ToolbarButton { boundAction: toolBar.shell.actionStart; glyph: Icons.play_arrow }
+        ToolbarButton { boundAction: toolBar.shell.actionStop; glyph: Icons.pause }
+        ToolbarButton { boundAction: toolBar.shell.actionDelete; glyph: Icons.deleteIcon }
+        ToolbarButton { boundAction: toolBar.shell.actionOpenDestinationFolder; glyph: Icons.folder_open }
+
+        Item { Layout.fillWidth: true }
+
+        RowLayout {
+            spacing: Spacing.lg
+            Layout.rightMargin: Spacing.sm
+
+            RowLayout {
+                spacing: 5
+                MDIcon {
+                    icon: Icons.download
+                    size: 17
+                    color: Theme.color("onSurfaceVariant")
+                }
+                Label {
+                    text: toolBar.formatSpeed(Session.downloadRate || 0)
+                    font: Typography.mono
+                    color: Theme.color("muted")
+                }
+            }
+
+            RowLayout {
+                spacing: 5
+                MDIcon {
+                    icon: Icons.upload
+                    size: 17
+                    color: Theme.color("onSurfaceVariant")
+                }
+                Label {
+                    text: toolBar.formatSpeed(Session.uploadRate || 0)
+                    font: Typography.mono
+                    color: Theme.color("muted")
                 }
             }
         }
 
-        TbButton { boundAction: toolBar.shell.actionOptions; glyph: Icons.settings }
-        TbButton { boundAction: toolBar.shell.actionLock; glyph: Icons.lock }
+        BarDivider {}
+        ToolbarButton { boundAction: toolBar.shell.actionOptions; glyph: Icons.settings }
+        ToolbarButton { boundAction: toolBar.shell.actionLock; glyph: Icons.lock }
     }
 
-    function applyTransferFilter() {
-        var col = filterColumnCombo.model[filterColumnCombo.currentIndex].column
-        toolBar.shell.applyTransferFilter(filterField.text, col)
-    }
-
-    function applyTextPosition(pos) {
-        Log.info("ui", "Toolbar text position -> " + pos)
-        toolBar.textPosition = pos
-        Preferences.setToolbarTextPosition(pos)
-        Preferences.apply()
-    }
-
-    // Hiding the toolbar clears the filter (matches legacy behavior).
-    onVisibleChanged: {
-        if (!visible && filterField.text.length > 0) {
-            Log.debug("ui", "Toolbar hidden; clearing transfer filter")
-            filterField.text = ""
+    function formatSpeed(bytesPerSecond) {
+        var units = ["B/s", "KiB/s", "MiB/s", "GiB/s", "TiB/s"]
+        var value = Math.max(0, bytesPerSecond)
+        var i = 0
+        while (value >= 1024 && i < units.length - 1) {
+            value /= 1024
+            ++i
         }
+        var digits = i === 0 ? 0 : (value < 100 ? 1 : 0)
+        return qsTr("%1 %2").arg(value.toFixed(digits)).arg(units[i])
     }
 
-    Component.onCompleted: {
-        toolBar.textPosition = Preferences.getToolbarTextPosition()
-        filterField.regexEnabled = Preferences.getRegexAsFilteringPatternForTransferList()
-        Log.debug("ui", "AppToolBar ready; textPosition=" + toolBar.textPosition)
-    }
+    Component.onCompleted: Log.debug("ui", "Design-system application bar ready")
 }

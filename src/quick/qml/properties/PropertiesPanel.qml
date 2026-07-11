@@ -1,12 +1,6 @@
 /*
  * qBittorrent (Material rewrite) — a BitTorrent client
  * Copyright (C) 2026  qBittorrent-Material contributors
- *
- * This program is free software; you can redistribute it and/or modify
- * it under the terms of the GNU General Public License as published by
- * the Free Software Foundation; either version 2 of the License, or
- * (at your option) any later version.
- *
  * SPDX-License-Identifier: GPL-3.0-or-later
  */
 
@@ -17,51 +11,41 @@ import QtCore
 import qBittorrent
 
 /*!
-    \qmltype PropertiesPanel
-    \brief The bottom torrent-properties pane: a stacked set of tabs above a
-           tab bar (General / Trackers / Peers / HTTP Sources / Content / Speed).
-
-    Rebuild of the legacy \c PropertiesWidget + \c PropTabBar. The content stack
-    sits on top and the tab bar below; clicking the already-active tab collapses
-    the pane (leaving just the tab bar), matching the legacy slide behavior.
-    The current tab and expanded state persist under \c TorrentProperties/*.
-    Switching tabs (or expanding) writes \c PropertiesController.currentTab so the
-    controller refreshes only that tab's dynamic data.
+    Bordered torrent-properties panel. Tabs sit at the top like the supplied
+    transfer surface, while re-clicking the current tab retains qBittorrent's
+    useful collapse behavior.
 */
 Item {
     id: root
 
-    /*! Collapsed height = just the tab bar. */
-    readonly property int collapsedHeight: tabBar.height
-
-    /*! Whether the content stack is shown (vs. collapsed to the tab bar). */
+    readonly property int collapsedHeight: Spacing.controlHeight + Spacing.sm
     property bool expanded: true
-
-    /*! Index of the active tab (0..5). */
     property int currentTab: 0
+
+    clip: true
+
+    Rectangle {
+        anchors.fill: parent
+        z: -1
+        radius: Spacing.radiusPanel
+        color: Theme.color("surface")
+        border.width: 1
+        border.color: Theme.color("outline")
+    }
 
     Settings {
         id: persist
         category: "TorrentProperties"
-        property int currentTab: -1   // -1 = start collapsed (legacy default)
+        property int currentTab: -1
         property bool visible: false
-    }
-
-    Component.onCompleted: {
-        expanded = persist.visible
-        currentTab = persist.currentTab >= 0 ? persist.currentTab : 0
-        if (expanded)
-            PropertiesController.currentTab = currentTab
-        Log.debug("ui", "PropertiesPanel ready; expanded=" + expanded + " tab=" + currentTab)
     }
 
     function _selectTab(index) {
         if (index === currentTab && expanded) {
-            // Reclick on the active tab → collapse.
             expanded = false
             persist.visible = false
             persist.currentTab = -1
-            Log.info("ui", "PropertiesPanel collapsed")
+            Log.info("ui", "Properties panel collapsed")
             return
         }
         currentTab = index
@@ -70,7 +54,6 @@ Item {
             persist.visible = true
         }
         persist.currentTab = index
-        Log.info("ui", "PropertiesPanel tab -> " + index)
         PropertiesController.currentTab = index
     }
 
@@ -78,7 +61,54 @@ Item {
         anchors.fill: parent
         spacing: 0
 
-        // ---- Content stack ----------------------------------------------------
+        TabBar {
+            id: tabBar
+            Layout.fillWidth: true
+            Layout.preferredHeight: root.collapsedHeight
+            currentIndex: root.currentTab
+            Material.elevation: 0
+            background: Rectangle { color: "transparent" }
+
+            component PropertyTab: TabButton {
+                id: button
+                property string tabIcon: ""
+                property string tabText: ""
+                implicitHeight: root.collapsedHeight
+                width: implicitWidth
+                leftPadding: Spacing.md
+                rightPadding: Spacing.md
+                contentItem: RowLayout {
+                    spacing: Spacing.xs
+                    MDIcon {
+                        icon: button.tabIcon
+                        size: 17
+                        color: button.checked
+                            ? Theme.color("primary") : Theme.color("muted")
+                    }
+                    Label {
+                        text: button.tabText
+                        font: Typography.titleSmall
+                        color: button.checked
+                            ? Theme.color("primary") : Theme.color("muted")
+                    }
+                }
+            }
+
+            PropertyTab { tabIcon: Icons.description; tabText: qsTr("General"); onClicked: root._selectTab(0) }
+            PropertyTab { tabIcon: Icons.dns; tabText: qsTr("Trackers"); onClicked: root._selectTab(1) }
+            PropertyTab { tabIcon: Icons.groups; tabText: qsTr("Peers"); onClicked: root._selectTab(2) }
+            PropertyTab { tabIcon: Icons.publicIcon; tabText: qsTr("HTTP sources"); onClicked: root._selectTab(3) }
+            PropertyTab { tabIcon: Icons.folder; tabText: qsTr("Content"); onClicked: root._selectTab(4) }
+            PropertyTab { tabIcon: Icons.show_chart; tabText: qsTr("Speed"); onClicked: root._selectTab(5) }
+        }
+
+        Rectangle {
+            Layout.fillWidth: true
+            implicitHeight: 1
+            color: Theme.color("outlineVariant")
+            visible: root.expanded
+        }
+
         Item {
             id: stackHost
             Layout.fillWidth: true
@@ -87,7 +117,6 @@ Item {
             clip: true
 
             StackLayout {
-                id: stack
                 anchors.fill: parent
                 currentIndex: root.currentTab
                 visible: PropertiesController.hasTorrent
@@ -100,7 +129,6 @@ Item {
                 SpeedTab {}
             }
 
-            // Placeholder shown when no torrent is selected.
             ColumnLayout {
                 anchors.centerIn: parent
                 spacing: Spacing.sm
@@ -108,71 +136,33 @@ Item {
 
                 MDIcon {
                     icon: Icons.description
-                    size: 40
+                    size: 34
                     color: Theme.color("outline")
                     Layout.alignment: Qt.AlignHCenter
                 }
                 Label {
                     text: qsTr("Select a torrent to view its properties")
-                    font: Typography.bodyMedium
-                    color: Theme.color("onSurfaceVariant")
+                    font: Typography.bodyLarge
+                    color: Theme.color("muted")
                     Layout.alignment: Qt.AlignHCenter
                 }
             }
         }
-
-        // Divider between stack and tab bar.
-        Rectangle {
-            Layout.fillWidth: true
-            height: 1
-            color: Theme.color("outlineVariant")
-            visible: root.expanded
-        }
-
-        // ---- Tab bar (bottom) -------------------------------------------------
-        TabBar {
-            id: tabBar
-            Layout.fillWidth: true
-            currentIndex: root.currentTab
-            Material.elevation: 0
-
-            component PropTab: TabButton {
-                id: tb
-                property string tabIcon: ""
-                property string tabText: ""
-                width: implicitWidth
-                contentItem: RowLayout {
-                    spacing: Spacing.xs
-                    MDIcon {
-                        icon: tb.tabIcon
-                        size: 18
-                        color: tb.checked ? Theme.color("primary") : Theme.color("onSurfaceVariant")
-                        Layout.alignment: Qt.AlignVCenter
-                    }
-                    Label {
-                        text: tb.tabText
-                        font: Typography.titleSmall
-                        color: tb.checked ? Theme.color("primary") : Theme.color("onSurfaceVariant")
-                        Layout.alignment: Qt.AlignVCenter
-                    }
-                }
-            }
-
-            PropTab { tabIcon: Icons.description; tabText: qsTr("General");      onClicked: root._selectTab(0) }
-            PropTab { tabIcon: Icons.dns;         tabText: qsTr("Trackers");     onClicked: root._selectTab(1) }
-            PropTab { tabIcon: Icons.groups;      tabText: qsTr("Peers");        onClicked: root._selectTab(2) }
-            PropTab { tabIcon: Icons.publicIcon;      tabText: qsTr("HTTP Sources"); onClicked: root._selectTab(3) }
-            PropTab { tabIcon: Icons.folder;      tabText: qsTr("Content");      onClicked: root._selectTab(4) }
-            PropTab { tabIcon: Icons.show_chart;  tabText: qsTr("Speed");        onClicked: root._selectTab(5) }
-        }
     }
 
-    // Refresh the active tab's dynamic data when the current torrent changes.
     Connections {
         target: PropertiesController
         function onHasTorrentChanged() {
             if (root.expanded && PropertiesController.hasTorrent)
                 PropertiesController.currentTab = root.currentTab
         }
+    }
+
+    Component.onCompleted: {
+        expanded = persist.visible
+        currentTab = persist.currentTab >= 0 ? persist.currentTab : 0
+        if (expanded)
+            PropertiesController.currentTab = currentTab
+        Log.debug("ui", "Design-system Properties panel ready")
     }
 }

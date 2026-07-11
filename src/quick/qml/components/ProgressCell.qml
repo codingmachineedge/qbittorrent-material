@@ -12,6 +12,7 @@
 
 import QtQuick
 import QtQuick.Controls.Material
+import QtQuick.Layouts
 import qBittorrent
 
 /*!
@@ -39,29 +40,42 @@ Item {
     property string text: Math.round(Math.max(0, Math.min(1, progress)) * 100) + "%"
 
     implicitWidth: 120
-    implicitHeight: 20
+    implicitHeight: 36
 
-    ProgressBar {
-        id: bar
+    ColumnLayout {
         anchors.fill: parent
-        anchors.margins: Spacing.xs
-        from: 0.0
-        to: 1.0
-        value: Math.max(0, Math.min(1, root.progress))
-        enabled: root.active
+        anchors.leftMargin: Spacing.sm
+        anchors.rightMargin: Spacing.sm
+        anchors.topMargin: 5
+        anchors.bottomMargin: 4
+        spacing: 3
 
-        Material.accent: root.active ? root.barColor : Theme.color("outline")
+        Rectangle {
+            Layout.fillWidth: true
+            Layout.preferredHeight: 6
+            radius: 3
+            color: Theme.color("outlineVariant")
+            clip: true
 
-        background: Rectangle {
-            radius: 2
-            color: Theme.color("surfaceVariant")
+            Rectangle {
+                width: parent.width * Math.max(0, Math.min(1, root.progress))
+                height: parent.height
+                radius: parent.radius
+                color: root.active ? root.barColor : Theme.color("outline")
+                Behavior on width {
+                    NumberAnimation {
+                        duration: Spacing.motionBase
+                        easing.type: Easing.OutCubic
+                    }
+                }
+            }
         }
-    }
 
-    Label {
-        anchors.centerIn: parent
-        text: root.text
-        font: Typography.labelSmall
-        color: root.active ? Theme.color("onSurface") : Theme.color("onSurfaceVariant")
+        Label {
+            text: root.text
+            font: Typography.metadataMono
+            color: root.active ? Theme.color("muted") : Theme.color("outline")
+            Layout.alignment: Qt.AlignHCenter
+        }
     }
 }

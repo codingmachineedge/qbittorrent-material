@@ -76,7 +76,7 @@ Menu {
             spacing: Spacing.sm
 
             MDIcon {
-                icon: Icons.forId("delete")
+                icon: Icons.deleteIcon
                 size: Spacing.iconSizeSmall
                 color: Theme.color("onSurface")
             }

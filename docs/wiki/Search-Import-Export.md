@@ -39,7 +39,7 @@ Imported documents remain in this browser through local storage and can be clear
 
 ## Application Workspace exports are separate
 
-The desktop application's **Workspace** tab has its own JSON snapshot and
+The desktop application's **Workspace** navigation destination has its own JSON snapshot and
 complete Git repository export actions. Those formats contain personal
 workspace pages and appearance settings; this documentation site's wiki bundles
 contain searchable documents and browser search state. The two JSON formats are

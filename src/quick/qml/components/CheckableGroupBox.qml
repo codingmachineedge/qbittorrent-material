@@ -38,8 +38,8 @@ Pane {
     /*! Emitted when the user flips the switch. */
     signal toggled(bool isChecked)
 
-    padding: Spacing.md
-    Material.elevation: root.checked ? 2 : 1
+    padding: Spacing.lg
+    Material.elevation: 0
 
     background: Rectangle {
         radius: Spacing.radiusCard
@@ -83,8 +83,8 @@ Pane {
             enabled: root.checked
             opacity: root.checked ? 1.0 : 0.0
             implicitHeight: root.checked ? body.implicitHeight : 0
-            Behavior on implicitHeight { NumberAnimation { duration: 160; easing.type: Easing.OutCubic } }
-            Behavior on opacity { NumberAnimation { duration: 120 } }
+            Behavior on implicitHeight { NumberAnimation { duration: Spacing.motionFast; easing.type: Easing.OutCubic } }
+            Behavior on opacity { NumberAnimation { duration: Spacing.motionFast } }
 
             ColumnLayout {
                 id: body

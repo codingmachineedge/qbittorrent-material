@@ -63,6 +63,8 @@ public:
     Q_INVOKABLE void start();
     Q_INVOKABLE void stop();
     Q_INVOKABLE void forceStart();
+    Q_INVOKABLE void pauseSession();
+    Q_INVOKABLE void resumeSession();
 
     // --- removal ---
     Q_INVOKABLE void deleteSelected(bool deleteFiles);

@@ -49,7 +49,6 @@ class DesktopIntegration : public QObject
     Q_PROPERTY(QString toolTip READ toolTip WRITE setToolTip NOTIFY toolTipChanged)
 
 public:
-    explicit DesktopIntegration(QObject *parent = nullptr);
     ~DesktopIntegration() override;
 
     /// QML singleton factory — returns the app-owned instance.
@@ -85,6 +84,13 @@ signals:
     void notificationClicked();
 
 private:
+    friend class Application;
+
+    // Application owns the one desktop bridge. A private constructor forces
+    // QML singleton registration through create(), avoiding a duplicate tray
+    // icon and duplicate notification state.
+    explicit DesktopIntegration(QObject *parent = nullptr);
+
     void createTrayIcon();
     [[nodiscard]] QIcon resolveTrayIcon() const;
 

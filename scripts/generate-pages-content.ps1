@@ -65,6 +65,9 @@ $documents = foreach ($file in $sourceFiles) {
     }
     $relativePath = $file.FullName.Substring($rootPrefix.Length).Replace('\', '/')
     $content = [System.IO.File]::ReadAllText($file.FullName, [System.Text.Encoding]::UTF8)
+    # Keep the generated search corpus byte-stable across Windows and Unix
+    # checkouts. Source line endings are presentation-neutral inside JSON.
+    $content = $content.Replace("`r`n", "`n").Replace("`r", "`n")
     if ($relativePath -eq "README.md") {
         # GitHub renders the centered brand/link blocks as HTML. The embedded
         # wiki intentionally escapes raw HTML, so omit those two decorative

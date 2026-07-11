@@ -39,12 +39,12 @@ Pane {
     property string titleIcon: ""
 
     /*! Material elevation of the card surface. */
-    property int elevation: 1
+    property int elevation: 0
 
     /*! Card body — default children, laid out vertically. */
     default property alias content: column.data
 
-    padding: Spacing.md
+    padding: Spacing.lg
     Material.elevation: root.elevation
 
     background: Rectangle {

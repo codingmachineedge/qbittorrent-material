@@ -5,11 +5,11 @@
   <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
   <meta name="theme-color" content="#1a73e8">
   <meta name="color-scheme" content="light dark">
-  <meta name="description" content="qBittorrent Material is a modern, native Material 3 desktop experience with persistent custom workspace tabs, local Git history, automated installers, and complete searchable documentation.">
-  <meta name="keywords" content="qBittorrent, Material Design, Material 3, Qt, C++, BitTorrent, workspace tabs, local Git, open source">
+  <meta name="description" content="qBittorrent Material is a native Qt desktop rewrite with compact Material navigation for Transfers, Search, RSS, Execution Log, Workspace, and Options in System, Light, and Dark themes.">
+  <meta name="keywords" content="qBittorrent, Material Design, Qt, C++, BitTorrent, Transfers, Search, RSS, Execution Log, workspace tabs, open source">
   <meta property="og:type" content="website">
   <meta property="og:title" content="qBittorrent Material">
-  <meta property="og:description" content="A modern native qBittorrent desktop experience with every project document in one searchable wiki.">
+  <meta property="og:description" content="A compact native qBittorrent desktop workspace with persistent navigation, clear operational state, and searchable project documentation.">
   <meta property="og:url" content="https://codingmachineedge.github.io/qbittorrent-material/">
   <meta property="og:image" content="https://codingmachineedge.github.io/qbittorrent-material/images/app/01-main-window.png">
   <meta name="twitter:card" content="summary_large_image">
@@ -68,9 +68,9 @@
       <div class="hero__glow hero__glow--one" aria-hidden="true"></div>
       <div class="hero__glow hero__glow--two" aria-hidden="true"></div>
       <div class="hero__copy">
-        <div class="eyebrow"><span class="eyebrow__dot" aria-hidden="true"></span> Material 3 · Native Qt · Open source</div>
+        <div class="eyebrow"><span class="eyebrow__dot" aria-hidden="true"></span> Native Material · Qt Quick · Open source</div>
         <h1 id="hero-title">Your torrents.<br><span class="gradient-text">Clear and under control.</span></h1>
-        <p class="hero__lede">A compact native qBittorrent desktop experience with clear state, keyboard-safe controls, and a cool-neutral Material interface.</p>
+        <p class="hero__lede">A compact native qBittorrent desktop rewrite with a 64px command bar, persistent workspace navigation, keyboard-safe controls, and cool-neutral System, Light, and Dark themes.</p>
         <div class="hero__actions">
           <a class="button button--filled button--large" href="https://github.com/codingmachineedge/qbittorrent-material/releases">
             <svg aria-hidden="true" viewBox="0 0 24 24"><path d="M12 3v12m0 0 4-4m-4 4-4-4M5 21h14"/></svg>
@@ -96,7 +96,7 @@
             <span>qBittorrent Material</span>
             <div class="window-actions"><span>—</span><span>□</span><span>×</span></div>
           </div>
-          <img src="images/app/01-main-window.png" width="852" height="602" alt="qBittorrent Material main window showing the navigation rail, transfer list, toolbar, and properties panel">
+          <img src="images/app/01-main-window.png" width="960" height="900" alt="Light qBittorrent Material Transfers workspace with the command bar, grouped navigation, transfer table, properties, and status footer">
         </div>
         <div class="floating-chip floating-chip--release"><span class="status-dot" aria-hidden="true"></span><strong>Release ready</strong><small>Built and smoke-tested</small></div>
         <div class="floating-chip floating-chip--native"><svg aria-hidden="true" viewBox="0 0 24 24"><path d="M4 5h16v12H4zM8 21h8M12 17v4"/></svg><strong>Native desktop</strong><small>Fast Qt rendering</small></div>
@@ -119,8 +119,8 @@
       <div class="bento-grid">
         <article class="feature-card feature-card--wide feature-card--primary">
           <div class="feature-card__icon"><svg aria-hidden="true" viewBox="0 0 24 24"><path d="M4 5h16v14H4zM4 9h16M8 9v10"/></svg></div>
-          <div><span class="feature-card__label">Focused workspace</span><h3>Information, exactly where it belongs.</h3><p>Navigation, transfers, properties, and global status form one coherent workspace that scales from laptop to ultrawide.</p></div>
-          <img src="images/app/08-main-workspace.png" width="602" height="486" loading="lazy" alt="Main qBittorrent Material workspace">
+          <div><span class="feature-card__label">Focused workspaces</span><h3>Every operational surface, one destination away.</h3><p>Transfers, Search, RSS, Execution Log, and the personal Workspace share the same persistent 248px navigation and stable application chrome.</p></div>
+          <img src="images/app/08-main-workspace.png" width="960" height="900" loading="lazy" alt="RSS reader in the shared qBittorrent Material desktop shell">
         </article>
         <article class="feature-card feature-card--wide">
           <div class="feature-card__icon"><svg aria-hidden="true" viewBox="0 0 24 24"><path d="M4 5h7v4H4zM11 5h9v4h-9zM4 9h16v10H4zM8 13h8m-8 3h5"/></svg></div>
@@ -132,7 +132,7 @@
         </article>
         <article class="feature-card feature-card--dark">
           <div class="feature-card__icon"><svg aria-hidden="true" viewBox="0 0 24 24"><path d="M12 3a9 9 0 1 0 9 9c0-.7-.08-1.38-.23-2.03A6 6 0 0 1 14.03 3.23 9.08 9.08 0 0 0 12 3Z"/></svg></div>
-          <h3>Made for every light</h3><p>Automatic, light, and dark themes use semantic color throughout.</p>
+          <h3>Made for every light</h3><p>System, Light, and Dark themes use semantic color throughout.</p>
         </article>
         <article class="feature-card">
           <div class="feature-card__icon"><svg aria-hidden="true" viewBox="0 0 24 24"><path d="M13 2 4 14h7l-1 8 9-12h-7z"/></svg></div>
@@ -144,7 +144,7 @@
         </article>
         <article class="feature-card feature-card--wide feature-card--image">
           <div><div class="feature-card__icon"><svg aria-hidden="true" viewBox="0 0 24 24"><path d="M5 4h14v16H5zM8 8h8M8 12h8M8 16h5"/></svg></div><h3>Deep detail, on demand</h3><p>Inspect general data, trackers, peers, HTTP sources, content, and speed without losing context.</p></div>
-          <img src="images/app/05-properties-tabs.png" width="602" height="243" loading="lazy" alt="Properties panel tabs and status details">
+          <img src="images/app/05-properties-tabs.png" width="960" height="768" loading="lazy" alt="Dark Transfers workspace with the torrent properties region">
         </article>
       </div>
     </section>
@@ -152,17 +152,17 @@
     <section class="section experience" id="experience" aria-labelledby="experience-title">
       <div class="experience__copy">
         <span class="overline">A calmer control room</span>
-        <h2 id="experience-title">Big when it matters.<br>Adaptive everywhere.</h2>
-        <p>The application showcase uses roughly 80% of the available screen width and responds fluidly at every breakpoint. The actual desktop interface follows the same principle: dense enough for serious work, spacious enough to breathe.</p>
+        <h2 id="experience-title">Compact by design.<br>Stable across every workspace.</h2>
+        <p>The native shell uses a 64px command bar, 248px navigation, 24px gutters and panel corners, 40px controls, and a 32px status footer. The hierarchy stays consistent from the supported 960px compact window through wide desktop displays.</p>
         <ul class="check-list">
-          <li><span><svg aria-hidden="true" viewBox="0 0 24 24"><path d="m5 12 4 4L19 6"/></svg></span><div><strong>Responsive presentation</strong><small>From compact phones to wide desktop displays.</small></div></li>
+          <li><span><svg aria-hidden="true" viewBox="0 0 24 24"><path d="m5 12 4 4L19 6"/></svg></span><div><strong>Desktop-adaptive presentation</strong><small>From a 960px compact window to wide desktop displays.</small></div></li>
           <li><span><svg aria-hidden="true" viewBox="0 0 24 24"><path d="m5 12 4 4L19 6"/></svg></span><div><strong>Material interaction states</strong><small>Clear focus, hover, selection, and disabled feedback.</small></div></li>
           <li><span><svg aria-hidden="true" viewBox="0 0 24 24"><path d="m5 12 4 4L19 6"/></svg></span><div><strong>Accessible by default</strong><small>Keyboard navigation, reduced motion, and high contrast support.</small></div></li>
         </ul>
       </div>
       <div class="experience__visual">
         <div class="experience__rail"><span class="rail-item rail-item--active"></span><span class="rail-item"></span><span class="rail-item"></span><span class="rail-item"></span></div>
-        <img src="images/app/04-transfer-list.png" width="602" height="245" loading="lazy" alt="Transfer list with progress, status, peers, speeds, and ETA columns">
+        <img src="images/app/04-transfer-list.png" width="960" height="768" loading="lazy" alt="Transfers workspace with progress, status, peers, speeds, and ETA columns">
       </div>
     </section>
 
@@ -263,64 +263,64 @@
         <p>Open any view for a closer look at the installed application. Every image is captured from the real native build.</p>
       </div>
       <div class="gallery-grid">
-        <button class="gallery-card gallery-card--hero" type="button" data-lightbox="images/app/01-main-window.png" data-caption="Main window — the complete Material workspace">
-          <img src="images/app/01-main-window.png" width="852" height="602" loading="lazy" alt="Full qBittorrent Material main window">
-          <span><strong>Main window</strong><small>The complete Material workspace</small></span><i aria-hidden="true"><svg viewBox="0 0 24 24"><path d="M8 3H3v5m13-5h5v5M3 16v5h5m13-5v5h-5"/></svg></i>
+        <button class="gallery-card gallery-card--hero" type="button" data-lightbox="images/app/01-main-window.png" data-caption="Transfers · Light — the complete 64px / 248px / 32px desktop shell">
+          <img src="images/app/01-main-window.png" width="960" height="900" loading="lazy" alt="Light Transfers workspace in the complete qBittorrent Material shell">
+          <span><strong>Transfers · Light</strong><small>The complete Material desktop shell</small></span><i aria-hidden="true"><svg viewBox="0 0 24 24"><path d="M8 3H3v5m13-5h5v5M3 16v5h5m13-5v5h-5"/></svg></i>
         </button>
-        <button class="gallery-card" type="button" data-lightbox="images/app/02-toolbar-and-filter.png" data-caption="Toolbar and filtering — essential actions remain close">
-          <img src="images/app/02-toolbar-and-filter.png" width="852" height="76" loading="lazy" alt="Toolbar and transfer filtering controls">
-          <span><strong>Toolbar &amp; filtering</strong><small>Essential actions stay close</small></span><i aria-hidden="true"><svg viewBox="0 0 24 24"><path d="M8 3H3v5m13-5h5v5M3 16v5h5m13-5v5h-5"/></svg></i>
+        <button class="gallery-card gallery-card--wide" type="button" data-lightbox="images/app/02-toolbar-and-filter.png" data-caption="Transfers · Dark — the same command bar, navigation, and state hierarchy">
+          <img src="images/app/02-toolbar-and-filter.png" width="960" height="900" loading="lazy" alt="Dark Transfers workspace with command bar and filters">
+          <span><strong>Transfers · Dark</strong><small>Semantic state in the Google dark palette</small></span><i aria-hidden="true"><svg viewBox="0 0 24 24"><path d="M8 3H3v5m13-5h5v5M3 16v5h5m13-5v5h-5"/></svg></i>
         </button>
-        <button class="gallery-card gallery-card--tall" type="button" data-lightbox="images/app/03-filter-sidebar.png" data-caption="Filter sidebar — status, category, tags, and trackers">
-          <img src="images/app/03-filter-sidebar.png" width="250" height="486" loading="lazy" alt="Filter sidebar with status categories and tags">
-          <span><strong>Filter sidebar</strong><small>Every transfer, organized</small></span><i aria-hidden="true"><svg viewBox="0 0 24 24"><path d="M8 3H3v5m13-5h5v5M3 16v5h5m13-5v5h-5"/></svg></i>
+        <button class="gallery-card" type="button" data-lightbox="images/app/03-filter-sidebar.png" data-caption="Compact Transfers shell — persistent navigation at the 960×640 capture target">
+          <img src="images/app/03-filter-sidebar.png" width="960" height="640" loading="lazy" alt="Compact 960 by 640 Transfers shell">
+          <span><strong>Compact desktop</strong><small>Persistent hierarchy at 960×640</small></span><i aria-hidden="true"><svg viewBox="0 0 24 24"><path d="M8 3H3v5m13-5h5v5M3 16v5h5m13-5v5h-5"/></svg></i>
         </button>
-        <button class="gallery-card gallery-card--wide" type="button" data-lightbox="images/app/04-transfer-list.png" data-caption="Transfer list — rich status at a glance">
-          <img src="images/app/04-transfer-list.png" width="602" height="245" loading="lazy" alt="Transfer list table with torrent status columns">
-          <span><strong>Transfer list</strong><small>Rich status at a glance</small></span><i aria-hidden="true"><svg viewBox="0 0 24 24"><path d="M8 3H3v5m13-5h5v5M3 16v5h5m13-5v5h-5"/></svg></i>
+        <button class="gallery-card gallery-card--wide" type="button" data-lightbox="images/app/04-transfer-list.png" data-caption="Transfers — filters, actions, progress, speed, peers, and ETA in one workspace">
+          <img src="images/app/04-transfer-list.png" width="960" height="768" loading="lazy" alt="Transfers table with torrent status columns and filters">
+          <span><strong>Transfer table</strong><small>Operational state at a glance</small></span><i aria-hidden="true"><svg viewBox="0 0 24 24"><path d="M8 3H3v5m13-5h5v5M3 16v5h5m13-5v5h-5"/></svg></i>
         </button>
-        <button class="gallery-card gallery-card--wide" type="button" data-lightbox="images/app/05-properties-tabs.png" data-caption="Properties tabs — inspect every detail without leaving context">
-          <img src="images/app/05-properties-tabs.png" width="602" height="243" loading="lazy" alt="Properties panel tabs and torrent status details">
-          <span><strong>Properties</strong><small>Deep detail, one click away</small></span><i aria-hidden="true"><svg viewBox="0 0 24 24"><path d="M8 3H3v5m13-5h5v5M3 16v5h5m13-5v5h-5"/></svg></i>
+        <button class="gallery-card gallery-card--wide" type="button" data-lightbox="images/app/05-properties-tabs.png" data-caption="Transfers properties · Dark — detail stays attached to the selected torrent">
+          <img src="images/app/05-properties-tabs.png" width="960" height="768" loading="lazy" alt="Dark Transfers workspace with torrent properties">
+          <span><strong>Properties · Dark</strong><small>Deep detail without losing context</small></span><i aria-hidden="true"><svg viewBox="0 0 24 24"><path d="M8 3H3v5m13-5h5v5M3 16v5h5m13-5v5h-5"/></svg></i>
         </button>
-        <button class="gallery-card" type="button" data-lightbox="images/app/06-statusbar.png" data-caption="Status bar — network and global transfer speeds">
-          <img src="images/app/06-statusbar.png" width="852" height="40" loading="lazy" alt="Application status bar with network and global speed information">
-          <span><strong>Status bar</strong><small>Global health at a glance</small></span><i aria-hidden="true"><svg viewBox="0 0 24 24"><path d="M8 3H3v5m13-5h5v5M3 16v5h5m13-5v5h-5"/></svg></i>
+        <button class="gallery-card gallery-card--wide" type="button" data-lightbox="images/app/06-statusbar.png" data-caption="Execution Log — timestamped runtime messages with text and level filters">
+          <img src="images/app/06-statusbar.png" width="960" height="900" loading="lazy" alt="Execution Log workspace in Light mode">
+          <span><strong>Execution Log</strong><small>Runtime events, filtered in place</small></span><i aria-hidden="true"><svg viewBox="0 0 24 24"><path d="M8 3H3v5m13-5h5v5M3 16v5h5m13-5v5h-5"/></svg></i>
         </button>
-        <button class="gallery-card" type="button" data-lightbox="images/app/07-navigation-and-toolbar.png" data-caption="Navigation and toolbar — a clear, familiar action model">
-          <img src="images/app/07-navigation-and-toolbar.png" width="852" height="186" loading="lazy" alt="Material navigation and toolbar controls">
-          <span><strong>Navigation</strong><small>A familiar action model</small></span><i aria-hidden="true"><svg viewBox="0 0 24 24"><path d="M8 3H3v5m13-5h5v5M3 16v5h5m13-5v5h-5"/></svg></i>
+        <button class="gallery-card gallery-card--wide" type="button" data-lightbox="images/app/07-navigation-and-toolbar.png" data-caption="Search · Dark — query, plugin scope, result filters, and download actions">
+          <img src="images/app/07-navigation-and-toolbar.png" width="960" height="900" loading="lazy" alt="Search workspace in Dark mode">
+          <span><strong>Search · Dark</strong><small>Plugins and results in one surface</small></span><i aria-hidden="true"><svg viewBox="0 0 24 24"><path d="M8 3H3v5m13-5h5v5M3 16v5h5m13-5v5h-5"/></svg></i>
         </button>
-        <button class="gallery-card gallery-card--hero" type="button" data-lightbox="images/app/08-main-workspace.png" data-caption="Main workspace — designed to scale dynamically">
-          <img src="images/app/08-main-workspace.png" width="602" height="486" loading="lazy" alt="The main workspace at a closer crop">
-          <span><strong>Main workspace</strong><small>Designed to scale with you</small></span><i aria-hidden="true"><svg viewBox="0 0 24 24"><path d="M8 3H3v5m13-5h5v5M3 16v5h5m13-5v5h-5"/></svg></i>
+        <button class="gallery-card gallery-card--hero" type="button" data-lightbox="images/app/08-main-workspace.png" data-caption="RSS reader — feeds, articles, and automation context in the shared shell">
+          <img src="images/app/08-main-workspace.png" width="960" height="900" loading="lazy" alt="RSS reader workspace in Light mode">
+          <span><strong>RSS reader</strong><small>Feeds and release actions together</small></span><i aria-hidden="true"><svg viewBox="0 0 24 24"><path d="M8 3H3v5m13-5h5v5M3 16v5h5m13-5v5h-5"/></svg></i>
         </button>
-        <button class="gallery-card gallery-card--hero" type="button" data-lightbox="images/app/09-custom-workspace-tabs.png" data-caption="Persistent Workspace tabs — LowLevel Workspace Studio is a user rename demonstration">
-          <img src="images/app/09-custom-workspace-tabs.png" width="2048" height="1280" loading="lazy" alt="Persistent browser-style Workspace tabs in a user-renamed qBittorrent Material application">
-          <span><strong>Persistent Workspace</strong><small>User-renamed app, four saved pages</small></span><i aria-hidden="true"><svg viewBox="0 0 24 24"><path d="M8 3H3v5m13-5h5v5M3 16v5h5m13-5v5h-5"/></svg></i>
+        <button class="gallery-card gallery-card--hero" type="button" data-lightbox="images/app/09-custom-workspace-tabs.png" data-caption="Personal Workspace — persistent browser-style pages with local history">
+          <img src="images/app/09-custom-workspace-tabs.png" width="960" height="900" loading="lazy" alt="Persistent personal Workspace in Light mode">
+          <span><strong>Personal Workspace</strong><small>Pages, appearance, and local history</small></span><i aria-hidden="true"><svg viewBox="0 0 24 24"><path d="M8 3H3v5m13-5h5v5M3 16v5h5m13-5v5h-5"/></svg></i>
         </button>
-        <button class="gallery-card gallery-card--wide" type="button" data-lightbox="images/app/10-tab-context-menu.png" data-caption="Tab context menu — customize, duplicate, close others, or close">
-          <img src="images/app/10-tab-context-menu.png" width="2048" height="1280" loading="lazy" alt="Workspace tab context menu anchored to the selected Design Lab tab">
-          <span><strong>Tab actions</strong><small>Context stays attached to the page</small></span><i aria-hidden="true"><svg viewBox="0 0 24 24"><path d="M8 3H3v5m13-5h5v5M3 16v5h5m13-5v5h-5"/></svg></i>
+        <button class="gallery-card gallery-card--wide" type="button" data-lightbox="images/app/10-tab-context-menu.png" data-caption="Options · Light — categorized settings with staged Apply and Cancel actions">
+          <img src="images/app/10-tab-context-menu.png" width="960" height="900" loading="lazy" alt="Options dialog in Light mode">
+          <span><strong>Options · Light</strong><small>Categorized settings, clearly staged</small></span><i aria-hidden="true"><svg viewBox="0 0 24 24"><path d="M8 3H3v5m13-5h5v5M3 16v5h5m13-5v5h-5"/></svg></i>
         </button>
-        <button class="gallery-card gallery-card--wide" type="button" data-lightbox="images/app/11-tab-typography-color.png" data-caption="Tab name and appearance — installed fonts, style, size, emphasis, and unlimited color">
-          <img src="images/app/11-tab-typography-color.png" width="1721" height="1033" loading="lazy" alt="Per-tab name, font family, font style, point size, bold, italic, and HSV color controls">
-          <span><strong>Name &amp; appearance</strong><small>Typography and unrestricted color</small></span><i aria-hidden="true"><svg viewBox="0 0 24 24"><path d="M8 3H3v5m13-5h5v5M3 16v5h5m13-5v5h-5"/></svg></i>
+        <button class="gallery-card gallery-card--wide" type="button" data-lightbox="images/app/11-tab-typography-color.png" data-caption="Options · Dark — the complete settings hierarchy in the dark palette">
+          <img src="images/app/11-tab-typography-color.png" width="960" height="900" loading="lazy" alt="Options dialog in Dark mode">
+          <span><strong>Options · Dark</strong><small>The same hierarchy in every light</small></span><i aria-hidden="true"><svg viewBox="0 0 24 24"><path d="M8 3H3v5m13-5h5v5M3 16v5h5m13-5v5h-5"/></svg></i>
         </button>
-        <button class="gallery-card gallery-card--hero" type="button" data-lightbox="images/app/12-workspace-portability.png" data-caption="Workspace portability — JSON snapshots and complete Git repositories">
-          <img src="images/app/12-workspace-portability.png" width="2048" height="1280" loading="lazy" alt="Workspace menu offering JSON and complete Git repository import and export">
-          <span><strong>Portable by design</strong><small>Snapshot or complete Git history</small></span><i aria-hidden="true"><svg viewBox="0 0 24 24"><path d="M8 3H3v5m13-5h5v5M3 16v5h5m13-5v5h-5"/></svg></i>
+        <button class="gallery-card gallery-card--hero" type="button" data-lightbox="images/app/12-workspace-portability.png" data-caption="Download from URLs — magnet links and supported URLs in a focused dialog">
+          <img src="images/app/12-workspace-portability.png" width="960" height="768" loading="lazy" alt="Download from URLs dialog in Light mode">
+          <span><strong>Download from URLs</strong><small>Focused input with honest validation</small></span><i aria-hidden="true"><svg viewBox="0 0 24 24"><path d="M8 3H3v5m13-5h5v5M3 16v5h5m13-5v5h-5"/></svg></i>
         </button>
-        <button class="gallery-card gallery-card--wide" type="button" data-lightbox="images/app/13-restored-workspace.png" data-caption="Restored after relaunch — display name, ordered tabs, active page, content, and appearance">
-          <img src="images/app/13-restored-workspace.png" width="1380" height="891" loading="lazy" alt="Renamed qBittorrent Material application with persistent Workspace tabs restored after relaunch">
-          <span><strong>Restored after relaunch</strong><small>Name, pages, content, and type return</small></span><i aria-hidden="true"><svg viewBox="0 0 24 24"><path d="M8 3H3v5m13-5h5v5M3 16v5h5m13-5v5h-5"/></svg></i>
+        <button class="gallery-card gallery-card--wide" type="button" data-lightbox="images/app/13-restored-workspace.png" data-caption="About qBittorrent · Dark — version, credits, and license information">
+          <img src="images/app/13-restored-workspace.png" width="960" height="768" loading="lazy" alt="About qBittorrent dialog in Dark mode">
+          <span><strong>About · Dark</strong><small>Version, credits, and license</small></span><i aria-hidden="true"><svg viewBox="0 0 24 24"><path d="M8 3H3v5m13-5h5v5M3 16v5h5m13-5v5h-5"/></svg></i>
         </button>
         <button class="gallery-card gallery-card--hero" type="button" data-lightbox="images/site/01-landing-desktop.png" data-caption="Material landing page — the project, release path, and app at a glance">
-          <img src="images/site/01-landing-desktop.png" width="1440" height="1000" loading="lazy" alt="qBittorrent Material documentation landing page on desktop">
+          <img src="images/site/01-landing-desktop.png" width="1071" height="1000" loading="lazy" alt="qBittorrent Material documentation landing page on desktop">
           <span><strong>Documentation home</strong><small>The complete Material landing experience</small></span><i aria-hidden="true"><svg viewBox="0 0 24 24"><path d="M8 3H3v5m13-5h5v5M3 16v5h5m13-5v5h-5"/></svg></i>
         </button>
         <button class="gallery-card gallery-card--tall" type="button" data-lightbox="images/site/02-wiki-search.png" data-caption="Embedded wiki search — the complete locally indexed corpus">
-          <img src="images/site/02-wiki-search.png" width="1384" height="1555" loading="lazy" alt="Embedded documentation wiki showing highlighted installer search results">
+          <img src="images/site/02-wiki-search.png" width="1384" height="1370" loading="lazy" alt="Embedded documentation wiki showing highlighted installer search results">
           <span><strong>Wiki search</strong><small>Every document, indexed locally</small></span><i aria-hidden="true"><svg viewBox="0 0 24 24"><path d="M8 3H3v5m13-5h5v5M3 16v5h5m13-5v5h-5"/></svg></i>
         </button>
         <button class="gallery-card" type="button" data-lightbox="images/site/03-regex-builder.png" data-caption="Regex builder — token palette, flags, live matches, and import/export">
@@ -340,7 +340,7 @@
         <p>The foundation is in place. The roadmap keeps refinement, platform reach, and community feedback moving forward.</p>
       </div>
       <ol class="roadmap-list">
-        <li class="roadmap-item roadmap-item--done"><span class="roadmap-marker"><svg aria-hidden="true" viewBox="0 0 24 24"><path d="m5 12 4 4L19 6"/></svg></span><div><span>Shipped</span><h3>Native Material foundation</h3><p>Core shell, navigation, transfers, filters, details, responsive site, and repeatable releases.</p></div></li>
+        <li class="roadmap-item roadmap-item--done"><span class="roadmap-marker"><svg aria-hidden="true" viewBox="0 0 24 24"><path d="m5 12 4 4L19 6"/></svg></span><div><span>Shipped</span><h3>Native Material foundation</h3><p>Shared command bar, navigation, status footer, Transfers, Search, RSS, Execution Log, Workspace, Options, and repeatable releases.</p></div></li>
         <li class="roadmap-item roadmap-item--active"><span class="roadmap-marker"><span></span></span><div><span>In progress</span><h3>Behavioral parity &amp; polish</h3><p>Close remaining interaction gaps while refining motion, accessibility, and platform integration.</p></div></li>
         <li class="roadmap-item"><span class="roadmap-marker"></span><div><span>Next</span><h3>Broader platform delivery</h3><p>Package and validate the native experience across additional desktop environments.</p></div></li>
       </ol>
@@ -374,7 +374,7 @@
   <footer class="site-footer">
     <div class="site-footer__main">
       <a class="brand" href="#home"><img class="brand__mark" src="assets/logo-mark.svg" alt="" width="40" height="40"><span class="brand__wordmark"><strong>qBittorrent</strong><span>Material</span></span></a>
-      <p>A community-built exploration of a modern native qBittorrent desktop experience.</p>
+      <p>A community-built native qBittorrent rewrite with one compact Material workspace system.</p>
       <nav aria-label="Footer navigation"><div><strong>Project</strong><a href="https://github.com/codingmachineedge/qbittorrent-material">Source</a><a href="https://github.com/codingmachineedge/qbittorrent-material/releases">Releases</a><a href="https://github.com/codingmachineedge/qbittorrent-material/actions">Actions</a></div><div><strong>Learn</strong><a href="#wiki">Documentation</a><a href="#wiki/wiki-workspace-tabs">Workspace tabs</a><a href="#gallery">Screenshots</a><a href="#roadmap">Roadmap</a></div><div><strong>Community</strong><a href="https://github.com/codingmachineedge/qbittorrent-material/issues">Issues</a><a href="https://github.com/codingmachineedge/qbittorrent-material/pulls">Pull requests</a><a href="https://github.com/codingmachineedge/qbittorrent-material/wiki">GitHub Wiki</a></div></nav>
     </div>
     <div class="site-footer__legal"><span>Released as open-source software. qBittorrent is a trademark of its respective owners.</span><a href="#home">Back to top <svg aria-hidden="true" viewBox="0 0 24 24"><path d="m6 15 6-6 6 6"/></svg></a></div>

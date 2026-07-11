@@ -384,7 +384,7 @@ Flickable {
             if (error)
                 Snackbar.show(qsTr("Failed to parse the provided IP filter"))
             else
-                Snackbar.show(qsTr("Successfully parsed the provided IP filter: %1 rules were applied.").arg(ruleCount))
+                Snackbar.show(qsTr("Successfully parsed the provided IP filter: %1 rules were found.").arg(ruleCount))
         }
     }
 

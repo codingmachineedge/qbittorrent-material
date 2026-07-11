@@ -33,9 +33,22 @@ TextField {
 
     placeholderText: placeholder
     selectByMouse: true
+    implicitHeight: Spacing.controlHeight
+    font: Typography.bodyLarge
+    color: Theme.color("onSurface")
+    placeholderTextColor: Theme.color("muted")
 
     leftPadding: searchIcon.width + Spacing.md
     rightPadding: trailing.width + Spacing.sm
+
+    background: Rectangle {
+        radius: Spacing.radiusField
+        color: Theme.color("surface")
+        border.width: root.activeFocus ? 2 : 1
+        border.color: root.activeFocus
+            ? Theme.color("primary") : Theme.color("outline")
+        Behavior on border.color { ColorAnimation { duration: Spacing.motionFast } }
+    }
 
     onTextChanged: Log.trace("ui", "FilterTextField text -> '" + text + "'")
 

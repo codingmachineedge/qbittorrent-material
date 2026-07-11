@@ -16,13 +16,28 @@ A ground-up rewrite of [qBittorrent](https://www.qbittorrent.org/) with a **Qt 6
 
 - **Language:** C++20 (engine + model layer) and QML (all UI)
 - **Engine:** wraps `libtorrent-rasterbar` 2.x
-- **UI:** Qt Quick Controls 2, Material style, light + dark themes
+- **UI:** Qt Quick Controls 2, Material style, System + Light + Dark themes
 - **Goal:** feature-for-feature clone of qBittorrent's desktop client, rebuilt as Material Design
 
 ## Status
 
-Feature-by-feature rewrite in progress. See
-[`docs/FEATURE_SPEC.md`](docs/FEATURE_SPEC.md) for the full feature inventory.
+The native desktop interface is fully rewritten in Qt Quick/Material: the shell,
+all five workspaces, settings, shared controls, and dialogs use the same design
+system in System, Light, and Dark modes. Backend parity and edge-case coverage
+remain tracked in [`docs/FEATURE_SPEC.md`](docs/FEATURE_SPEC.md).
+
+## Native Material workspace
+
+The rewritten desktop shell follows one compact, data-first system: a 64px
+command bar, persistent 248px workspace navigation, 24px content gutters,
+flat bordered panels with 24px corners, 40px controls, and a 32px status
+footer. Transfers, Search, RSS, Execution Log, and the personal Workspace stay
+one click away; Options opens as the shared settings surface.
+
+System theme follows the operating system, with explicit Light and Dark modes
+available. The light palette uses the supplied cool-neutral Material tokens;
+the dark palette uses their Google Material counterparts. Both retain visible
+focus, semantic transfer states, and compact monospace operational data.
 
 ## Persistent custom workspace
 
@@ -62,40 +77,35 @@ publishing, and Wiki synchronization.
 
 ## Screenshots
 
-Captured from the installed Windows package with a fresh, empty test profile.
-The full annotated gallery lives in [`docs/SCREENSHOTS.md`](docs/SCREENSHOTS.md).
+Captured from the native Windows build with an isolated, empty test profile.
+The full annotated 13-view gallery and capture matrix live in
+[`docs/SCREENSHOTS.md`](docs/SCREENSHOTS.md).
 
-![qBittorrent Material dashboard](docs/images/app/01-main-window.png)
+![Light Transfers workspace in the complete qBittorrent Material shell](docs/images/app/01-main-window.png)
 
-| Navigation and toolbar | Status filters |
+| Dark Transfers workspace | Compact desktop shell |
 | --- | --- |
-| ![Navigation and Material toolbar](docs/images/app/07-navigation-and-toolbar.png) | ![Status filter sidebar](docs/images/app/03-filter-sidebar.png) |
+| ![Dark theme Transfers workspace](docs/images/app/02-toolbar-and-filter.png) | ![Compact 960px Transfers layout](docs/images/app/03-filter-sidebar.png) |
 
-| Transfer workspace | Torrent properties tabs |
+| Transfer table | Dark torrent properties |
 | --- | --- |
-| ![Transfer list and filters](docs/images/app/04-transfer-list.png) | ![Torrent property tabs](docs/images/app/05-properties-tabs.png) |
+| ![Transfers table and filters](docs/images/app/04-transfer-list.png) | ![Dark Transfers properties panel](docs/images/app/05-properties-tabs.png) |
 
-| Toolbar filter controls | Main workspace |
+| Execution Log | Search |
 | --- | --- |
-| ![Toolbar filter controls](docs/images/app/02-toolbar-and-filter.png) | ![Main application workspace](docs/images/app/08-main-workspace.png) |
+| ![Execution Log workspace](docs/images/app/06-statusbar.png) | ![Dark Search workspace](docs/images/app/07-navigation-and-toolbar.png) |
 
-![Application status bar](docs/images/app/06-statusbar.png)
-
-### Persistent Workspace
-
-The screenshots below come from the installed app. **LowLevel Workspace Studio**
-is a user-selected display name that demonstrates application renaming; it is
-not a separate edition or project rebrand.
-
-![Persistent browser-style Workspace tabs with a user-renamed application](docs/images/app/09-custom-workspace-tabs.png)
-
-| Tab context menu | Per-tab typography and unlimited color |
+| RSS | Personal Workspace |
 | --- | --- |
-| ![Workspace tab context menu](docs/images/app/10-tab-context-menu.png) | ![Tab name, font, style, size, emphasis, and color controls](docs/images/app/11-tab-typography-color.png) |
+| ![RSS reader workspace](docs/images/app/08-main-workspace.png) | ![Persistent personal Workspace](docs/images/app/09-custom-workspace-tabs.png) |
 
-| JSON and complete Git portability | Restored after relaunch |
+| Options · Light | Options · Dark |
 | --- | --- |
-| ![Workspace JSON and complete Git repository portability menu](docs/images/app/12-workspace-portability.png) | ![Renamed application and persistent tabs restored after relaunch](docs/images/app/13-restored-workspace.png) |
+| ![Options dialog in Light mode](docs/images/app/10-tab-context-menu.png) | ![Options dialog in Dark mode](docs/images/app/11-tab-typography-color.png) |
+
+| Download from URLs | About |
+| --- | --- |
+| ![Download from URLs dialog](docs/images/app/12-workspace-portability.png) | ![About qBittorrent dialog in Dark mode](docs/images/app/13-restored-workspace.png) |
 
 ## Building
 

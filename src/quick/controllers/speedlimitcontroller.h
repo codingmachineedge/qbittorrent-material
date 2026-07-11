@@ -41,6 +41,8 @@ class SpeedLimitController : public QObject
     Q_PROPERTY(int downloadLimit READ downloadLimit NOTIFY changed)
     Q_PROPERTY(int altUploadLimit READ altUploadLimit NOTIFY changed)
     Q_PROPERTY(int altDownloadLimit READ altDownloadLimit NOTIFY changed)
+    Q_PROPERTY(bool alternativeLimitsEnabled READ alternativeLimitsEnabled
+        NOTIFY alternativeLimitsEnabledChanged)
 
 public:
     /// QML singleton factory — returns the app-owned instance.
@@ -53,6 +55,9 @@ public:
     explicit SpeedLimitController(QObject *parent = nullptr)
         : QObject(parent)
     {
+        auto *const session = BitTorrent::Session::instance();
+        connect(session, &BitTorrent::Session::speedLimitModeChanged,
+            this, &SpeedLimitController::alternativeLimitsEnabledChanged);
         load();
     }
 
@@ -60,6 +65,18 @@ public:
     [[nodiscard]] int downloadLimit() const { return m_downloadLimit; }
     [[nodiscard]] int altUploadLimit() const { return m_altUploadLimit; }
     [[nodiscard]] int altDownloadLimit() const { return m_altDownloadLimit; }
+    [[nodiscard]] bool alternativeLimitsEnabled() const
+    {
+        return BitTorrent::Session::instance()->isAltGlobalSpeedLimitEnabled();
+    }
+
+    Q_INVOKABLE void toggleAlternativeLimits()
+    {
+        auto *const session = BitTorrent::Session::instance();
+        const bool enabled = !session->isAltGlobalSpeedLimitEnabled();
+        qCInfo(lcUi) << "Alternative speed limits ->" << enabled;
+        session->setAltGlobalSpeedLimitEnabled(enabled);
+    }
 
     /// (Re)read the four limits from the session, converting bytes/s -> KiB/s.
     Q_INVOKABLE void load()
@@ -99,6 +116,7 @@ public:
 signals:
     /// Emitted whenever any of the four cached limits changes.
     void changed();
+    void alternativeLimitsEnabledChanged();
 
 private:
     [[nodiscard]] static int toKiB(const int bytesPerSec) { return bytesPerSec / 1024; }

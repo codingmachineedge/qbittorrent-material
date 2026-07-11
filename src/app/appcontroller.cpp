@@ -14,7 +14,11 @@
 
 #include <QClipboard>
 #include <QCryptographicHash>
+#include <QDir>
+#include <QFileInfo>
 #include <QGuiApplication>
+#include <QImage>
+#include <QQuickWindow>
 #include <QRegularExpression>
 
 #include "base/logging.h"
@@ -253,6 +257,32 @@ void AppController::addTorrentFromSource(const QString &source)
     }
     qCInfo(lcUi) << "Requesting torrent add for source:" << source.left(80);
     emit addTorrentRequested(source.trimmed());
+}
+
+bool AppController::captureMainWindow(const QString &filePath) const
+{
+    const QFileInfo output(filePath);
+    if (output.absoluteFilePath().isEmpty())
+        return false;
+
+    QDir().mkpath(output.absolutePath());
+    for (QWindow *const window : QGuiApplication::topLevelWindows())
+    {
+        auto *const quickWindow = qobject_cast<QQuickWindow *>(window);
+        if (!quickWindow || !quickWindow->isVisible())
+            continue;
+
+        const QImage image = quickWindow->grabWindow();
+        const bool saved = !image.isNull() && image.save(output.absoluteFilePath(), "PNG");
+        if (saved)
+            qCInfo(lcUi) << "Captured main window ->" << output.absoluteFilePath();
+        else
+            qCWarning(lcUi) << "Failed to capture main window ->" << output.absoluteFilePath();
+        return saved;
+    }
+
+    qCWarning(lcUi) << "No visible Qt Quick window available for capture";
+    return false;
 }
 
 void AppController::handleActivationRequest(const QString &payload)

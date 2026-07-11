@@ -68,11 +68,11 @@ Popup {
     modal: true
     focus: true
     closePolicy: Popup.CloseOnEscape
-    padding: Spacing.lg
+    padding: Spacing.xl
 
     parent: Overlay.overlay
     anchors.centerIn: parent
-    width: Math.min(420, (parent ? parent.width : 420) * 0.9)
+    width: Math.min(520, (parent ? parent.width : 520) * 0.9)
 
     Material.elevation: 24
     Material.roundedScale: Material.MediumScale
@@ -80,6 +80,8 @@ Popup {
     background: Rectangle {
         radius: Spacing.radiusDialog
         color: Theme.color("surface")
+        border.width: 1
+        border.color: Theme.color("outline")
     }
 
     onOpened: {
@@ -107,7 +109,7 @@ Popup {
 
         Label {
             text: root.title
-            font: Typography.headlineSmall
+            font: Typography.sectionTitle
             color: Theme.color("onSurface")
             elide: Text.ElideRight
             Layout.fillWidth: true
@@ -128,6 +130,7 @@ Popup {
             placeholderText: root.placeholder
             selectByMouse: true
             validator: root.validator
+            implicitHeight: Spacing.controlHeight
             onAccepted: root._accept()
         }
 

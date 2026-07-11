@@ -36,12 +36,32 @@ ApplicationWindow {
     id: root
     objectName: "mainWindow"
 
+    function argumentValue(name, fallbackValue) {
+        var prefix = name + "="
+        var args = Qt.application.arguments
+        for (var i = 0; i < args.length; ++i) {
+            if (String(args[i]).startsWith(prefix))
+                return String(args[i]).slice(prefix.length)
+        }
+        return fallbackValue
+    }
+
+    readonly property string captureOutput: argumentValue("--capture-ui", "")
+    readonly property bool captureMode: captureOutput.length > 0
+    readonly property int capturePage: parseInt(argumentValue("--capture-page", "0")) || 0
+    readonly property string captureTheme: argumentValue("--capture-theme", "light")
+    readonly property string captureDialog: argumentValue("--capture-dialog", "")
+    readonly property int captureWidth: parseInt(argumentValue("--capture-width", "1440")) || 1440
+    readonly property int captureHeight: parseInt(argumentValue("--capture-height", "900")) || 900
+    property int captureOriginalScheme: ThemeManager.colorScheme
+
     // -- Window basics --------------------------------------------------------
-    width: 914
-    height: 563
-    minimumWidth: 640
-    minimumHeight: 400
+    width: captureMode ? captureWidth : 1280
+    height: captureMode ? captureHeight : 800
+    minimumWidth: 960
+    minimumHeight: 600
     visible: true
+    color: Theme.color("background")
 
     // Size the first normal window to 80% of the screen's usable area.  This is
     // deliberately imperative instead of a width/height binding: users remain
@@ -157,6 +177,7 @@ ApplicationWindow {
 
     Connections {
         target: root.screen
+        ignoreUnknownSignals: true
 
         function onAvailableGeometryChanged() {
             root.scheduleScreenGeometryUpdate(false)
@@ -167,7 +188,7 @@ ApplicationWindow {
     Material.theme: Theme.isDark ? Material.Dark : Material.Light
     Material.accent: Theme.color("primary")
     Material.primary: Theme.color("primary")
-    Material.background: Theme.color("surface")
+    Material.background: Theme.color("background")
     Material.foreground: Theme.color("onSurface")
 
     // -- Shell view state (initialized from Preferences in onCompleted) --------
@@ -247,7 +268,7 @@ ApplicationWindow {
         id: actionStart
         text: qsTr("Sta&rt")
         shortcut: "Ctrl+S"
-        enabled: root.currentTabIndex === 0 && (TransferController.hasSelection || false)
+        enabled: root.currentTabIndex === 0 && TransferController.selectionCount > 0
         onTriggered: root.startSelected()
     }
     property alias actionStop: actionStop
@@ -255,7 +276,7 @@ ApplicationWindow {
         id: actionStop
         text: qsTr("Sto&p")
         shortcut: "Ctrl+P"
-        enabled: root.currentTabIndex === 0 && (TransferController.hasSelection || false)
+        enabled: root.currentTabIndex === 0 && TransferController.selectionCount > 0
         onTriggered: root.stopSelected()
     }
     property alias actionDelete: actionDelete
@@ -263,7 +284,7 @@ ApplicationWindow {
         id: actionDelete
         text: qsTr("&Remove")
         shortcut: StandardKey.Delete
-        enabled: root.currentTabIndex === 0 && (TransferController.hasSelection || false)
+        enabled: root.currentTabIndex === 0 && TransferController.selectionCount > 0
         onTriggered: root.removeSelected()
     }
     property alias actionTopQueuePos: actionTopQueuePos
@@ -271,7 +292,7 @@ ApplicationWindow {
         id: actionTopQueuePos
         text: qsTr("Top of Queue")
         shortcut: "Ctrl+Shift++"
-        enabled: root.currentTabIndex === 0 && (TransferController.hasSelection || false)
+        enabled: root.currentTabIndex === 0 && TransferController.selectionCount > 0
         onTriggered: root.queueTop()
     }
     property alias actionIncreaseQueuePos: actionIncreaseQueuePos
@@ -279,7 +300,7 @@ ApplicationWindow {
         id: actionIncreaseQueuePos
         text: qsTr("Move Up Queue")
         shortcut: "Ctrl++"
-        enabled: root.currentTabIndex === 0 && (TransferController.hasSelection || false)
+        enabled: root.currentTabIndex === 0 && TransferController.selectionCount > 0
         onTriggered: root.queueUp()
     }
     property alias actionDecreaseQueuePos: actionDecreaseQueuePos
@@ -287,7 +308,7 @@ ApplicationWindow {
         id: actionDecreaseQueuePos
         text: qsTr("Move Down Queue")
         shortcut: "Ctrl+-"
-        enabled: root.currentTabIndex === 0 && (TransferController.hasSelection || false)
+        enabled: root.currentTabIndex === 0 && TransferController.selectionCount > 0
         onTriggered: root.queueDown()
     }
     property alias actionBottomQueuePos: actionBottomQueuePos
@@ -295,7 +316,7 @@ ApplicationWindow {
         id: actionBottomQueuePos
         text: qsTr("Bottom of Queue")
         shortcut: "Ctrl+Shift+-"
-        enabled: root.currentTabIndex === 0 && (TransferController.hasSelection || false)
+        enabled: root.currentTabIndex === 0 && TransferController.selectionCount > 0
         onTriggered: root.queueBottom()
     }
     property alias actionPauseSession: actionPauseSession
@@ -633,18 +654,13 @@ ApplicationWindow {
     Action {
         id: actionOpenDestinationFolder
         text: qsTr("Open Destination Folder")
-        enabled: root.currentTabIndex === 0 && (TransferController.hasSelection || false)
+        enabled: root.currentTabIndex === 0 && TransferController.selectionCount > 0
         onTriggered: root.openDestinationFolder()
     }
 
     // =========================================================================
-    //  Chrome: menu bar / toolbar / status bar / central tabs
+    //  Chrome: compact application bar / persistent nav / status footer
     // =========================================================================
-
-    menuBar: AppMenuBar {
-        id: appMenuBar
-        shell: root
-    }
 
     header: AppToolBar {
         id: appToolBar
@@ -680,7 +696,7 @@ ApplicationWindow {
     // UI lock overlay — fills the whole window when locked.
     UILockScreen {
         id: lockScreen
-        parent: root.overlay
+        parent: Overlay.overlay
         anchors.fill: parent
         z: 10000
         visible: AppController.locked
@@ -688,7 +704,7 @@ ApplicationWindow {
 
     ExitConfirmationDialog {
         id: exitDialog
-        parent: root.overlay
+        parent: Overlay.overlay
         onConfirmed: (always) => {
             Log.info("ui", "Exit confirmed (alwaysYes=" + always + ")")
             if (always)
@@ -700,7 +716,7 @@ ApplicationWindow {
 
     LockPasswordDialog {
         id: lockPasswordDialog
-        parent: root.overlay
+        parent: Overlay.overlay
         onAccepted: (password) => {
             Log.info("ui", "UI lock password set")
             AppController.setLockPassword(password)
@@ -713,15 +729,16 @@ ApplicationWindow {
     }
 
     // Shell dialogs (per-feature types, referenced by name in the single module).
-    OptionsDialog { id: optionsDialog; parent: root.overlay }
-    StatisticsDialog { id: statisticsDialog; parent: root.overlay }
-    TorrentCreatorDialog { id: torrentCreatorDialog; parent: root.overlay }
-    SpeedLimitDialog { id: speedLimitDialog; parent: root.overlay }
-    AboutDialog { id: aboutDialog; parent: root.overlay }
-    CookiesDialog { id: cookiesDialog; parent: root.overlay }
+    OptionsDialog { id: optionsDialog; parent: Overlay.overlay }
+    StatisticsDialog { id: statisticsDialog; parent: Overlay.overlay }
+    TorrentCreatorDialog { id: torrentCreatorDialog; parent: Overlay.overlay }
+    SpeedLimitDialog { id: speedLimitDialog; parent: Overlay.overlay }
+    AboutDialog { id: aboutDialog; parent: Overlay.overlay }
+    CookiesDialog { id: cookiesDialog; parent: Overlay.overlay }
     DownloadFromURLDialog {
         id: downloadFromURLDialog
-        parent: root.overlay
+        parent: Overlay.overlay
+        allowClipboardAutopaste: !root.captureMode
         onUrlsAccepted: (urls) => {
             Log.info("ui", "Adding " + urls.length + " URL(s) from link dialog")
             for (var i = 0; i < urls.length; ++i)
@@ -730,7 +747,7 @@ ApplicationWindow {
     }
     DeletionConfirmationDialog {
         id: deletionDialog
-        parent: root.overlay
+        parent: Overlay.overlay
         onConfirmed: (deleteFiles) => {
             Log.info("ui", "Delete confirmed (deleteFiles=" + deleteFiles + ")")
             TransferController.deleteSelected(deleteFiles)
@@ -873,15 +890,49 @@ ApplicationWindow {
     }
     function removeSelected() {
         Log.info("ui", "Action: Remove selected")
-        deletionDialog.openForSelection(TransferController.selectionCount || 0)
+        deletionDialog.torrentsCount = TransferController.selectionCount
+        deletionDialog.torrentName = qsTr("selected torrent")
+        deletionDialog.open()
     }
-    function queueTop() { Log.info("ui", "Action: Queue top"); TransferController.moveTop() }
-    function queueUp() { Log.info("ui", "Action: Queue up"); TransferController.moveUp() }
-    function queueDown() { Log.info("ui", "Action: Queue down"); TransferController.moveDown() }
-    function queueBottom() { Log.info("ui", "Action: Queue bottom"); TransferController.moveBottom() }
+
+    Timer {
+        id: captureTimer
+        interval: 1400
+        repeat: false
+        onTriggered: {
+            var saved = AppController.captureMainWindow(root.captureOutput)
+            ThemeManager.colorScheme = root.captureOriginalScheme
+            Log.info("ui", "Documentation capture finished; saved=" + saved)
+            AppController.exit(true)
+        }
+    }
+
+    Timer {
+        id: captureSetupTimer
+        interval: 120
+        repeat: false
+        onTriggered: {
+            // Start the capture clock first so even a page/dialog setup error
+            // cannot strand a documentation process.
+            captureTimer.start()
+            centralTabs.activateTab(root.capturePage)
+            switch (root.captureDialog) {
+            case "options": optionsDialog.open(); break
+            case "add-link": downloadFromURLDialog.open(); break
+            case "about": aboutDialog.open(); break
+            case "statistics": statisticsDialog.open(); break
+            case "speed-limits": speedLimitDialog.open(); break
+            default: break
+            }
+        }
+    }
+    function queueTop() { Log.info("ui", "Action: Queue top"); TransferController.queueTop() }
+    function queueUp() { Log.info("ui", "Action: Queue up"); TransferController.queueUp() }
+    function queueDown() { Log.info("ui", "Action: Queue down"); TransferController.queueDown() }
+    function queueBottom() { Log.info("ui", "Action: Queue bottom"); TransferController.queueBottom() }
     function openDestinationFolder() {
         Log.info("ui", "Action: Open destination folder")
-        TransferController.openDestinationFolder()
+        TransferController.openDestination()
     }
     function pauseSession() {
         Log.info("ui", "Action: Pause session")
@@ -1011,12 +1062,6 @@ ApplicationWindow {
         Preferences.apply()
     }
 
-    // -- Toolbar transfer filter --
-    function applyTransferFilter(text, column) {
-        Log.debug("ui", "Transfer filter -> column=" + column + " text='" + text + "'")
-        TransferController.setNameFilter(text, column)
-    }
-
     // -- Tab & window helpers --
     function switchToTab(index) {
         Log.debug("ui", "Switch to tab " + index)
@@ -1053,16 +1098,35 @@ ApplicationWindow {
     }
 
     Component.onCompleted: {
+        // Configure deterministic documentation state before any persisted
+        // preference reads. That keeps captures resilient to a stale or partial
+        // profile and guarantees the timer is armed as early as possible.
+        if (root.captureMode) {
+            root.toolbarVisible = true
+            root.statusbarVisible = true
+            root.sidebarVisible = true
+            root.width = root.captureWidth
+            root.height = root.captureHeight
+            root.searchTabEnabled = root.searchTabEnabled || root.capturePage === 1
+            root.rssTabEnabled = root.rssTabEnabled || root.capturePage === 2
+            root.executionLogEnabled = root.executionLogEnabled || root.capturePage === 3
+            ThemeManager.colorScheme = root.captureTheme === "dark"
+                ? ThemeManager.Dark : ThemeManager.Light
+            captureSetupTimer.start()
+        }
+
         Log.info("ui", "Main window constructed; initializing shell state from Preferences")
         DesktopIntegration.toolTip = WorkspaceManager.appDisplayName
-        root.scheduleScreenGeometryUpdate(true)
-        root.toolbarVisible = Preferences.isToolbarDisplayed()
-        root.statusbarVisible = Preferences.isStatusbarDisplayed()
-        root.sidebarVisible = Preferences.isFiltersSidebarVisible()
-        root.speedInTitleBar = Preferences.speedInTitleBar()
-        root.searchTabEnabled = Preferences.isSearchEnabled()
-        root.rssTabEnabled = Preferences.isRSSWidgetEnabled()
-        root.executionLogEnabled = Preferences.value("GUI/Log/Enabled", false)
+        if (!root.captureMode) {
+            root.scheduleScreenGeometryUpdate(true)
+            root.toolbarVisible = Preferences.isToolbarDisplayed()
+            root.statusbarVisible = Preferences.isStatusbarDisplayed()
+            root.sidebarVisible = Preferences.isFiltersSidebarVisible()
+            root.speedInTitleBar = Preferences.speedInTitleBar()
+            root.searchTabEnabled = Preferences.isSearchEnabled()
+            root.rssTabEnabled = Preferences.isRSSWidgetEnabled()
+            root.executionLogEnabled = Preferences.value("GUI/Log/Enabled", false)
+        }
 
         var mask = Preferences.value("GUI/Log/Types", 15)
         root.logNormalEnabled = (mask & 1) !== 0

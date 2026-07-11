@@ -125,6 +125,24 @@ void TransferController::forceStart()
         torrent->start(TorrentOperatingMode::Forced);
 }
 
+void TransferController::pauseSession()
+{
+    Session *const session = Session::instance();
+    if (!session || session->isPaused())
+        return;
+    qCInfo(lcUi) << "Pause BitTorrent session";
+    session->pause();
+}
+
+void TransferController::resumeSession()
+{
+    Session *const session = Session::instance();
+    if (!session || !session->isPaused())
+        return;
+    qCInfo(lcUi) << "Resume BitTorrent session";
+    session->resume();
+}
+
 // --- removal ---
 
 void TransferController::deleteSelected(bool deleteFiles)

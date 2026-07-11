@@ -1,5 +1,5 @@
 const CACHE_PREFIX = "qbt-material-docs-";
-const CACHE_VERSION = CACHE_PREFIX + "v3";
+const CACHE_VERSION = CACHE_PREFIX + "v5";
 const APP_SHELL = [
   "./",
   "./index.html",
