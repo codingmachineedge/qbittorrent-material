@@ -160,6 +160,39 @@ if (WIN32)
     # The repository currently has no distributable LICENSE file. Do not show
     # CPack's generic placeholder as if it were the application's license.
     set(CPACK_NSIS_IGNORE_LICENSE_PAGE ON)
+
+    # Register the app as the handler for .torrent files and magnet: links so
+    # double-clicking a .torrent or clicking a magnet link launches it with the
+    # source as argv[1] (Application::run() adds it on cold start). Bracket
+    # arguments keep the backslashes literal through the CMake→CPack→NSIS chain;
+    # single-quoted NSIS strings embed the double-quoted command line cleanly.
+    # NOTE: backslashes are DOUBLED here. CPack writes this value verbatim into
+    # CPackConfig.cmake, which the cpack executable then re-parses as a CMake
+    # string — so "\\" becomes a single "\" that lands literally in project.nsi.
+    set(CPACK_NSIS_EXTRA_INSTALL_COMMANDS [[
+      ; --- File associations: .torrent + magnet: ---
+      WriteRegStr HKCR ".torrent" "" "qBittorrentMaterial.torrent"
+      WriteRegStr HKCR ".torrent" "Content Type" "application/x-bittorrent"
+      WriteRegStr HKCR "qBittorrentMaterial.torrent" "" "BitTorrent Torrent"
+      WriteRegStr HKCR "qBittorrentMaterial.torrent\\DefaultIcon" "" "$INSTDIR\\bin\\qbittorrent.exe,0"
+      WriteRegStr HKCR "qBittorrentMaterial.torrent\\shell\\open\\command" "" '"$INSTDIR\\bin\\qbittorrent.exe" "%1"'
+      WriteRegStr HKCR "magnet" "" "URL:Magnet Link"
+      WriteRegStr HKCR "magnet" "URL Protocol" ""
+      WriteRegStr HKCR "magnet\\DefaultIcon" "" "$INSTDIR\\bin\\qbittorrent.exe,0"
+      WriteRegStr HKCR "magnet\\shell\\open\\command" "" '"$INSTDIR\\bin\\qbittorrent.exe" "%1"'
+      System::Call 'shell32::SHChangeNotify(i 0x08000000, i 0, i 0, i 0)'
+    ]])
+    set(CPACK_NSIS_EXTRA_UNINSTALL_COMMANDS [[
+      ; --- Remove file associations on uninstall ---
+      DeleteRegKey HKCR "qBittorrentMaterial.torrent"
+      DeleteRegValue HKCR ".torrent" ""
+      DeleteRegKey HKCR "magnet\\shell\\open\\command"
+      DeleteRegKey HKCR "magnet\\shell\\open"
+      DeleteRegKey HKCR "magnet\\shell"
+      DeleteRegKey HKCR "magnet\\DefaultIcon"
+      DeleteRegValue HKCR "magnet" "URL Protocol"
+      System::Call 'shell32::SHChangeNotify(i 0x08000000, i 0, i 0, i 0)'
+    ]])
 endif()
 
 include(CPack)
