@@ -19,7 +19,7 @@
     - CMake >= 3.21, Ninja  -> installed via winget if missing
     - Python 3              -> used to fetch Qt (aqtinstall)
     - Qt 6.8.3 (msvc2022_64) -> fetched into .\.qt via aqtinstall
-    - vcpkg + libtorrent/zlib -> cloned into .\.vcpkg and built
+    - vcpkg + libtorrent/libgit2/zlib -> cloned into .\.vcpkg and built
     - NSIS 3                -> installed via winget only when -Package is used
 #>
 [CmdletBinding()]
@@ -165,7 +165,7 @@ function Ensure-Qt {
     if (-not (Test-Path (Join-Path $QtPrefix 'bin\qmake.exe'))) { Die "Qt install failed." }
 }
 
-# --- 3. vcpkg + libtorrent -----------------------------------------------------
+# --- 3. vcpkg + native libraries ----------------------------------------------
 function Ensure-Vcpkg {
     if (-not (Test-Path $VcpkgRoot)) {
         Info "Cloning vcpkg into $VcpkgRoot ..."
@@ -200,8 +200,10 @@ function Ensure-Vcpkg {
         --clean-after-build | Out-Host
     if ($LASTEXITCODE -ne 0) { Die 'vcpkg dependency restore failed.' }
 
-    $installed = Join-Path $installedRoot "$Triplet\lib\torrent-rasterbar.lib"
-    if (-not (Test-Path $installed)) { Die 'vcpkg completed but libtorrent was not installed.' }
+    $libtorrent = Join-Path $installedRoot "$Triplet\lib\torrent-rasterbar.lib"
+    $libgit2 = Join-Path $installedRoot "$Triplet\lib\git2.lib"
+    if (-not (Test-Path $libtorrent)) { Die 'vcpkg completed but libtorrent was not installed.' }
+    if (-not (Test-Path $libgit2)) { Die 'vcpkg completed but libgit2 was not installed.' }
 }
 
 # --- MAIN ----------------------------------------------------------------------

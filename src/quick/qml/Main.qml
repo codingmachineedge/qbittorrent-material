@@ -34,6 +34,7 @@ import qBittorrent
 */
 ApplicationWindow {
     id: root
+    objectName: "mainWindow"
 
     // -- Window basics --------------------------------------------------------
     width: 914
@@ -198,7 +199,7 @@ ApplicationWindow {
     // -- Window title (§14) ---------------------------------------------------
     readonly property string appVersion: Qt.application.version.length > 0 ? Qt.application.version : "5.x"
     title: {
-        var base = qsTr("qBittorrent %1").arg(root.appVersion)
+        var base = qsTr("%1 %2").arg(WorkspaceManager.appDisplayName).arg(root.appVersion)
         if (root.speedInTitleBar) {
             base = qsTr("[D: %1, U: %2] %3")
                 .arg(statusBar.formatSpeed(Session.downloadRate || 0))
@@ -243,7 +244,7 @@ ApplicationWindow {
         id: actionStart
         text: qsTr("Sta&rt")
         shortcut: "Ctrl+S"
-        enabled: TransferController.hasSelection || false
+        enabled: root.currentTabIndex === 0 && (TransferController.hasSelection || false)
         onTriggered: root.startSelected()
     }
     property alias actionStop: actionStop
@@ -251,7 +252,7 @@ ApplicationWindow {
         id: actionStop
         text: qsTr("Sto&p")
         shortcut: "Ctrl+P"
-        enabled: TransferController.hasSelection || false
+        enabled: root.currentTabIndex === 0 && (TransferController.hasSelection || false)
         onTriggered: root.stopSelected()
     }
     property alias actionDelete: actionDelete
@@ -259,7 +260,7 @@ ApplicationWindow {
         id: actionDelete
         text: qsTr("&Remove")
         shortcut: StandardKey.Delete
-        enabled: TransferController.hasSelection || false
+        enabled: root.currentTabIndex === 0 && (TransferController.hasSelection || false)
         onTriggered: root.removeSelected()
     }
     property alias actionTopQueuePos: actionTopQueuePos
@@ -267,7 +268,7 @@ ApplicationWindow {
         id: actionTopQueuePos
         text: qsTr("Top of Queue")
         shortcut: "Ctrl+Shift++"
-        enabled: TransferController.hasSelection || false
+        enabled: root.currentTabIndex === 0 && (TransferController.hasSelection || false)
         onTriggered: root.queueTop()
     }
     property alias actionIncreaseQueuePos: actionIncreaseQueuePos
@@ -275,7 +276,7 @@ ApplicationWindow {
         id: actionIncreaseQueuePos
         text: qsTr("Move Up Queue")
         shortcut: "Ctrl++"
-        enabled: TransferController.hasSelection || false
+        enabled: root.currentTabIndex === 0 && (TransferController.hasSelection || false)
         onTriggered: root.queueUp()
     }
     property alias actionDecreaseQueuePos: actionDecreaseQueuePos
@@ -283,7 +284,7 @@ ApplicationWindow {
         id: actionDecreaseQueuePos
         text: qsTr("Move Down Queue")
         shortcut: "Ctrl+-"
-        enabled: TransferController.hasSelection || false
+        enabled: root.currentTabIndex === 0 && (TransferController.hasSelection || false)
         onTriggered: root.queueDown()
     }
     property alias actionBottomQueuePos: actionBottomQueuePos
@@ -291,7 +292,7 @@ ApplicationWindow {
         id: actionBottomQueuePos
         text: qsTr("Bottom of Queue")
         shortcut: "Ctrl+Shift+-"
-        enabled: TransferController.hasSelection || false
+        enabled: root.currentTabIndex === 0 && (TransferController.hasSelection || false)
         onTriggered: root.queueBottom()
     }
     property alias actionPauseSession: actionPauseSession
@@ -307,6 +308,74 @@ ApplicationWindow {
         text: qsTr("R&esume Session")
         shortcut: "Ctrl+Shift+S"
         onTriggered: root.resumeSession()
+    }
+
+    // --- Workspace ---
+    property alias actionWorkspaceNewTab: actionWorkspaceNewTab
+    Action {
+        id: actionWorkspaceNewTab
+        text: qsTr("&New Workspace Tab")
+        shortcut: "Ctrl+T"
+        onTriggered: centralTabs.newWorkspaceTab()
+    }
+    property alias actionWorkspaceCloseTab: actionWorkspaceCloseTab
+    Action {
+        id: actionWorkspaceCloseTab
+        text: qsTr("&Close Workspace Tab")
+        shortcut: "Ctrl+W"
+        enabled: root.currentTabIndex === 4 && WorkspaceManager.count > 0
+        onTriggered: centralTabs.closeWorkspaceTab()
+    }
+    property alias actionWorkspaceCustomizeTab: actionWorkspaceCustomizeTab
+    Action {
+        id: actionWorkspaceCustomizeTab
+        text: qsTr("Tab Name && &Appearance…")
+        enabled: WorkspaceManager.count > 0
+        onTriggered: centralTabs.customizeWorkspaceTab()
+    }
+    property alias actionWorkspaceRenameApp: actionWorkspaceRenameApp
+    Action {
+        id: actionWorkspaceRenameApp
+        text: qsTr("&Rename Application…")
+        onTriggered: centralTabs.renameWorkspaceApplication()
+    }
+    property alias actionWorkspaceSync: actionWorkspaceSync
+    Action {
+        id: actionWorkspaceSync
+        text: qsTr("&Save && Commit Workspace")
+        shortcut: "Ctrl+S"
+        enabled: root.currentTabIndex === 4
+        onTriggered: centralTabs.syncWorkspace()
+    }
+    property alias actionWorkspaceImport: actionWorkspaceImport
+    Action {
+        id: actionWorkspaceImport
+        text: qsTr("Import Workspace &JSON…")
+        onTriggered: centralTabs.importWorkspace()
+    }
+    property alias actionWorkspaceExport: actionWorkspaceExport
+    Action {
+        id: actionWorkspaceExport
+        text: qsTr("Export Workspace J&SON…")
+        onTriggered: centralTabs.exportWorkspace()
+    }
+    property alias actionWorkspaceImportRepository: actionWorkspaceImportRepository
+    Action {
+        id: actionWorkspaceImportRepository
+        text: qsTr("Import Complete Git &Repository…")
+        onTriggered: centralTabs.importWorkspaceRepository()
+    }
+    property alias actionWorkspaceExportRepository: actionWorkspaceExportRepository
+    Action {
+        id: actionWorkspaceExportRepository
+        text: qsTr("Export Complete &Git Repository…")
+        onTriggered: centralTabs.exportWorkspaceRepository()
+    }
+    property alias actionWorkspaceOpenRepository: actionWorkspaceOpenRepository
+    Action {
+        id: actionWorkspaceOpenRepository
+        text: qsTr("Open &Managed Repository")
+        onTriggered: centralTabs.openWorkspaceRepository()
     }
 
     // --- View (checkable) ---
@@ -556,7 +625,7 @@ ApplicationWindow {
     Action {
         id: actionOpenDestinationFolder
         text: qsTr("Open Destination Folder")
-        enabled: TransferController.hasSelection || false
+        enabled: root.currentTabIndex === 0 && (TransferController.hasSelection || false)
         onTriggered: root.openDestinationFolder()
     }
 
@@ -681,8 +750,10 @@ ApplicationWindow {
     Shortcut { sequences: ["Alt+2"]; onActivated: root.switchToTab(1) }
     Shortcut { sequences: ["Alt+3"]; onActivated: root.switchToTab(2) }
     Shortcut { sequences: ["Alt+4"]; onActivated: root.switchToTab(3) }
+    Shortcut { sequences: ["Alt+5"]; onActivated: root.switchToTab(4) }
     Shortcut {
         sequences: [StandardKey.Find, "Ctrl+E"]
+        enabled: root.currentTabIndex === 0
         onActivated: {
             Log.debug("ui", "Toggle focus between filter line edits")
             centralTabs.toggleFilterFocus()
@@ -690,6 +761,7 @@ ApplicationWindow {
     }
     Shortcut {
         sequences: [StandardKey.Paste]
+        enabled: root.currentTabIndex === 0
         onActivated: {
             Log.info("ui", "Paste-add from clipboard")
             AppController.pasteAdd()
@@ -737,6 +809,13 @@ ApplicationWindow {
         function onNotificationClicked() {
             Log.debug("ui", "Notification clicked -> show window")
             root.showAndRaise()
+        }
+    }
+
+    Connections {
+        target: WorkspaceManager
+        function onAppDisplayNameChanged() {
+            DesktopIntegration.toolTip = WorkspaceManager.appDisplayName
         }
     }
 
@@ -967,6 +1046,7 @@ ApplicationWindow {
 
     Component.onCompleted: {
         Log.info("ui", "Main window constructed; initializing shell state from Preferences")
+        DesktopIntegration.toolTip = WorkspaceManager.appDisplayName
         root.scheduleScreenGeometryUpdate(true)
         root.toolbarVisible = Preferences.isToolbarDisplayed()
         root.statusbarVisible = Preferences.isStatusbarDisplayed()

@@ -36,6 +36,23 @@ Sources, Content, and Speed tabs.
 
 ![Main workspace](images/app/08-main-workspace.png)
 
+## Custom workspace capture slots
+
+The following installed-package captures are reserved for the persistent
+Workspace feature. Add only images produced by the verified app build; the
+documentation deliberately does not use mock screenshots.
+
+| Planned file | Required view |
+| --- | --- |
+| `images/app/09-custom-workspace-tabs.png` | Workspace header, browser-style tab strip, and two or more real pages |
+| `images/app/10-tab-context-menu.png` | Right-click tab menu with customize, duplicate, close-others, and close actions |
+| `images/app/11-tab-typography-color.png` | Name and appearance dialog with font controls, unrestricted color controls, and preview |
+| `images/app/12-workspace-portability.png` | Import/export menu with JSON and complete Git repository choices |
+
+After capture, replace this queue with the four images and concise captions,
+then add matching cards to the Pages gallery, README, service-worker shell, and
+Wiki export.
+
 ## Status information
 
 The compact status bar remains visible at the bottom of the application shell.

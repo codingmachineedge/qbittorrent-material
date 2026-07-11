@@ -102,6 +102,11 @@ jobs:
             throw "Qt platform plugin is missing: $platformPlugin"
           }
 
+          $workspaceRoot = Join-Path $env:RUNNER_TEMP "qbt-material-workspace-smoke"
+          if (Test-Path -LiteralPath $workspaceRoot) {
+            Remove-Item -Recurse -Force -LiteralPath $workspaceRoot
+          }
+          $env:QBT_WORKSPACE_ROOT = $workspaceRoot
           $env:QT_QPA_PLATFORM = "offscreen"
           $process = Start-Process -FilePath $installedExe -PassThru
           Start-Sleep -Seconds 10
@@ -110,6 +115,35 @@ jobs:
           }
           Stop-Process -Id $process.Id -Force
           $process.WaitForExit()
+
+          $workspaceJson = Join-Path $workspaceRoot "workspace.json"
+          $workspaceGit = Join-Path $workspaceRoot ".git"
+          $workspaceTabs = @(Get-ChildItem -LiteralPath (Join-Path $workspaceRoot "tabs") `
+            -Filter "*.md" -File -ErrorAction SilentlyContinue)
+          if (-not (Test-Path -LiteralPath $workspaceJson)) {
+            throw "Installed application did not persist workspace.json."
+          }
+          if (-not (Test-Path -LiteralPath $workspaceGit)) {
+            throw "Installed application did not initialize its embedded local Git repository."
+          }
+          if ($workspaceTabs.Count -ne 1) {
+            throw "Expected one persisted welcome tab, found $($workspaceTabs.Count)."
+          }
+
+          $workspaceState = Get-Content -Raw -LiteralPath $workspaceJson | ConvertFrom-Json
+          if ($workspaceState.type -ne "qbt-material-workspace" `
+              -or $workspaceState.schemaVersion -ne 1 `
+              -or @($workspaceState.tabs).Count -ne 1) {
+            throw "Persisted workspace metadata failed schema validation."
+          }
+          git -C $workspaceRoot rev-parse --verify HEAD | Out-Null
+          if ($LASTEXITCODE -ne 0) {
+            throw "Embedded libgit2 did not create the initial workspace commit."
+          }
+          git -C $workspaceRoot fsck --strict
+          if ($LASTEXITCODE -ne 0) {
+            throw "Workspace repository failed git fsck."
+          }
 
           $uninstaller = Join-Path $smokeRoot "Uninstall.exe"
           if (-not (Test-Path -LiteralPath $uninstaller)) {

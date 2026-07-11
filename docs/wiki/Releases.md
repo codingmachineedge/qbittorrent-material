@@ -4,6 +4,11 @@
 
 Every branch push runs the `Build and release every push` workflow on Windows Server 2022. It configures MSVC and Qt, restores vcpkg caches, builds the application, packages NSIS, performs the installed-app smoke test, and creates a uniquely tagged prerelease.
 
+The dependency restore includes libgit2, which powers the app's private
+workspace repository without requiring `git.exe`. The installed-app launch gate
+therefore also verifies that the packaged workspace runtime dependencies can be
+loaded before an installer is published.
+
 Tags follow this form:
 
 ```text
@@ -20,7 +25,7 @@ GitHub Pages publishes directly from `master/docs`. That keeps the documentation
 
 ## Release confidence gates
 
-1. Configure with the pinned Qt and vcpkg toolchain.
+1. Configure with the pinned Qt, libgit2, and vcpkg toolchain.
 2. Compile the Release target.
 3. Build exactly one expected NSIS installer.
 4. Hash the package with SHA-256.

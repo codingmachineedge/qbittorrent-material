@@ -12,6 +12,22 @@ No. The complete documentation corpus is embedded in the static site. Search, re
 
 No. Imported files stay in local browser storage unless you explicitly export and share a bundle.
 
+## Does the Workspace feature need Git installed?
+
+No. The application uses bundled libgit2 to create and commit its managed local
+workspace repository. You can still inspect that repository with any compatible
+Git client.
+
+## Does renaming the app change its executable or settings profile?
+
+No. It changes the persisted display name used by the window, Workspace header,
+and tray tooltip while keeping application identity and paths stable.
+
+## Is Workspace Git pushed to GitHub?
+
+No. It has local history only. Nothing leaves the computer unless you export
+and share a JSON snapshot or complete repository.
+
 ## Why is each push a prerelease?
 
 The project favors traceable test builds. Each release points at one commit and contains the exact installer that passed the automated smoke gate.

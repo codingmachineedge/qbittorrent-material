@@ -58,8 +58,9 @@ Installer names follow this pattern:
 qBittorrent-Material-<version>-<build-id>-windows-x64.exe
 ```
 
-The package includes the Qt runtime, plugins, and QML imports required to run
-the installed application.
+The package includes the Qt runtime, plugins, QML imports, and libgit2 support
+required to run the installed application and its persistent local Workspace
+repository. End users do not need to install the Git command-line client.
 
 ## Visual smoke-test gallery
 
@@ -92,7 +93,9 @@ cmake --build build --parallel
 ```
 
 CMake requires Qt 6.6 or newer, libtorrent-rasterbar 2.0.7 or newer, Boost
-1.76 or newer, OpenSSL 3.0 or newer, and Zlib 1.2.11 or newer.
+1.76 or newer, OpenSSL 3.0 or newer, Zlib 1.2.11 or newer, and libgit2. The
+supported Windows helper supplies libgit2 through the repository's vcpkg
+manifest.
 
 ## Linux and macOS
 

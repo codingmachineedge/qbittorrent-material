@@ -23,6 +23,14 @@ powershell -ExecutionPolicy Bypass -File .\run.ps1 -Package
 
 Installers and their SHA-256 files are written to `build\packages`.
 
+## Try the persistent workspace
+
+Press `Alt+5` after launch to open **Workspace**, then press `Ctrl+T` to create a
+browser-style page. Changes save and commit to a managed local Git repository.
+Git support is included in the application, so a separate Git installation is
+not required. Continue with the [Workspace Tabs](Workspace-Tabs.md) guide for
+appearance controls, application renaming, and portable exports.
+
 ## Linux and macOS
 
 ```sh

@@ -9,6 +9,13 @@
     "boost-circular-buffer",
     "boost-headers",
     "boost-multi-index",
+    {
+      "name": "libgit2",
+      "default-features": false,
+      "features": [
+        "pcre"
+      ]
+    },
     "libtorrent",
     "openssl",
     "zlib"

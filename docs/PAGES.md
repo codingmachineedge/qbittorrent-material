@@ -14,6 +14,9 @@ Canonical content comes from:
 - every Markdown and JSON file under `docs`
 - curated guides under `docs/wiki`
 
+This includes the complete [Custom Workspace Tabs](WORKSPACE_TABS.md) reference
+and its shorter task-oriented Wiki guide.
+
 Run the deterministic generator after changing any source document:
 
 ```powershell
@@ -89,3 +92,4 @@ The site includes `.nojekyll`, a web manifest, an offline service worker, projec
 6. Plain, regex, invalid-regex, filtered, and empty-result searches.
 7. Markdown/JSON import, wiki export, and search-profile round trip.
 8. Internal document links, table of contents, copy-code buttons, and gallery lightbox.
+9. Workspace guide search, internal links, and the four installed-app capture slots after real images are added.

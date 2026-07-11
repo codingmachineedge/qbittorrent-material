@@ -17,9 +17,9 @@ import qBittorrent
 
 /*!
     CentralTabs — the central Material tab area: a \c TabBar over a \c StackLayout
-    holding Transfers / Search / RSS / Execution Log. The tab bar auto-hides when
-    only the Transfers tab is present (§7). Optional tabs are lazily created via
-    \c Loader when their View action is enabled.
+    holding Transfers / Search / RSS / Execution Log / Workspace. Optional tabs
+    are lazily created via \c Loader when their View action is enabled. Workspace
+    is always available and owns a second, browser-style set of persistent pages.
 */
 Item {
     id: central
@@ -33,14 +33,14 @@ Item {
     property bool rssEnabled: false
     property bool logEnabled: false
 
-    /// The currently selected tab index (0 Transfers, 1 Search, 2 RSS, 3 Log).
+    /// The selected tab index (0 Transfers, 1 Search, 2 RSS, 3 Log, 4 Workspace).
     property int currentIndex: 0
 
     // RSS unread badge (guarded — the RSS controller may not be present yet).
     readonly property int rssUnread: (typeof RSSController !== "undefined" && RSSController.unreadCount) || 0
 
     readonly property int visibleTabCount:
-        1 + (searchEnabled ? 1 : 0) + (rssEnabled ? 1 : 0) + (logEnabled ? 1 : 0)
+        2 + (searchEnabled ? 1 : 0) + (rssEnabled ? 1 : 0) + (logEnabled ? 1 : 0)
 
     // If the active tab gets disabled, fall back to Transfers.
     onSearchEnabledChanged: normalizeCurrent()
@@ -67,6 +67,61 @@ Item {
     function toggleFilterFocus() {
         if (currentIndex === 0 && transfersLoader.item && transfersLoader.item.toggleFilterFocus)
             transfersLoader.item.toggleFilterFocus()
+    }
+
+    function workspaceItem() {
+        central.currentIndex = 4
+        return workspaceLoader.item
+    }
+
+    function newWorkspaceTab() {
+        var item = workspaceItem()
+        if (item) item.createTab()
+    }
+
+    function closeWorkspaceTab() {
+        var item = workspaceItem()
+        if (item) item.closeCurrentTab()
+    }
+
+    function customizeWorkspaceTab() {
+        var item = workspaceItem()
+        if (item) item.customizeCurrentTab()
+    }
+
+    function renameWorkspaceApplication() {
+        var item = workspaceItem()
+        if (item) item.renameApplication()
+    }
+
+    function importWorkspace() {
+        var item = workspaceItem()
+        if (item) item.importWorkspace()
+    }
+
+    function exportWorkspace() {
+        var item = workspaceItem()
+        if (item) item.exportWorkspace()
+    }
+
+    function importWorkspaceRepository() {
+        var item = workspaceItem()
+        if (item) item.importGitRepository()
+    }
+
+    function exportWorkspaceRepository() {
+        var item = workspaceItem()
+        if (item) item.exportGitRepository()
+    }
+
+    function openWorkspaceRepository() {
+        var item = workspaceItem()
+        if (item) item.openGitRepository()
+    }
+
+    function syncWorkspace() {
+        var item = workspaceItem()
+        if (item) item.syncWorkspace()
     }
 
     // A tab button with a leading MDIcon and an optional trailing count.
@@ -135,6 +190,12 @@ Item {
                 visible: central.logEnabled
                 width: visible ? implicitWidth : 0
             }
+            AppTabButton {
+                objectName: "workspaceTopLevelTab"
+                Accessible.name: qsTr("Workspace")
+                glyph: Icons.edit
+                label: qsTr("Workspace")
+            }
         }
 
         StackLayout {
@@ -175,6 +236,14 @@ Item {
                 active: central.logEnabled
                 sourceComponent: ExecutionLogTab {}
                 onLoaded: Log.debug("ui", "Execution Log tab instantiated")
+            }
+
+            // 4 — Persistent browser-style workspace
+            Loader {
+                id: workspaceLoader
+                active: true
+                sourceComponent: WorkspaceView {}
+                onLoaded: Log.debug("ui", "Workspace tab instantiated")
             }
         }
     }

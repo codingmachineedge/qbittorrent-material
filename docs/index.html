@@ -5,8 +5,8 @@
   <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
   <meta name="theme-color" content="#6750a4">
   <meta name="color-scheme" content="light dark">
-  <meta name="description" content="qBittorrent Material is a modern, native Material 3 desktop experience for qBittorrent. Explore the app, screenshots, build pipeline, and complete searchable documentation.">
-  <meta name="keywords" content="qBittorrent, Material Design, Material 3, Qt, C++, BitTorrent, open source">
+  <meta name="description" content="qBittorrent Material is a modern, native Material 3 desktop experience with persistent custom workspace tabs, local Git history, automated installers, and complete searchable documentation.">
+  <meta name="keywords" content="qBittorrent, Material Design, Material 3, Qt, C++, BitTorrent, workspace tabs, local Git, open source">
   <meta property="og:type" content="website">
   <meta property="og:title" content="qBittorrent Material">
   <meta property="og:description" content="A modern native qBittorrent desktop experience with every project document in one searchable wiki.">
@@ -122,6 +122,10 @@
           <div><span class="feature-card__label">Focused workspace</span><h3>Information, exactly where it belongs.</h3><p>Navigation, transfers, properties, and global status form one coherent workspace that scales from laptop to ultrawide.</p></div>
           <img src="images/app/08-main-workspace.png" width="1098" height="640" loading="lazy" alt="Main qBittorrent Material workspace">
         </article>
+        <article class="feature-card feature-card--wide">
+          <div class="feature-card__icon"><svg aria-hidden="true" viewBox="0 0 24 24"><path d="M4 5h7v4H4zM11 5h9v4h-9zM4 9h16v10H4zM8 13h8m-8 3h5"/></svg></div>
+          <div><span class="feature-card__label">Persistent workspace tabs</span><h3>Your pages. Your type. Your history.</h3><p>Create browser-style plain-text pages, give every tab its own font and unrestricted color, rename the app display, and let bundled local Git remember each change. Move a compact JSON snapshot or the complete repository whenever you need.</p></div>
+        </article>
         <article class="feature-card feature-card--accent">
           <div class="feature-card__icon"><svg aria-hidden="true" viewBox="0 0 24 24"><path d="M4 7h16M7 12h10M10 17h4"/></svg></div>
           <h3>Filters without friction</h3><p>See transfer states, categories, tags, and trackers at a glance.</p>
@@ -185,7 +189,7 @@
     <section class="section wiki" id="wiki" aria-labelledby="wiki-title">
       <div class="section-heading wiki__heading">
         <div><span class="overline">Living project knowledge</span><h2 id="wiki-title">The complete docs, in one place.</h2></div>
-        <p>Search every guide, specification, contract, and design decision without leaving this page. Use plain text or precise regular expressions.</p>
+        <p>Search every guide, including the complete custom Workspace Tabs reference, without leaving this page. Use plain text, precise regular expressions, and field filters.</p>
       </div>
 
       <div class="wiki-shell" id="wiki-workspace">
@@ -293,11 +297,18 @@
           <img src="images/app/08-main-workspace.png" width="1098" height="640" loading="lazy" alt="The main workspace at a closer crop">
           <span><strong>Main workspace</strong><small>Designed to scale with you</small></span><i aria-hidden="true"><svg viewBox="0 0 24 24"><path d="M8 3H3v5m13-5h5v5M3 16v5h5m13-5v5h-5"/></svg></i>
         </button>
+        <!-- WORKSPACE_SCREENSHOT_SLOTS
+          Add verified installed-app gallery cards here for:
+          images/app/09-custom-workspace-tabs.png
+          images/app/10-tab-context-menu.png
+          images/app/11-tab-typography-color.png
+          images/app/12-workspace-portability.png
+        -->
         <button class="gallery-card gallery-card--hero" type="button" data-lightbox="images/site/01-landing-desktop.png" data-caption="Material landing page — the project, release path, and app at a glance">
           <img src="images/site/01-landing-desktop.png" width="1440" height="1000" loading="lazy" alt="qBittorrent Material documentation landing page on desktop">
           <span><strong>Documentation home</strong><small>The complete Material landing experience</small></span><i aria-hidden="true"><svg viewBox="0 0 24 24"><path d="M8 3H3v5m13-5h5v5M3 16v5h5m13-5v5h-5"/></svg></i>
         </button>
-        <button class="gallery-card gallery-card--tall" type="button" data-lightbox="images/site/02-wiki-search.png" data-caption="Embedded wiki search — 21 documents with highlighted local results">
+        <button class="gallery-card gallery-card--tall" type="button" data-lightbox="images/site/02-wiki-search.png" data-caption="Embedded wiki search — the complete locally indexed corpus">
           <img src="images/site/02-wiki-search.png" width="1384" height="1555" loading="lazy" alt="Embedded documentation wiki showing highlighted installer search results">
           <span><strong>Wiki search</strong><small>Every document, indexed locally</small></span><i aria-hidden="true"><svg viewBox="0 0 24 24"><path d="M8 3H3v5m13-5h5v5M3 16v5h5m13-5v5h-5"/></svg></i>
         </button>
@@ -334,6 +345,7 @@
         <details><summary>How is each release tested?<svg aria-hidden="true" viewBox="0 0 24 24"><path d="m6 9 6 6 6-6"/></svg></summary><p>GitHub Actions builds the app, creates an NSIS package, installs it silently, launches and verifies the executable, then performs a clean uninstall.</p></details>
         <details><summary>Does this replace the original qBittorrent?<svg aria-hidden="true" viewBox="0 0 24 24"><path d="m6 9 6 6 6-6"/></svg></summary><p>It is a distinct Material-oriented desktop project built around qBittorrent behavior and concepts. Review the current feature specification before relying on it as a daily-driver replacement.</p></details>
         <details><summary>Can I search the documentation offline?<svg aria-hidden="true" viewBox="0 0 24 24"><path d="m6 9 6 6 6-6"/></svg></summary><p>Yes. The entire wiki index and search engine run locally in your browser with no external service or JavaScript dependency.</p></details>
+        <details><summary>Does the custom Workspace require Git?<svg aria-hidden="true" viewBox="0 0 24 24"><path d="m6 9 6 6 6-6"/></svg></summary><p>No separate installation is required. Bundled libgit2 saves each persistent page and its appearance to a managed local repository, with JSON and complete-repository export options.</p></details>
         <details><summary>How can I contribute?<svg aria-hidden="true" viewBox="0 0 24 24"><path d="m6 9 6 6 6-6"/></svg></summary><p>Start with the building and architecture pages in the wiki, then open an issue or pull request on GitHub.</p></details>
       </div>
     </section>
@@ -352,7 +364,7 @@
     <div class="site-footer__main">
       <a class="brand" href="#home"><img class="brand__mark" src="assets/logo-mark.svg" alt="" width="40" height="40"><span class="brand__wordmark"><strong>qBittorrent</strong><span>Material</span></span></a>
       <p>A community-built exploration of a modern native qBittorrent desktop experience.</p>
-      <nav aria-label="Footer navigation"><div><strong>Project</strong><a href="https://github.com/codingmachineedge/qbittorrent-material">Source</a><a href="https://github.com/codingmachineedge/qbittorrent-material/releases">Releases</a><a href="https://github.com/codingmachineedge/qbittorrent-material/actions">Actions</a></div><div><strong>Learn</strong><a href="#wiki">Documentation</a><a href="#gallery">Screenshots</a><a href="#roadmap">Roadmap</a></div><div><strong>Community</strong><a href="https://github.com/codingmachineedge/qbittorrent-material/issues">Issues</a><a href="https://github.com/codingmachineedge/qbittorrent-material/pulls">Pull requests</a><a href="https://github.com/codingmachineedge/qbittorrent-material/wiki">GitHub Wiki</a></div></nav>
+      <nav aria-label="Footer navigation"><div><strong>Project</strong><a href="https://github.com/codingmachineedge/qbittorrent-material">Source</a><a href="https://github.com/codingmachineedge/qbittorrent-material/releases">Releases</a><a href="https://github.com/codingmachineedge/qbittorrent-material/actions">Actions</a></div><div><strong>Learn</strong><a href="#wiki">Documentation</a><a href="#wiki/wiki-workspace-tabs">Workspace tabs</a><a href="#gallery">Screenshots</a><a href="#roadmap">Roadmap</a></div><div><strong>Community</strong><a href="https://github.com/codingmachineedge/qbittorrent-material/issues">Issues</a><a href="https://github.com/codingmachineedge/qbittorrent-material/pulls">Pull requests</a><a href="https://github.com/codingmachineedge/qbittorrent-material/wiki">GitHub Wiki</a></div></nav>
     </div>
     <div class="site-footer__legal"><span>Released as open-source software. qBittorrent is a trademark of its respective owners.</span><a href="#home">Back to top <svg aria-hidden="true" viewBox="0 0 24 24"><path d="m6 15 6-6 6 6"/></svg></a></div>
   </footer>

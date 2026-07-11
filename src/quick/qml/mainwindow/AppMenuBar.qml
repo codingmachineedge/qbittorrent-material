@@ -155,6 +155,26 @@ MenuBar {
         }
     }
 
+    // ---- Workspace ----------------------------------------------------------
+    Menu {
+        title: qsTr("&Workspace")
+        Material.elevation: 8
+        onOpened: Log.debug("ui", "Workspace menu opened")
+
+        IconMenuItem { action: menuBar.shell.actionWorkspaceNewTab; glyph: Icons.add }
+        IconMenuItem { action: menuBar.shell.actionWorkspaceCloseTab; glyph: Icons.close }
+        IconMenuItem { action: menuBar.shell.actionWorkspaceCustomizeTab; glyph: Icons.edit }
+        IconMenuItem { action: menuBar.shell.actionWorkspaceRenameApp; glyph: Icons.edit }
+        MenuSeparator {}
+        IconMenuItem { action: menuBar.shell.actionWorkspaceSync; glyph: Icons.refresh }
+        IconMenuItem { action: menuBar.shell.actionWorkspaceOpenRepository; glyph: Icons.folder_open }
+        MenuSeparator {}
+        IconMenuItem { action: menuBar.shell.actionWorkspaceImport; glyph: Icons.upload }
+        IconMenuItem { action: menuBar.shell.actionWorkspaceExport; glyph: Icons.save_alt }
+        IconMenuItem { action: menuBar.shell.actionWorkspaceImportRepository; glyph: Icons.upload }
+        IconMenuItem { action: menuBar.shell.actionWorkspaceExportRepository; glyph: Icons.save_alt }
+    }
+
     // ---- Tools --------------------------------------------------------------
     Menu {
         title: qsTr("&Tools")
