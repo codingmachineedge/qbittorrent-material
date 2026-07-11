@@ -1,0 +1,76 @@
+{
+  "id": "./",
+  "name": "qBittorrent Material Documentation",
+  "short_name": "qBT Material",
+  "description": "The landing page, searchable documentation, visual tour, and project wiki for qBittorrent Material.",
+  "lang": "en",
+  "dir": "ltr",
+  "start_url": "./",
+  "scope": "./",
+  "display": "standalone",
+  "display_override": ["window-controls-overlay", "standalone", "minimal-ui"],
+  "orientation": "any",
+  "background_color": "#fffaff",
+  "theme_color": "#6750a4",
+  "categories": ["developer", "documentation", "utilities"],
+  "icons": [
+    {
+      "src": "assets/logo-mark.svg",
+      "sizes": "any",
+      "type": "image/svg+xml",
+      "purpose": "any"
+    },
+    {
+      "src": "assets/logo-mark.svg",
+      "sizes": "any",
+      "type": "image/svg+xml",
+      "purpose": "maskable"
+    }
+  ],
+  "screenshots": [
+    {
+      "src": "images/site/01-landing-desktop.png",
+      "sizes": "1440x1000",
+      "type": "image/png",
+      "form_factor": "wide",
+      "label": "qBittorrent Material documentation home"
+    },
+    {
+      "src": "images/site/04-mobile-landing.png",
+      "sizes": "390x844",
+      "type": "image/png",
+      "form_factor": "narrow",
+      "label": "Responsive Material documentation home"
+    },
+    {
+      "src": "images/app/01-main-window.png",
+      "sizes": "1552x862",
+      "type": "image/png",
+      "form_factor": "wide",
+      "label": "qBittorrent Material main workspace"
+    },
+    {
+      "src": "images/app/03-filter-sidebar.png",
+      "sizes": "310x638",
+      "type": "image/png",
+      "form_factor": "narrow",
+      "label": "Transfer filter navigation"
+    }
+  ],
+  "shortcuts": [
+    {
+      "name": "Search documentation",
+      "short_name": "Search",
+      "description": "Open the complete searchable project wiki",
+      "url": "./#wiki",
+      "icons": [{ "src": "assets/logo-mark.svg", "sizes": "any", "type": "image/svg+xml" }]
+    },
+    {
+      "name": "Screenshot gallery",
+      "short_name": "Gallery",
+      "description": "Explore every documented application view",
+      "url": "./#gallery",
+      "icons": [{ "src": "assets/logo-mark.svg", "sizes": "any", "type": "image/svg+xml" }]
+    }
+  ]
+}

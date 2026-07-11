@@ -1,3 +1,15 @@
+<p align="center">
+  <img src="resources/branding/logo-horizontal.svg" width="620" alt="qBittorrent Material">
+</p>
+
+<p align="center">
+  <a href="https://codingmachineedge.github.io/qbittorrent-material/">Material documentation site</a>
+  ·
+  <a href="https://github.com/codingmachineedge/qbittorrent-material/wiki">GitHub Wiki</a>
+  ·
+  <a href="https://github.com/codingmachineedge/qbittorrent-material/releases">Windows installers</a>
+</p>
+
 # qBittorrent Material
 
 A ground-up rewrite of [qBittorrent](https://www.qbittorrent.org/) with a **Qt 6 / QML** front end styled entirely with **Material Design** (Qt Quick Controls 2 Material style). Every window and every dialog is Material.
@@ -11,6 +23,27 @@ A ground-up rewrite of [qBittorrent](https://www.qbittorrent.org/) with a **Qt 6
 
 Feature-by-feature rewrite in progress. See
 [`docs/FEATURE_SPEC.md`](docs/FEATURE_SPEC.md) for the full feature inventory.
+
+## Documentation website
+
+The [GitHub Pages site](https://codingmachineedge.github.io/qbittorrent-material/)
+puts the landing page, every Markdown and JSON specification, the complete visual
+tour, and a curated wiki into one installable Material interface. It includes
+plain-text and regex search, a rule-based filter builder, regex test dialog,
+local Markdown/JSON imports, and portable wiki/search exports.
+
+The same curated guides and full technical references are mirrored to the
+[GitHub Wiki](https://github.com/codingmachineedge/qbittorrent-material/wiki).
+See [`docs/PAGES.md`](docs/PAGES.md) for local preview, content generation,
+publishing, and Wiki synchronization.
+
+![qBittorrent Material documentation landing page](docs/images/site/01-landing-desktop.png)
+
+| Embedded wiki search | Regex builder |
+| --- | --- |
+| ![Embedded documentation search](docs/images/site/02-wiki-search.png) | ![Regex search builder](docs/images/site/03-regex-builder.png) |
+
+![Responsive mobile documentation](docs/images/site/04-mobile-landing.png)
 
 ## Screenshots
 

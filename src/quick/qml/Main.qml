@@ -814,7 +814,7 @@ ApplicationWindow {
     }
     function openDocumentation() {
         Log.info("ui", "Action: Documentation")
-        Qt.openUrlExternally("https://doc.qbittorrent.org")
+        Qt.openUrlExternally("https://codingmachineedge.github.io/qbittorrent-material/#wiki")
     }
     function donate() {
         Log.info("ui", "Action: Donate")

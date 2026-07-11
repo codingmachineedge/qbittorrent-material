@@ -41,3 +41,23 @@ Sources, Content, and Speed tabs.
 The compact status bar remains visible at the bottom of the application shell.
 
 ![Status bar](images/app/06-statusbar.png)
+
+## Documentation experience
+
+The GitHub Pages landing page presents the application at 80% of the viewport
+on large screens, then reflows navigation, calls to action, and screenshots for
+phones and tablets.
+
+![Material documentation landing page](images/site/01-landing-desktop.png)
+
+The complete project corpus is searchable inside the page. Results are grouped
+by document and highlight the matching text without sending the query anywhere.
+
+![Embedded wiki search](images/site/02-wiki-search.png)
+
+The regex builder includes token shortcuts, flags, sample text, live match
+highlighting, and portable pattern import/export.
+
+![Regex builder dialog](images/site/03-regex-builder.png)
+
+![Mobile documentation landing page](images/site/04-mobile-landing.png)

@@ -1,0 +1,405 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+  <meta name="theme-color" content="#6750a4">
+  <meta name="color-scheme" content="light dark">
+  <meta name="description" content="qBittorrent Material is a modern, native Material 3 desktop experience for qBittorrent. Explore the app, screenshots, build pipeline, and complete searchable documentation.">
+  <meta name="keywords" content="qBittorrent, Material Design, Material 3, Qt, C++, BitTorrent, open source">
+  <meta property="og:type" content="website">
+  <meta property="og:title" content="qBittorrent Material">
+  <meta property="og:description" content="A modern native qBittorrent desktop experience with every project document in one searchable wiki.">
+  <meta property="og:image" content="images/app/01-main-window.png">
+  <meta name="twitter:card" content="summary_large_image">
+  <title>qBittorrent Material — Native. Modern. Yours.</title>
+  <link rel="icon" type="image/svg+xml" href="assets/logo-mark.svg">
+  <link rel="manifest" href="manifest.webmanifest">
+  <link rel="stylesheet" href="assets/site.css">
+  <script defer src="content.generated.js"></script>
+  <script defer src="assets/site.js"></script>
+</head>
+<body>
+  <a class="skip-link" href="#main-content">Skip to content</a>
+
+  <header class="top-app-bar" id="site-header">
+    <div class="top-app-bar__inner">
+      <a class="brand" href="#home" aria-label="qBittorrent Material home">
+        <img class="brand__mark" src="assets/logo-mark.svg" alt="" width="40" height="40">
+        <span class="brand__wordmark">
+          <strong>qBittorrent</strong>
+          <span>Material</span>
+        </span>
+      </a>
+
+      <button class="icon-button mobile-nav-toggle" id="mobile-nav-toggle" type="button" aria-label="Open navigation" aria-controls="primary-navigation" aria-expanded="false">
+        <svg aria-hidden="true" viewBox="0 0 24 24"><path d="M4 6h16M4 12h16M4 18h16"/></svg>
+      </button>
+
+      <nav class="primary-navigation" id="primary-navigation" aria-label="Primary navigation">
+        <a href="#features">Features</a>
+        <a href="#experience">Experience</a>
+        <a href="#pipeline">Releases</a>
+        <a href="#wiki">Docs &amp; wiki</a>
+        <a href="#gallery">Gallery</a>
+      </nav>
+
+      <div class="top-app-bar__actions">
+        <a class="icon-button" href="https://github.com/codingmachineedge/qbittorrent-material" aria-label="View source code on GitHub">
+          <svg aria-hidden="true" viewBox="0 0 24 24"><path d="M12 2a10 10 0 0 0-3.16 19.49c.5.09.68-.22.68-.48v-1.87c-2.78.6-3.37-1.18-3.37-1.18-.45-1.16-1.11-1.47-1.11-1.47-.91-.62.07-.61.07-.61 1 .07 1.53 1.03 1.53 1.03.9 1.53 2.35 1.09 2.92.83.09-.65.35-1.09.64-1.34-2.22-.25-4.55-1.11-4.55-4.94 0-1.09.39-1.98 1.03-2.68-.1-.25-.45-1.27.1-2.64 0 0 .84-.27 2.75 1.02A9.6 9.6 0 0 1 12 6.82a9.6 9.6 0 0 1 2.5.34c1.91-1.29 2.75-1.02 2.75-1.02.55 1.37.2 2.39.1 2.64.64.7 1.03 1.59 1.03 2.68 0 3.84-2.34 4.69-4.57 4.93.36.31.68.92.68 1.86v2.76c0 .27.18.58.69.48A10 10 0 0 0 12 2Z"/></svg>
+        </a>
+        <button class="icon-button" id="theme-toggle" type="button" aria-label="Switch color theme" title="Switch color theme">
+          <svg class="theme-icon theme-icon--light" aria-hidden="true" viewBox="0 0 24 24"><path d="M12 4V2m0 20v-2M4 12H2m20 0h-2M5.64 5.64 4.22 4.22m15.56 15.56-1.42-1.42m0-12.72 1.42-1.42M4.22 19.78l1.42-1.42M17 12a5 5 0 1 1-10 0 5 5 0 0 1 10 0Z"/></svg>
+          <svg class="theme-icon theme-icon--dark" aria-hidden="true" viewBox="0 0 24 24"><path d="M20.6 15.3A9 9 0 0 1 8.7 3.4 9 9 0 1 0 20.6 15.3Z"/></svg>
+        </button>
+        <a class="button button--filled top-download" href="https://github.com/codingmachineedge/qbittorrent-material/releases">
+          <svg aria-hidden="true" viewBox="0 0 24 24"><path d="M12 3v12m0 0 4-4m-4 4-4-4M5 21h14"/></svg>
+          Download
+        </a>
+      </div>
+    </div>
+  </header>
+
+  <main id="main-content">
+    <section class="hero section" id="home" aria-labelledby="hero-title">
+      <div class="hero__glow hero__glow--one" aria-hidden="true"></div>
+      <div class="hero__glow hero__glow--two" aria-hidden="true"></div>
+      <div class="hero__copy">
+        <div class="eyebrow"><span class="eyebrow__dot" aria-hidden="true"></span> Material 3 · Native Qt · Open source</div>
+        <h1 id="hero-title">Your torrents.<br><span class="gradient-text">Beautifully in motion.</span></h1>
+        <p class="hero__lede">A thoughtful, native qBittorrent desktop experience shaped around clarity, speed, and the expressive character of Material Design 3.</p>
+        <div class="hero__actions">
+          <a class="button button--filled button--large" href="https://github.com/codingmachineedge/qbittorrent-material/releases">
+            <svg aria-hidden="true" viewBox="0 0 24 24"><path d="M12 3v12m0 0 4-4m-4 4-4-4M5 21h14"/></svg>
+            Get the Windows installer
+          </a>
+          <a class="button button--tonal button--large" href="#wiki">
+            Explore the docs
+            <svg aria-hidden="true" viewBox="0 0 24 24"><path d="m9 18 6-6-6-6"/></svg>
+          </a>
+        </div>
+        <div class="hero__trust" aria-label="Project highlights">
+          <span><svg aria-hidden="true" viewBox="0 0 24 24"><path d="m5 12 4 4L19 6"/></svg> Automated smoke tests</span>
+          <span><svg aria-hidden="true" viewBox="0 0 24 24"><path d="M12 2v20M2 12h20"/></svg> One-click install</span>
+          <span><svg aria-hidden="true" viewBox="0 0 24 24"><path d="M12 3 4 7v5c0 5 3.4 8.7 8 10 4.6-1.3 8-5 8-10V7l-8-4Z"/></svg> Built in public</span>
+        </div>
+      </div>
+
+      <figure class="app-showcase" aria-labelledby="app-showcase-caption">
+        <div class="app-showcase__halo" aria-hidden="true"></div>
+        <div class="app-window">
+          <div class="app-window__chrome" aria-hidden="true">
+            <div class="window-dots"><span></span><span></span><span></span></div>
+            <span>qBittorrent Material</span>
+            <div class="window-actions"><span>—</span><span>□</span><span>×</span></div>
+          </div>
+          <img src="images/app/01-main-window.png" width="1552" height="862" alt="qBittorrent Material main window showing the navigation rail, transfer list, toolbar, and properties panel">
+        </div>
+        <div class="floating-chip floating-chip--release"><span class="status-dot" aria-hidden="true"></span><strong>Release ready</strong><small>Built and smoke-tested</small></div>
+        <div class="floating-chip floating-chip--native"><svg aria-hidden="true" viewBox="0 0 24 24"><path d="M4 5h16v12H4zM8 21h8M12 17v4"/></svg><strong>Native desktop</strong><small>Fast Qt rendering</small></div>
+        <figcaption class="sr-only" id="app-showcase-caption">The full qBittorrent Material desktop workspace.</figcaption>
+      </figure>
+
+      <div class="hero-stats surface" aria-label="Project facts">
+        <div><strong>8</strong><span>documented views</span></div>
+        <div><strong>100%</strong><span>native interface</span></div>
+        <div><strong>0</strong><span>CI artifacts</span></div>
+        <div><strong>1</strong><span>installer asset</span></div>
+      </div>
+    </section>
+
+    <section class="section section--contained" id="features" aria-labelledby="features-title">
+      <div class="section-heading">
+        <div><span class="overline">Designed around you</span><h2 id="features-title">Everything familiar. Refined.</h2></div>
+        <p>The power of qBittorrent stays close at hand while hierarchy, color, motion, and spacing make every task easier to read.</p>
+      </div>
+      <div class="bento-grid">
+        <article class="feature-card feature-card--wide feature-card--primary">
+          <div class="feature-card__icon"><svg aria-hidden="true" viewBox="0 0 24 24"><path d="M4 5h16v14H4zM4 9h16M8 9v10"/></svg></div>
+          <div><span class="feature-card__label">Focused workspace</span><h3>Information, exactly where it belongs.</h3><p>Navigation, transfers, properties, and global status form one coherent workspace that scales from laptop to ultrawide.</p></div>
+          <img src="images/app/08-main-workspace.png" width="1098" height="640" loading="lazy" alt="Main qBittorrent Material workspace">
+        </article>
+        <article class="feature-card feature-card--accent">
+          <div class="feature-card__icon"><svg aria-hidden="true" viewBox="0 0 24 24"><path d="M4 7h16M7 12h10M10 17h4"/></svg></div>
+          <h3>Filters without friction</h3><p>See transfer states, categories, tags, and trackers at a glance.</p>
+        </article>
+        <article class="feature-card feature-card--dark">
+          <div class="feature-card__icon"><svg aria-hidden="true" viewBox="0 0 24 24"><path d="M12 3a9 9 0 1 0 9 9c0-.7-.08-1.38-.23-2.03A6 6 0 0 1 14.03 3.23 9.08 9.08 0 0 0 12 3Z"/></svg></div>
+          <h3>Made for every light</h3><p>Automatic, light, and dark themes use semantic color throughout.</p>
+        </article>
+        <article class="feature-card">
+          <div class="feature-card__icon"><svg aria-hidden="true" viewBox="0 0 24 24"><path d="M13 2 4 14h7l-1 8 9-12h-7z"/></svg></div>
+          <h3>Native performance</h3><p>C++ and Qt keep interaction immediate without a browser shell.</p>
+        </article>
+        <article class="feature-card">
+          <div class="feature-card__icon"><svg aria-hidden="true" viewBox="0 0 24 24"><path d="M4 6h16M4 12h10M4 18h7M18 14v7m-3-3 3 3 3-3"/></svg></div>
+          <h3>Transfer clarity</h3><p>Progress, peers, speed, ETA, and ratios remain readable at a glance.</p>
+        </article>
+        <article class="feature-card feature-card--wide feature-card--image">
+          <div><div class="feature-card__icon"><svg aria-hidden="true" viewBox="0 0 24 24"><path d="M5 4h14v16H5zM8 8h8M8 12h8M8 16h5"/></svg></div><h3>Deep detail, on demand</h3><p>Inspect general data, trackers, peers, HTTP sources, content, and speed without losing context.</p></div>
+          <img src="images/app/05-properties-tabs.png" width="1430" height="192" loading="lazy" alt="Properties panel tabs and status details">
+        </article>
+      </div>
+    </section>
+
+    <section class="section experience" id="experience" aria-labelledby="experience-title">
+      <div class="experience__copy">
+        <span class="overline">A calmer control room</span>
+        <h2 id="experience-title">Big when it matters.<br>Adaptive everywhere.</h2>
+        <p>The application showcase uses roughly 80% of the available screen width and responds fluidly at every breakpoint. The actual desktop interface follows the same principle: dense enough for serious work, spacious enough to breathe.</p>
+        <ul class="check-list">
+          <li><span><svg aria-hidden="true" viewBox="0 0 24 24"><path d="m5 12 4 4L19 6"/></svg></span><div><strong>Responsive presentation</strong><small>From compact phones to wide desktop displays.</small></div></li>
+          <li><span><svg aria-hidden="true" viewBox="0 0 24 24"><path d="m5 12 4 4L19 6"/></svg></span><div><strong>Material interaction states</strong><small>Clear focus, hover, selection, and disabled feedback.</small></div></li>
+          <li><span><svg aria-hidden="true" viewBox="0 0 24 24"><path d="m5 12 4 4L19 6"/></svg></span><div><strong>Accessible by default</strong><small>Keyboard navigation, reduced motion, and high contrast support.</small></div></li>
+        </ul>
+      </div>
+      <div class="experience__visual">
+        <div class="experience__rail"><span class="rail-item rail-item--active"></span><span class="rail-item"></span><span class="rail-item"></span><span class="rail-item"></span></div>
+        <img src="images/app/04-transfer-list.png" width="1453" height="238" loading="lazy" alt="Transfer list with progress, status, peers, speeds, and ETA columns">
+        <div class="metric-card metric-card--down"><span>Download</span><strong>24.8 <small>MiB/s</small></strong><svg aria-hidden="true" viewBox="0 0 120 44"><path d="M2 38 17 32l13 4 18-21 14 10 18-20 17 12 21-14"/></svg></div>
+        <div class="metric-card metric-card--up"><span>Upload</span><strong>4.2 <small>MiB/s</small></strong><svg aria-hidden="true" viewBox="0 0 120 44"><path d="m2 34 14 1 13-14 18 9 16-17 15 10 17-14 23 6"/></svg></div>
+      </div>
+    </section>
+
+    <section class="section section--contained pipeline" id="pipeline" aria-labelledby="pipeline-title">
+      <div class="section-heading section-heading--centered">
+        <div><span class="overline">Confidence on every push</span><h2 id="pipeline-title">Source to installer, automatically.</h2></div>
+        <p>Every push builds the Windows application, packages it with NSIS, smoke-tests the installed executable, and publishes the installer directly on GitHub Releases.</p>
+      </div>
+      <ol class="pipeline-track">
+        <li><span class="pipeline-step__number">01</span><div class="pipeline-step__icon"><svg aria-hidden="true" viewBox="0 0 24 24"><path d="M8 7 3 12l5 5m8-10 5 5-5 5m-3-14-2 18"/></svg></div><div><strong>Push</strong><small>Commit reaches the repository</small></div></li>
+        <li><span class="pipeline-step__number">02</span><div class="pipeline-step__icon"><svg aria-hidden="true" viewBox="0 0 24 24"><path d="M5 4h14v16H5zM9 2v4m6-4v4M9 18v4m6-4v4M2 9h4m-4 6h4m12-6h4m-4 6h4"/></svg></div><div><strong>Build</strong><small>MSVC, Qt, CMake, and vcpkg</small></div></li>
+        <li><span class="pipeline-step__number">03</span><div class="pipeline-step__icon"><svg aria-hidden="true" viewBox="0 0 24 24"><path d="M5 8 12 4l7 4-7 4zM5 8v8l7 4 7-4V8M12 12v8"/></svg></div><div><strong>Package</strong><small>Standalone NSIS installer</small></div></li>
+        <li><span class="pipeline-step__number">04</span><div class="pipeline-step__icon"><svg aria-hidden="true" viewBox="0 0 24 24"><path d="m5 12 4 4L19 6M4 21h16"/></svg></div><div><strong>Smoke test</strong><small>Install, launch, verify, uninstall</small></div></li>
+        <li><span class="pipeline-step__number">05</span><div class="pipeline-step__icon"><svg aria-hidden="true" viewBox="0 0 24 24"><path d="M12 3v12m0-12 4 4m-4-4L8 7M5 21h14v-5"/></svg></div><div><strong>Release</strong><small>Direct asset, zero CI artifacts</small></div></li>
+      </ol>
+      <div class="pipeline-callout surface">
+        <div><span class="status-dot"></span><strong>Release pipeline operational</strong><small>Automated for every pushed branch</small></div>
+        <a class="button button--outlined" href="https://github.com/codingmachineedge/qbittorrent-material/actions">View workflow runs <svg aria-hidden="true" viewBox="0 0 24 24"><path d="m9 18 6-6-6-6"/></svg></a>
+      </div>
+    </section>
+
+    <section class="section wiki" id="wiki" aria-labelledby="wiki-title">
+      <div class="section-heading wiki__heading">
+        <div><span class="overline">Living project knowledge</span><h2 id="wiki-title">The complete docs, in one place.</h2></div>
+        <p>Search every guide, specification, contract, and design decision without leaving this page. Use plain text or precise regular expressions.</p>
+      </div>
+
+      <div class="wiki-shell" id="wiki-workspace">
+        <div class="wiki-topbar">
+          <div class="wiki-topbar__title"><img src="assets/logo-mark.svg" alt="" width="32" height="32"><span><strong>Project wiki</strong><small>All documentation · locally searchable</small></span></div>
+          <div class="wiki-topbar__tools">
+            <button class="button button--text" id="open-import-export" type="button" aria-haspopup="dialog" aria-controls="import-export-dialog"><svg aria-hidden="true" viewBox="0 0 24 24"><path d="M12 3v12m0-12 4 4m-4-4L8 7M5 21h14v-5"/></svg>Import / export</button>
+            <a class="icon-button" href="https://github.com/codingmachineedge/qbittorrent-material/wiki" aria-label="Open the GitHub Wiki" title="Open GitHub Wiki"><svg aria-hidden="true" viewBox="0 0 24 24"><path d="M5 4h14v16H5zM9 8h6m-6 4h6m-6 4h4"/></svg></a>
+          </div>
+        </div>
+
+        <div class="wiki-search-panel">
+          <form class="search-field" id="global-search-form" role="search">
+            <svg aria-hidden="true" viewBox="0 0 24 24"><circle cx="11" cy="11" r="7"/><path d="m16 16 5 5"/></svg>
+            <label class="sr-only" for="global-search">Search all documentation</label>
+            <input id="global-search" name="q" type="search" autocomplete="off" spellcheck="false" placeholder="Search every document…" aria-describedby="search-hint">
+            <kbd aria-hidden="true">/</kbd>
+          </form>
+          <div class="search-controls" aria-label="Search options">
+            <label class="toggle-chip" title="Interpret the query as a regular expression"><input id="regex-toggle" type="checkbox"><span>.*</span> Regex</label>
+            <label class="toggle-chip" title="Match uppercase and lowercase exactly"><input id="case-toggle" type="checkbox"><span>Aa</span> Match case</label>
+            <label class="toggle-chip" title="Match only complete words"><input id="whole-word-toggle" type="checkbox"><span>“ ”</span> Whole word</label>
+            <button class="filter-chip" id="open-filter-builder" type="button" aria-haspopup="dialog" aria-controls="filter-dialog"><svg aria-hidden="true" viewBox="0 0 24 24"><path d="M4 6h16M7 12h10M10 18h4"/></svg> Filters</button>
+            <button class="filter-chip" id="open-regex-builder" type="button" aria-haspopup="dialog" aria-controls="regex-dialog"><svg aria-hidden="true" viewBox="0 0 24 24"><path d="m5 16 4-8 4 8m-6-3h4M15 8v8m0-4h4"/></svg> Regex builder</button>
+          </div>
+          <small id="search-hint">Press <kbd>/</kbd> to search · <kbd>Esc</kbd> to clear · regular expressions run locally in your browser</small>
+          <div class="active-filter-chips" id="active-filter-chips" aria-live="polite"></div>
+        </div>
+
+        <div class="wiki-layout">
+          <aside class="doc-sidebar" aria-label="Documentation navigation">
+            <div class="doc-sidebar__heading"><span>Browse</span><span id="document-count">Documents</span></div>
+            <nav id="doc-nav" aria-label="Wiki pages">
+              <div class="nav-skeleton" aria-hidden="true"><span></span><span></span><span></span><span></span><span></span></div>
+            </nav>
+            <div class="doc-sidebar__footer">
+              <a href="https://github.com/codingmachineedge/qbittorrent-material/issues"><svg aria-hidden="true" viewBox="0 0 24 24"><circle cx="12" cy="12" r="9"/><path d="M12 7v6m0 4h.01"/></svg>Report a docs issue</a>
+            </div>
+          </aside>
+
+          <div class="doc-results" id="search-results" aria-label="Search results" hidden>
+            <div class="doc-results__header"><strong>Search results</strong><span id="search-status" role="status" aria-live="polite">Type to search all documentation</span></div>
+            <div id="search-result-list"></div>
+          </div>
+
+          <article class="doc-article" id="doc-article" tabindex="-1">
+            <nav class="breadcrumbs" id="doc-breadcrumbs" aria-label="Breadcrumb"><a href="#wiki">Wiki</a><span>/</span><span>Overview</span></nav>
+            <div class="article-loading" aria-live="polite">
+              <span class="overline">Welcome to the project wiki</span>
+              <h3>Documentation that works like the app.</h3>
+              <p>Browse the navigation or search the complete local documentation set. Pages are rendered here with headings, code, tables, links, and a generated outline.</p>
+              <div class="wiki-welcome-grid">
+                <button type="button" data-doc="BUILDING.md"><svg aria-hidden="true" viewBox="0 0 24 24"><path d="M14 4 4 14l6 6L20 10M12 6l6 6"/></svg><span><strong>Build the project</strong><small>Dependencies, presets, and packaging</small></span></button>
+                <button type="button" data-doc="ARCHITECTURE.md"><svg aria-hidden="true" viewBox="0 0 24 24"><path d="M12 3 3 8l9 5 9-5zM3 13l9 5 9-5M3 18l9 5 9-5"/></svg><span><strong>Explore architecture</strong><small>Layers, boundaries, and data flow</small></span></button>
+                <button type="button" data-doc="DESIGN_SYSTEM.md"><svg aria-hidden="true" viewBox="0 0 24 24"><path d="M12 3a9 9 0 0 0 0 18h1.5a2.5 2.5 0 0 0 0-5H12a2 2 0 0 1 0-4h5a4 4 0 0 0 4-4c0-2.76-4.03-5-9-5Z"/></svg><span><strong>Read the design system</strong><small>Tokens, components, and behavior</small></span></button>
+                <button type="button" data-doc="FEATURE_SPEC.md"><svg aria-hidden="true" viewBox="0 0 24 24"><path d="M6 3h9l4 4v14H6zM14 3v5h5M9 13h6M9 17h4"/></svg><span><strong>Feature specification</strong><small>The complete product definition</small></span></button>
+              </div>
+            </div>
+            <nav class="doc-pagination" aria-label="Adjacent wiki pages"><button class="button button--text" id="doc-prev" type="button" disabled><svg aria-hidden="true" viewBox="0 0 24 24"><path d="m15 18-6-6 6-6"/></svg>Previous</button><button class="button button--text" id="doc-next" type="button">Next<svg aria-hidden="true" viewBox="0 0 24 24"><path d="m9 18 6-6-6-6"/></svg></button></nav>
+          </article>
+
+          <aside class="article-toc" aria-label="On this page">
+            <strong>On this page</strong>
+            <nav id="article-toc"><span class="toc-empty">Choose a document to see its outline.</span></nav>
+          </aside>
+        </div>
+      </div>
+    </section>
+
+    <section class="section section--contained gallery" id="gallery" aria-labelledby="gallery-title">
+      <div class="section-heading">
+        <div><span class="overline">The visual tour</span><h2 id="gallery-title">Details make the difference.</h2></div>
+        <p>Open any view for a closer look at the installed application. Every image is captured from the real native build.</p>
+      </div>
+      <div class="gallery-grid">
+        <button class="gallery-card gallery-card--hero" type="button" data-lightbox="images/app/01-main-window.png" data-caption="Main window — the complete Material workspace">
+          <img src="images/app/01-main-window.png" width="1552" height="862" loading="lazy" alt="Full qBittorrent Material main window">
+          <span><strong>Main window</strong><small>The complete Material workspace</small></span><i aria-hidden="true"><svg viewBox="0 0 24 24"><path d="M8 3H3v5m13-5h5v5M3 16v5h5m13-5v5h-5"/></svg></i>
+        </button>
+        <button class="gallery-card" type="button" data-lightbox="images/app/02-toolbar-and-filter.png" data-caption="Toolbar and filtering — essential actions remain close">
+          <img src="images/app/02-toolbar-and-filter.png" width="1232" height="93" loading="lazy" alt="Toolbar and transfer filtering controls">
+          <span><strong>Toolbar &amp; filtering</strong><small>Essential actions stay close</small></span><i aria-hidden="true"><svg viewBox="0 0 24 24"><path d="M8 3H3v5m13-5h5v5M3 16v5h5m13-5v5h-5"/></svg></i>
+        </button>
+        <button class="gallery-card gallery-card--tall" type="button" data-lightbox="images/app/03-filter-sidebar.png" data-caption="Filter sidebar — status, category, tags, and trackers">
+          <img src="images/app/03-filter-sidebar.png" width="310" height="638" loading="lazy" alt="Filter sidebar with status categories and tags">
+          <span><strong>Filter sidebar</strong><small>Every transfer, organized</small></span><i aria-hidden="true"><svg viewBox="0 0 24 24"><path d="M8 3H3v5m13-5h5v5M3 16v5h5m13-5v5h-5"/></svg></i>
+        </button>
+        <button class="gallery-card gallery-card--wide" type="button" data-lightbox="images/app/04-transfer-list.png" data-caption="Transfer list — rich status at a glance">
+          <img src="images/app/04-transfer-list.png" width="1453" height="238" loading="lazy" alt="Transfer list table with torrent status columns">
+          <span><strong>Transfer list</strong><small>Rich status at a glance</small></span><i aria-hidden="true"><svg viewBox="0 0 24 24"><path d="M8 3H3v5m13-5h5v5M3 16v5h5m13-5v5h-5"/></svg></i>
+        </button>
+        <button class="gallery-card gallery-card--wide" type="button" data-lightbox="images/app/05-properties-tabs.png" data-caption="Properties tabs — inspect every detail without leaving context">
+          <img src="images/app/05-properties-tabs.png" width="1430" height="192" loading="lazy" alt="Properties panel tabs and torrent status details">
+          <span><strong>Properties</strong><small>Deep detail, one click away</small></span><i aria-hidden="true"><svg viewBox="0 0 24 24"><path d="M8 3H3v5m13-5h5v5M3 16v5h5m13-5v5h-5"/></svg></i>
+        </button>
+        <button class="gallery-card" type="button" data-lightbox="images/app/06-statusbar.png" data-caption="Status bar — network and global transfer speeds">
+          <img src="images/app/06-statusbar.png" width="1552" height="87" loading="lazy" alt="Application status bar with network and global speed information">
+          <span><strong>Status bar</strong><small>Global health at a glance</small></span><i aria-hidden="true"><svg viewBox="0 0 24 24"><path d="M8 3H3v5m13-5h5v5M3 16v5h5m13-5v5h-5"/></svg></i>
+        </button>
+        <button class="gallery-card" type="button" data-lightbox="images/app/07-navigation-and-toolbar.png" data-caption="Navigation and toolbar — a clear, familiar action model">
+          <img src="images/app/07-navigation-and-toolbar.png" width="1552" height="191" loading="lazy" alt="Material navigation and toolbar controls">
+          <span><strong>Navigation</strong><small>A familiar action model</small></span><i aria-hidden="true"><svg viewBox="0 0 24 24"><path d="M8 3H3v5m13-5h5v5M3 16v5h5m13-5v5h-5"/></svg></i>
+        </button>
+        <button class="gallery-card gallery-card--hero" type="button" data-lightbox="images/app/08-main-workspace.png" data-caption="Main workspace — designed to scale dynamically">
+          <img src="images/app/08-main-workspace.png" width="1098" height="640" loading="lazy" alt="The main workspace at a closer crop">
+          <span><strong>Main workspace</strong><small>Designed to scale with you</small></span><i aria-hidden="true"><svg viewBox="0 0 24 24"><path d="M8 3H3v5m13-5h5v5M3 16v5h5m13-5v5h-5"/></svg></i>
+        </button>
+        <button class="gallery-card gallery-card--hero" type="button" data-lightbox="images/site/01-landing-desktop.png" data-caption="Material landing page — the project, release path, and app at a glance">
+          <img src="images/site/01-landing-desktop.png" width="1440" height="1000" loading="lazy" alt="qBittorrent Material documentation landing page on desktop">
+          <span><strong>Documentation home</strong><small>The complete Material landing experience</small></span><i aria-hidden="true"><svg viewBox="0 0 24 24"><path d="M8 3H3v5m13-5h5v5M3 16v5h5m13-5v5h-5"/></svg></i>
+        </button>
+        <button class="gallery-card gallery-card--tall" type="button" data-lightbox="images/site/02-wiki-search.png" data-caption="Embedded wiki search — 21 documents with highlighted local results">
+          <img src="images/site/02-wiki-search.png" width="1384" height="1555" loading="lazy" alt="Embedded documentation wiki showing highlighted installer search results">
+          <span><strong>Wiki search</strong><small>Every document, indexed locally</small></span><i aria-hidden="true"><svg viewBox="0 0 24 24"><path d="M8 3H3v5m13-5h5v5M3 16v5h5m13-5v5h-5"/></svg></i>
+        </button>
+        <button class="gallery-card" type="button" data-lightbox="images/site/03-regex-builder.png" data-caption="Regex builder — token palette, flags, live matches, and import/export">
+          <img src="images/site/03-regex-builder.png" width="720" height="570" loading="lazy" alt="Regex builder dialog with live highlighted matches">
+          <span><strong>Regex builder</strong><small>Build, test, import, and export patterns</small></span><i aria-hidden="true"><svg viewBox="0 0 24 24"><path d="M8 3H3v5m13-5h5v5M3 16v5h5m13-5v5h-5"/></svg></i>
+        </button>
+        <button class="gallery-card gallery-card--tall" type="button" data-lightbox="images/site/04-mobile-landing.png" data-caption="Responsive mobile landing page — the same Material hierarchy on a narrow screen">
+          <img src="images/site/04-mobile-landing.png" width="390" height="844" loading="lazy" alt="qBittorrent Material documentation landing page on mobile">
+          <span><strong>Mobile experience</strong><small>Responsive from phone to ultrawide</small></span><i aria-hidden="true"><svg viewBox="0 0 24 24"><path d="M8 3H3v5m13-5h5v5M3 16v5h5m13-5v5h-5"/></svg></i>
+        </button>
+      </div>
+    </section>
+
+    <section class="section section--contained roadmap" id="roadmap" aria-labelledby="roadmap-title">
+      <div class="section-heading">
+        <div><span class="overline">Built in the open</span><h2 id="roadmap-title">A living interface.</h2></div>
+        <p>The foundation is in place. The roadmap keeps refinement, platform reach, and community feedback moving forward.</p>
+      </div>
+      <ol class="roadmap-list">
+        <li class="roadmap-item roadmap-item--done"><span class="roadmap-marker"><svg aria-hidden="true" viewBox="0 0 24 24"><path d="m5 12 4 4L19 6"/></svg></span><div><span>Shipped</span><h3>Native Material foundation</h3><p>Core shell, navigation, transfers, filters, details, responsive site, and repeatable releases.</p></div></li>
+        <li class="roadmap-item roadmap-item--active"><span class="roadmap-marker"><span></span></span><div><span>In progress</span><h3>Behavioral parity &amp; polish</h3><p>Close remaining interaction gaps while refining motion, accessibility, and platform integration.</p></div></li>
+        <li class="roadmap-item"><span class="roadmap-marker"></span><div><span>Next</span><h3>Broader platform delivery</h3><p>Package and validate the native experience across additional desktop environments.</p></div></li>
+      </ol>
+    </section>
+
+    <section class="section section--contained faq" id="faq" aria-labelledby="faq-title">
+      <div class="section-heading">
+        <div><span class="overline">Good to know</span><h2 id="faq-title">Frequently asked questions.</h2></div>
+      </div>
+      <div class="faq-grid">
+        <details><summary>Is qBittorrent Material a web wrapper?<svg aria-hidden="true" viewBox="0 0 24 24"><path d="m6 9 6 6 6-6"/></svg></summary><p>No. The application is built natively in C++ with Qt and uses the real qBittorrent engine contracts.</p></details>
+        <details><summary>Where can I download the installer?<svg aria-hidden="true" viewBox="0 0 24 24"><path d="m6 9 6 6 6-6"/></svg></summary><p>Every successful push publishes a versioned Windows installer directly to <a href="https://github.com/codingmachineedge/qbittorrent-material/releases">GitHub Releases</a>.</p></details>
+        <details><summary>How is each release tested?<svg aria-hidden="true" viewBox="0 0 24 24"><path d="m6 9 6 6 6-6"/></svg></summary><p>GitHub Actions builds the app, creates an NSIS package, installs it silently, launches and verifies the executable, then performs a clean uninstall.</p></details>
+        <details><summary>Does this replace the original qBittorrent?<svg aria-hidden="true" viewBox="0 0 24 24"><path d="m6 9 6 6 6-6"/></svg></summary><p>It is a distinct Material-oriented desktop project built around qBittorrent behavior and concepts. Review the current feature specification before relying on it as a daily-driver replacement.</p></details>
+        <details><summary>Can I search the documentation offline?<svg aria-hidden="true" viewBox="0 0 24 24"><path d="m6 9 6 6 6-6"/></svg></summary><p>Yes. The entire wiki index and search engine run locally in your browser with no external service or JavaScript dependency.</p></details>
+        <details><summary>How can I contribute?<svg aria-hidden="true" viewBox="0 0 24 24"><path d="m6 9 6 6 6-6"/></svg></summary><p>Start with the building and architecture pages in the wiki, then open an issue or pull request on GitHub.</p></details>
+      </div>
+    </section>
+
+    <section class="final-cta" aria-labelledby="final-cta-title">
+      <div class="final-cta__glow" aria-hidden="true"></div>
+      <img src="assets/logo-mark.svg" width="76" height="76" alt="">
+      <span class="overline">Ready when you are</span>
+      <h2 id="final-cta-title">Make the everyday download<br>feel extraordinary.</h2>
+      <p>Install the latest automated build, explore the source, or help shape what comes next.</p>
+      <div class="final-cta__actions"><a class="button button--filled button--large" href="https://github.com/codingmachineedge/qbittorrent-material/releases">Browse release installers</a><a class="button button--outlined button--large" href="https://github.com/codingmachineedge/qbittorrent-material">View on GitHub</a></div>
+    </section>
+  </main>
+
+  <footer class="site-footer">
+    <div class="site-footer__main">
+      <a class="brand" href="#home"><img class="brand__mark" src="assets/logo-mark.svg" alt="" width="40" height="40"><span class="brand__wordmark"><strong>qBittorrent</strong><span>Material</span></span></a>
+      <p>A community-built exploration of a modern native qBittorrent desktop experience.</p>
+      <nav aria-label="Footer navigation"><div><strong>Project</strong><a href="https://github.com/codingmachineedge/qbittorrent-material">Source</a><a href="https://github.com/codingmachineedge/qbittorrent-material/releases">Releases</a><a href="https://github.com/codingmachineedge/qbittorrent-material/actions">Actions</a></div><div><strong>Learn</strong><a href="#wiki">Documentation</a><a href="#gallery">Screenshots</a><a href="#roadmap">Roadmap</a></div><div><strong>Community</strong><a href="https://github.com/codingmachineedge/qbittorrent-material/issues">Issues</a><a href="https://github.com/codingmachineedge/qbittorrent-material/pulls">Pull requests</a><a href="https://github.com/codingmachineedge/qbittorrent-material/wiki">GitHub Wiki</a></div></nav>
+    </div>
+    <div class="site-footer__legal"><span>Released as open-source software. qBittorrent is a trademark of its respective owners.</span><a href="#home">Back to top <svg aria-hidden="true" viewBox="0 0 24 24"><path d="m6 15 6-6 6 6"/></svg></a></div>
+  </footer>
+
+  <dialog class="builder-dialog" id="filter-dialog" aria-labelledby="filter-dialog-title">
+    <form method="dialog">
+      <header><div><span class="dialog-icon"><svg aria-hidden="true" viewBox="0 0 24 24"><path d="M4 6h16M7 12h10M10 18h4"/></svg></span><span><strong id="filter-dialog-title">Filter builder</strong><small>Combine rules to narrow the documentation</small></span></div><button class="icon-button" value="cancel" aria-label="Close filter builder"><svg aria-hidden="true" viewBox="0 0 24 24"><path d="M6 6l12 12M18 6 6 18"/></svg></button></header>
+      <div class="dialog-body">
+        <fieldset><legend>Match</legend><div class="segmented-control"><label><input type="radio" name="filter-match" value="all" checked><span>All rules</span></label><label><input type="radio" name="filter-match" value="any"><span>Any rule</span></label></div></fieldset>
+        <div class="filter-rules" id="filter-rules" aria-live="polite">
+          <div class="filter-rule" data-filter-rule><label><span>Field</span><select aria-label="Field"><option value="document">Document</option><option value="heading">Heading</option><option value="content">Content</option><option value="type">File type</option></select></label><label><span>Condition</span><select aria-label="Condition"><option value="contains">contains</option><option value="equals">equals</option><option value="starts">starts with</option><option value="regex">matches regex</option></select></label><label class="filter-rule__value"><span>Value</span><input type="text" aria-label="Filter value" placeholder="e.g. architecture"></label><button class="icon-button remove-filter-rule" type="button" aria-label="Remove rule"><svg aria-hidden="true" viewBox="0 0 24 24"><path d="M5 7h14M9 7V4h6v3m-8 0 1 14h8l1-14M10 11v6m4-6v6"/></svg></button></div>
+        </div>
+        <button class="button button--tonal" id="add-filter-rule" type="button"><svg aria-hidden="true" viewBox="0 0 24 24"><path d="M12 5v14M5 12h14"/></svg>Add rule</button>
+      </div>
+      <footer><button class="button button--text" id="clear-filters" type="button">Clear all</button><span></span><button class="button button--text" value="cancel">Cancel</button><button class="button button--filled" id="apply-filters" value="apply">Apply filters</button></footer>
+    </form>
+  </dialog>
+
+  <dialog class="builder-dialog" id="regex-dialog" aria-labelledby="regex-dialog-title">
+    <form method="dialog">
+      <header><div><span class="dialog-icon"><svg aria-hidden="true" viewBox="0 0 24 24"><path d="m4 16 4-8 4 8m-6-3h4M15 8v8m0-4h5"/></svg></span><span><strong id="regex-dialog-title">Regex search builder</strong><small>Build, test, import, and export a precise pattern</small></span></div><button class="icon-button" value="cancel" aria-label="Close regex builder"><svg aria-hidden="true" viewBox="0 0 24 24"><path d="M6 6l12 12M18 6 6 18"/></svg></button></header>
+      <div class="dialog-body regex-builder">
+        <label class="outlined-field regex-pattern-field"><span>Regular expression</span><span class="regex-slash">/</span><input id="regex-pattern" type="text" spellcheck="false" autocomplete="off" placeholder="(?:material|design)\\s+system"><span class="regex-slash">/</span><input id="regex-flags" class="regex-flags" type="text" value="gi" maxlength="6" aria-label="Regular expression flags"></label>
+        <div class="regex-tokens" aria-label="Pattern building blocks"><button type="button" data-regex-token=".">Any character</button><button type="button" data-regex-token="\\w+">Word</button><button type="button" data-regex-token="\\d+">Number</button><button type="button" data-regex-token="\\s+">Whitespace</button><button type="button" data-regex-token="^">Starts with</button><button type="button" data-regex-token="$">Ends with</button><button type="button" data-regex-token="(?:)">Group</button><button type="button" data-regex-token="|">Or</button><button type="button" data-regex-token=".*?">Anything</button><button type="button" data-regex-token="[A-Z]">Range</button></div>
+        <label class="outlined-field outlined-field--area"><span>Test text</span><textarea id="regex-sample" rows="5" placeholder="Paste sample documentation text here to test the expression…">The Material design system defines reusable color, typography, shape, and motion tokens.</textarea></label>
+        <div class="regex-preview" id="regex-preview" role="status" aria-live="polite"><span>Pattern preview</span><code>No pattern entered</code></div>
+        <div class="regex-builder__io"><button class="button button--text" id="regex-import" type="button"><svg aria-hidden="true" viewBox="0 0 24 24"><path d="M12 21V9m0 12-4-4m4 4 4-4M5 3h14v5"/></svg>Import pattern</button><button class="button button--text" id="regex-export" type="button"><svg aria-hidden="true" viewBox="0 0 24 24"><path d="M12 3v12m0-12 4 4m-4-4L8 7M5 21h14v-5"/></svg>Export pattern</button></div>
+      </div>
+      <footer><button class="button button--text" id="regex-clear" type="button">Reset</button><span></span><button class="button button--text" value="cancel">Cancel</button><button class="button button--filled" id="regex-apply" value="apply">Use expression</button></footer>
+    </form>
+  </dialog>
+
+  <dialog class="builder-dialog" id="import-export-dialog" aria-labelledby="import-export-title">
+    <form method="dialog">
+      <header><div><span class="dialog-icon"><svg aria-hidden="true" viewBox="0 0 24 24"><path d="M8 3H5a2 2 0 0 0-2 2v14h16v-3M12 3h7v7m0-7-9 9"/></svg></span><span><strong id="import-export-title">Import &amp; export</strong><small>Bring in Markdown or save a portable wiki snapshot</small></span></div><button class="icon-button" value="cancel" aria-label="Close import and export"><svg aria-hidden="true" viewBox="0 0 24 24"><path d="M6 6l12 12M18 6 6 18"/></svg></button></header>
+      <div class="dialog-body transfer-options">
+        <section><div class="transfer-options__icon"><svg aria-hidden="true" viewBox="0 0 24 24"><path d="M12 21V9m0 12-4-4m4 4 4-4M5 3h14v5"/></svg></div><div><h3>Import documentation</h3><p>Add local Markdown, text, or JSON wiki bundles to this browser session. Files never leave your device.</p><label class="button button--tonal" for="import-files"><svg aria-hidden="true" viewBox="0 0 24 24"><path d="M12 5v14M5 12h14"/></svg>Choose files</label><input id="import-files" type="file" accept=".md,.markdown,.txt,.json,text/markdown,text/plain,application/json" multiple hidden><div id="import-file-list" class="import-file-list" aria-live="polite"></div><button class="button button--text danger-text" id="clear-imports" type="button">Clear imported pages</button></div></section>
+        <section><div class="transfer-options__icon"><svg aria-hidden="true" viewBox="0 0 24 24"><path d="M12 3v12m0-12 4 4m-4-4L8 7M5 21h14v-5"/></svg></div><div><h3>Export your workspace</h3><p>Download the full wiki index or save the current search, options, filters, and matching results.</p><div class="transfer-options__buttons"><button class="button button--tonal" id="export-wiki" type="button">Export wiki JSON</button><button class="button button--outlined" id="export-search" type="button">Export search JSON</button></div></div></section>
+      </div>
+      <footer><span></span><span></span><button class="button button--filled" value="close">Done</button></footer>
+    </form>
+  </dialog>
+
+  <dialog class="lightbox-dialog" id="lightbox-dialog" aria-labelledby="lightbox-caption">
+    <form method="dialog"><button class="icon-button lightbox-dialog__close" value="close" aria-label="Close image viewer"><svg aria-hidden="true" viewBox="0 0 24 24"><path d="M6 6l12 12M18 6 6 18"/></svg></button></form>
+    <figure><img id="lightbox-image" src="images/app/01-main-window.png" alt=""><figcaption id="lightbox-caption">Main window</figcaption></figure>
+  </dialog>
+
+  <div class="snackbar" id="snackbar" role="status" aria-live="polite" aria-atomic="true" hidden><span id="snackbar-message"></span><button type="button" id="snackbar-action">Dismiss</button></div>
+
+  <noscript><div class="noscript-banner">JavaScript is disabled. The landing page and galleries still work, but the searchable wiki and dialogs need JavaScript.</div></noscript>
+</body>
+</html>

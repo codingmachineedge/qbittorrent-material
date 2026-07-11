@@ -1,0 +1,4 @@
+User-agent: *
+Allow: /
+
+Sitemap: https://codingmachineedge.github.io/qbittorrent-material/sitemap.xml
