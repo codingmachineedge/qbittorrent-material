@@ -35,6 +35,14 @@ Item {
     /*! Codepoint string to render, taken from the \c Icons singleton. */
     property string icon: ""
 
+    /*!
+        Material Symbols ligature name (e.g. \c "history", \c "play_arrow").
+        When set it takes precedence over \l icon; the glyph is produced by
+        the font's \c liga feature, exactly how the Material Redesign
+        prototype renders icons — no codepoint table needed.
+    */
+    property string name: ""
+
     /*! Rendered size in device-independent pixels. */
     property int size: 24
 
@@ -65,11 +73,13 @@ Item {
         id: label
         anchors.centerIn: parent
 
-        text: root.icon
+        text: (root.name.length > 0) ? root.name : root.icon
         color: Theme.color("onSurface")
 
         font.family: symbolsLoader.status === FontLoader.Ready ? symbolsLoader.name : "Material Symbols Outlined"
         font.pixelSize: root.size
+        // Ligature-name glyph selection (used when \l name is set).
+        font.features: ({ "liga": 1 })
         // Variable-font axes (Qt 6.7+): one file, every FILL/weight/optical-size variant.
         font.variableAxes: ({
             "FILL": root.fill ? 1 : 0,

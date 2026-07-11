@@ -10,8 +10,10 @@
 
 #include <QDateTime>
 #include <QDir>
+#include <QFile>
 #include <QFileInfo>
 #include <QSaveFile>
+#include <QStandardPaths>
 
 #include <git2.h>
 
@@ -19,6 +21,32 @@
 
 namespace
 {
+    // libgit2 rejects paths beyond the classic Windows MAX_PATH unless
+    // core.longpaths=true is found in its config chain — and for repository
+    // INIT the per-repo config does not exist yet. Point the in-process
+    // "global" config search path at an app-managed .gitconfig that enables
+    // long paths. This never touches the user's real ~/.gitconfig.
+    void enableLongPathsOnce()
+    {
+        static bool done = false;
+        if (done)
+            return;
+        done = true;
+
+        const QString dir = QStandardPaths::writableLocation(QStandardPaths::AppLocalDataLocation)
+            + QStringLiteral("/git-runtime");
+        if (!QDir().mkpath(dir))
+            return;
+        QFile configFile {dir + QStringLiteral("/.gitconfig")};
+        if (configFile.open(QIODevice::WriteOnly | QIODevice::Truncate))
+        {
+            configFile.write("[core]\n\tlongpaths = true\n");
+            configFile.close();
+            const QByteArray encoded = QDir::toNativeSeparators(dir).toUtf8();
+            git_libgit2_opts(GIT_OPT_SET_SEARCH_PATH, GIT_CONFIG_LEVEL_GLOBAL, encoded.constData());
+        }
+    }
+
     QString gitErrorText(const QString &fallback)
     {
         if (const git_error *error = git_error_last(); error && error->message)
@@ -118,6 +146,7 @@ namespace Git
         , m_signatureEmail {signatureEmail.toUtf8()}
     {
         git_libgit2_init();
+        enableLongPathsOnce();
     }
 
     GitRepositoryStore::~GitRepositoryStore()
@@ -150,12 +179,38 @@ namespace Git
         }
 
         // A directory whose .git is unusable (or a plain directory blocking a
-        // fresh init) is moved aside so no user data is ever destroyed.
+        // fresh init) is moved aside so no user data is ever destroyed. But an
+        // OPEN failure can also be environmental (permissions, path limits) —
+        // prove a fresh init works at a sibling probe path before displacing
+        // anything.
         const QFileInfo gitDirectory {QDir(m_rootPath).filePath(QStringLiteral(".git"))};
         if (gitDirectory.exists())
         {
             const QString timestamp = QDateTime::currentDateTimeUtc()
                 .toString(QStringLiteral("yyyyMMdd-hhmmss"));
+
+            const QString probePath = m_rootPath + QStringLiteral("-probe-") + timestamp;
+            {
+                git_repository_init_options probeOptions = GIT_REPOSITORY_INIT_OPTIONS_INIT;
+                probeOptions.flags = GIT_REPOSITORY_INIT_MKPATH;
+                probeOptions.initial_head = "main";
+                git_repository *probe = nullptr;
+                const QByteArray encodedProbe = QDir::fromNativeSeparators(probePath).toUtf8();
+                const int probeResult =
+                    git_repository_init_ext(&probe, encodedProbe.constData(), &probeOptions);
+                git_repository_free(probe);
+                QDir(probePath).removeRecursively();
+                if (probeResult != 0)
+                {
+                    // The environment can't host a repository here at all;
+                    // leave the existing (possibly healthy) one untouched.
+                    setError(error, QStringLiteral(
+                        "Could not open the local Git repository at %1")
+                        .arg(QDir::toNativeSeparators(m_rootPath)));
+                    return false;
+                }
+            }
+
             const QString recovery = m_rootPath + QStringLiteral("-recovery-") + timestamp;
             if (!QDir().rename(m_rootPath, recovery))
             {

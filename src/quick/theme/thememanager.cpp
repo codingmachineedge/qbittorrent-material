@@ -27,12 +27,33 @@ namespace
 {
     const QString kColorSchemeKey = u"Appearance/ColorScheme"_s;
     const QString kTrayIconStyleKey = u"Appearance/TrayIconStyle"_s;
+    const QString kUiStyleKey = u"Appearance/UiStyle"_s;
 
     QColor parseColor(const QString &hex)
     {
         const QColor c(hex);
         return c;
     }
+
+    QColor withAlpha(const QColor &base, const qreal alpha)
+    {
+        QColor c = base;
+        c.setAlphaF(alpha);
+        return c;
+    }
+
+    // One UI style's 13 Material Redesign palette roles (per scheme).
+    struct StylePalette
+    {
+        QString bg, surf, sc, sc2, on, onv, ol, olv, pr, onPr, pc, onPc;
+        QColor shadow;
+    };
+
+    // Status colors shared by all styles (per scheme) — the design's ST table.
+    struct StatusPalette
+    {
+        QString success, error, warning, done, muted, info;
+    };
 }
 
 ThemeManager *ThemeManager::m_instance = nullptr;
@@ -42,9 +63,6 @@ ThemeManager::ThemeManager(QObject *parent)
 {
     qCDebug(lcTheme) << "ThemeManager constructing";
 
-    buildPalette();
-    buildNamedIdMap();
-
     // Restore persisted user choices (legacy setting keys preserved verbatim).
     auto *prefs = Preferences::instance();
     if (prefs)
@@ -53,7 +71,14 @@ ThemeManager::ThemeManager(QObject *parent)
             prefs->value(kColorSchemeKey, static_cast<int>(System)).toInt());
         m_trayIconStyle = static_cast<TrayIconStyle>(
             prefs->value(kTrayIconStyleKey, static_cast<int>(Normal)).toInt());
+        const QString style = prefs->value(kUiStyleKey, u"TonalRail"_s).toString();
+        m_uiStyle = (style == u"SplitDock"_s) ? SplitDock
+            : (style == u"CardFlow"_s) ? CardFlow : TonalRail;
     }
+
+    buildPalette();
+    buildStylePalette();
+    buildNamedIdMap();
     qCInfo(lcTheme) << "ThemeManager initialized; colorScheme=" << m_colorScheme
                     << "trayIconStyle=" << m_trayIconStyle << "isDark=" << isDark();
 
@@ -119,6 +144,52 @@ void ThemeManager::setTrayIconStyle(TrayIconStyle value)
         prefs->apply();
     }
     emit trayIconStyleChanged();
+}
+
+ThemeManager::UiStyle ThemeManager::uiStyle() const
+{
+    return m_uiStyle;
+}
+
+void ThemeManager::setUiStyle(const UiStyle value)
+{
+    if (m_uiStyle == value)
+        return;
+
+    qCInfo(lcTheme) << "UI style changed" << m_uiStyle << "->" << value;
+    m_uiStyle = value;
+    buildStylePalette();
+
+    if (auto *prefs = Preferences::instance())
+    {
+        const QString name = (value == SplitDock) ? u"SplitDock"_s
+            : (value == CardFlow) ? u"CardFlow"_s : u"TonalRail"_s;
+        prefs->setValue(kUiStyleKey, name);
+        prefs->apply();
+    }
+    emit themeChanged();
+}
+
+QString ThemeManager::styleName() const
+{
+    switch (m_uiStyle)
+    {
+    case SplitDock: return u"Split Dock"_s;
+    case CardFlow: return u"Card Flow"_s;
+    case TonalRail:
+    default: return u"Tonal Rail"_s;
+    }
+}
+
+QString ThemeManager::styleLetter() const
+{
+    switch (m_uiStyle)
+    {
+    case SplitDock: return u"B"_s;
+    case CardFlow: return u"C"_s;
+    case TonalRail:
+    default: return u"A"_s;
+    }
 }
 
 bool ThemeManager::isDark() const
@@ -321,7 +392,145 @@ void ThemeManager::buildPalette()
     put(u"severe"_s, u"#f9ab00"_s, u"#fdd663"_s); // == warning
     put(u"onSevere"_s, u"#202124"_s, u"#202124"_s);
 
-    qCDebug(lcTheme) << "Palette built:" << m_lightPalette.size() << "roles";
+    qCDebug(lcTheme) << "Legacy palette built:" << m_lightPalette.size() << "roles";
+}
+
+void ThemeManager::buildStylePalette()
+{
+    // ---- Material Redesign palettes -----------------------------------------
+    // Verbatim from the design handoff (design/incoming/2026-07-11-claude,
+    // PAL/ST tables): one M3 palette per UI style, plus a shared status set.
+    // Overwrites the legacy roles built above so every existing Theme.color()
+    // consumer restyles automatically.
+    static const StylePalette styleLight[3] = {
+        // A — Tonal Rail (purple)
+        {u"#fbfaff"_s, u"#ffffff"_s, u"#f1eff9"_s, u"#e6e2f1"_s, u"#1b1b21"_s, u"#47464f"_s,
+         u"#c7c5d4"_s, u"#e2e0ec"_s, u"#5646d6"_s, u"#ffffff"_s, u"#e3dfff"_s, u"#17106b"_s,
+         QColor(27, 27, 33, 41)},
+        // B — Split Dock (teal)
+        {u"#f4f9f9"_s, u"#ffffff"_s, u"#e9efef"_s, u"#dee7e7"_s, u"#161d1d"_s, u"#3f4948"_s,
+         u"#bec8c8"_s, u"#dbe4e4"_s, u"#00696d"_s, u"#ffffff"_s, u"#9cf0f5"_s, u"#002021"_s,
+         QColor(22, 29, 29, 41)},
+        // C — Card Flow (pink)
+        {u"#fff8f8"_s, u"#ffffff"_s, u"#f8eef0"_s, u"#f0e2e6"_s, u"#22191c"_s, u"#514347"_s,
+         u"#d6c2c6"_s, u"#ecdce0"_s, u"#8c4a60"_s, u"#ffffff"_s, u"#ffd9e2"_s, u"#3a071d"_s,
+         QColor(34, 25, 28, 41)}
+    };
+    static const StylePalette styleDark[3] = {
+        {u"#131318"_s, u"#1b1b21"_s, u"#23222b"_s, u"#2b2a35"_s, u"#e5e1ec"_s, u"#c7c5d4"_s,
+         u"#47464f"_s, u"#31303a"_s, u"#c4c0ff"_s, u"#2a2380"_s, u"#433caf"_s, u"#e3dfff"_s,
+         QColor(0, 0, 0, 140)},
+        {u"#0e1414"_s, u"#161d1d"_s, u"#1e2626"_s, u"#263030"_s, u"#dde4e3"_s, u"#bec8c8"_s,
+         u"#3f4948"_s, u"#2c3636"_s, u"#80d4d9"_s, u"#003739"_s, u"#005054"_s, u"#9cf0f5"_s,
+         QColor(0, 0, 0, 140)},
+        {u"#171114"_s, u"#211a1d"_s, u"#2b2225"_s, u"#352b2e"_s, u"#efdfe2"_s, u"#d6c2c6"_s,
+         u"#5d4f53"_s, u"#3a3033"_s, u"#ffb1c8"_s, u"#541d32"_s, u"#713349"_s, u"#ffd9e2"_s,
+         QColor(0, 0, 0, 140)}
+    };
+    static const StatusPalette statusLight
+        {u"#1a7f37"_s, u"#cf222e"_s, u"#9a6700"_s, u"#8250df"_s, u"#6e7781"_s, u"#0969da"_s};
+    static const StatusPalette statusDark
+        {u"#3fb950"_s, u"#f85149"_s, u"#d29922"_s, u"#a371f7"_s, u"#8b949e"_s, u"#58a6ff"_s};
+
+    const int style = static_cast<int>(m_uiStyle);
+    const auto fill = [](QHash<QString, QColor> &palette, const StylePalette &p,
+        const StatusPalette &st, const bool dark)
+    {
+        const auto put = [&palette](const QString &id, const QColor &color)
+        {
+            palette.insert(id, color);
+        };
+        const QColor pr = parseColor(p.pr);
+        const QColor on = parseColor(p.on);
+        const QColor success = parseColor(st.success);
+        const QColor error = parseColor(st.error);
+        const QColor warning = parseColor(st.warning);
+        const QColor done = parseColor(st.done);
+        const QColor info = parseColor(st.info);
+        const qreal container = dark ? 0.18 : 0.12;
+
+        // Primary family.
+        put(u"primary"_s, pr);
+        put(u"onPrimary"_s, parseColor(p.onPr));
+        put(u"primaryContainer"_s, parseColor(p.pc));
+        put(u"onPrimaryContainer"_s, parseColor(p.onPc));
+        put(u"primaryHover"_s, pr);
+        put(u"primaryPressed"_s, pr);
+        put(u"primaryEmphasis"_s, pr);
+
+        // Neutral secondary; tertiary carries the success family.
+        put(u"secondary"_s, parseColor(p.onv));
+        put(u"onSecondary"_s, parseColor(p.surf));
+        put(u"secondaryContainer"_s, parseColor(p.sc));
+        put(u"onSecondaryContainer"_s, parseColor(p.onv));
+        put(u"tertiary"_s, success);
+        put(u"onTertiary"_s, QColor(Qt::white));
+        put(u"tertiaryContainer"_s, withAlpha(success, container));
+        put(u"onTertiaryContainer"_s, success);
+
+        // Surfaces / text.
+        put(u"surface"_s, parseColor(p.surf));
+        put(u"surfaceVariant"_s, parseColor(p.sc));
+        put(u"surfaceContainerHigh"_s, parseColor(p.sc2));
+        put(u"onSurface"_s, on);
+        put(u"onSurfaceVariant"_s, parseColor(p.onv));
+        put(u"secondaryText"_s, parseColor(p.onv));
+        put(u"background"_s, parseColor(p.bg));
+        put(u"onBackground"_s, on);
+
+        // Lines / focus / depth.
+        put(u"outline"_s, parseColor(p.ol));
+        put(u"outlineVariant"_s, parseColor(p.olv));
+        put(u"focusRing"_s, withAlpha(pr, dark ? 0.32 : 0.24));
+        put(u"scrim"_s, QColor(0, 0, 0, dark ? 153 : 89));
+        put(u"shadow"_s, p.shadow);
+
+        // Hover overlays (the design's hov8/hov6).
+        put(u"hoverStrong"_s, dark ? QColor(230, 225, 240, 26) : QColor(27, 27, 33, 20));
+        put(u"hover"_s, dark ? QColor(230, 225, 240, 18) : QColor(27, 27, 33, 15));
+
+        // Inverse (snackbar) surface.
+        put(u"inverseSurface"_s, dark ? parseColor(u"#e5e1ec"_s) : parseColor(u"#313036"_s));
+        put(u"inverseOnSurface"_s, dark ? parseColor(u"#1b1b21"_s) : parseColor(u"#f3eff4"_s));
+        put(u"inversePrimary"_s, dark ? parseColor(u"#5646d6"_s) : parseColor(p.pc));
+
+        // Status families (shared across styles).
+        put(u"error"_s, error);
+        put(u"onError"_s, QColor(Qt::white));
+        put(u"errorContainer"_s, withAlpha(error, dark ? 0.18 : 0.10));
+        put(u"onErrorContainer"_s, error);
+
+        put(u"success"_s, success);
+        put(u"onSuccess"_s, QColor(Qt::white));
+        put(u"successContainer"_s, withAlpha(success, container));
+        put(u"onSuccessContainer"_s, success);
+        put(u"successEmphasis"_s, success);
+        put(u"onSuccessEmphasis"_s, QColor(Qt::white));
+
+        put(u"warning"_s, warning);
+        put(u"onWarning"_s, QColor(Qt::white));
+        put(u"warningContainer"_s, withAlpha(warning, container));
+        put(u"onWarningContainer"_s, warning);
+
+        put(u"done"_s, done);
+        put(u"onDone"_s, QColor(Qt::white));
+        put(u"doneContainer"_s, withAlpha(done, container));
+        put(u"onDoneContainer"_s, done);
+
+        put(u"info"_s, info);
+        put(u"onInfo"_s, QColor(Qt::white));
+
+        put(u"muted"_s, parseColor(p.onv));
+        put(u"stateStopped"_s, parseColor(st.muted));
+        put(u"severe"_s, warning);
+        put(u"onSevere"_s, QColor(Qt::white));
+    };
+
+    fill(m_lightPalette, styleLight[style], statusLight, false);
+    fill(m_darkPalette, styleDark[style], statusDark, true);
+
+    qCDebug(lcTheme) << "Style palette built for style" << m_uiStyle << ":"
+        << m_lightPalette.size() << "roles";
 }
 
 void ThemeManager::buildNamedIdMap()
@@ -356,7 +565,7 @@ void ThemeManager::buildNamedIdMap()
     m_namedIdMap.insert(u"QueuedUploading"_s, u"warning"_s);
     m_namedIdMap.insert(u"CheckingUploading"_s, u"success"_s);
     m_namedIdMap.insert(u"CheckingDownloading"_s, u"success"_s);
-    m_namedIdMap.insert(u"StoppedDownloading"_s, u"muted"_s);
+    m_namedIdMap.insert(u"StoppedDownloading"_s, u"stateStopped"_s);
     m_namedIdMap.insert(u"StoppedUploading"_s, u"done"_s);
     m_namedIdMap.insert(u"Moving"_s, u"success"_s);
     m_namedIdMap.insert(u"MissingFiles"_s, u"error"_s);

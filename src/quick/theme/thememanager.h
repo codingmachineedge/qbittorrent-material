@@ -43,6 +43,9 @@ class ThemeManager final : public QObject
     Q_PROPERTY(ColorScheme colorScheme READ colorScheme WRITE setColorScheme NOTIFY themeChanged)
     Q_PROPERTY(TrayIconStyle trayIconStyle READ trayIconStyle WRITE setTrayIconStyle NOTIFY trayIconStyleChanged)
     Q_PROPERTY(bool isDark READ isDark NOTIFY themeChanged)
+    Q_PROPERTY(UiStyle uiStyle READ uiStyle WRITE setUiStyle NOTIFY themeChanged)
+    Q_PROPERTY(QString styleName READ styleName NOTIFY themeChanged)
+    Q_PROPERTY(QString styleLetter READ styleLetter NOTIFY themeChanged)
 
 public:
     /// Preserved verbatim from legacy qBittorrent (setting `Appearance/ColorScheme`).
@@ -53,6 +56,16 @@ public:
         Dark = 2
     };
     Q_ENUM(ColorScheme)
+
+    /// The Material Redesign's three switchable UI directions
+    /// (setting `Appearance/UiStyle`; each carries its own M3 palette).
+    enum UiStyle
+    {
+        TonalRail = 0, // "A" — nav rail + chips, comfortable rows (purple)
+        SplitDock = 1, // "B" — classic sidebar, dense table, dock (teal)
+        CardFlow = 2   // "C" — cards + persistent detail panel (pink)
+    };
+    Q_ENUM(UiStyle)
 
     /// Preserved verbatim from legacy qBittorrent (setting `Appearance/TrayIconStyle`).
     enum TrayIconStyle
@@ -72,6 +85,13 @@ public:
 
     TrayIconStyle trayIconStyle() const;
     void setTrayIconStyle(TrayIconStyle value);
+
+    UiStyle uiStyle() const;
+    void setUiStyle(UiStyle value);
+    /// Human name of the active style ("Tonal Rail" / "Split Dock" / "Card Flow").
+    QString styleName() const;
+    /// Short key of the active style ("A" / "B" / "C").
+    QString styleLetter() const;
 
     /// True when the effective scheme (resolving `System`) is dark.
     bool isDark() const;
@@ -101,6 +121,7 @@ private:
     explicit ThemeManager(QObject *parent = nullptr);
 
     void buildPalette();
+    void buildStylePalette();
     void buildNamedIdMap();
     void onSystemColorSchemeChanged();
 
@@ -108,9 +129,10 @@ private:
 
     ColorScheme m_colorScheme = System;
     TrayIconStyle m_trayIconStyle = Normal;
+    UiStyle m_uiStyle = TonalRail;
 
-    QHash<QString, QColor> m_lightPalette;   ///< role/id -> light color
-    QHash<QString, QColor> m_darkPalette;    ///< role/id -> dark color
+    QHash<QString, QColor> m_lightPalette;   ///< role/id -> light color (active style)
+    QHash<QString, QColor> m_darkPalette;    ///< role/id -> dark color (active style)
     QHash<QString, QString> m_namedIdMap;    ///< named id -> role (or another named id)
 
     QHash<QString, QColor> m_lightOverrides; ///< config.json "colors"

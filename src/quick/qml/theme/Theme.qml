@@ -47,6 +47,22 @@ QtObject {
     //! Material.theme value for the current scheme.
     readonly property int materialTheme: isDark ? Material.Dark : Material.Light
 
+    // ---- UI style (Material Redesign: Tonal Rail / Split Dock / Card Flow) ----
+
+    //! Active UI style as a ThemeManager.UiStyle value (0=A, 1=B, 2=C).
+    readonly property int uiStyle: ThemeManager.uiStyle
+
+    //! Human name of the active style ("Tonal Rail" / "Split Dock" / "Card Flow").
+    readonly property string styleName: ThemeManager.styleName
+
+    //! Short style key: "A", "B" or "C".
+    readonly property string styleLetter: ThemeManager.styleLetter
+
+    //! Convenience flags for per-style layout branches.
+    readonly property bool isTonalRail: uiStyle === 0
+    readonly property bool isSplitDock: uiStyle === 1
+    readonly property bool isCardFlow: uiStyle === 2
+
     // ---- Resolution -----------------------------------------------------------
 
     /*!

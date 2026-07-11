@@ -134,7 +134,38 @@ void TorrentJournal::initializeRepositories()
 
     m_available = ok && settingsOk;
     if (m_available)
+    {
         writeStaticFiles();
+
+        // First run: capture the complete preference state as the settings
+        // repo's root commit (the design's "init: preferences snapshot").
+        if (m_settingsStore->headCommitId().isEmpty())
+        {
+            QJsonObject snapshot;
+            const QStringList keys = SettingsStorage::instance()->allKeys();
+            for (const QString &key : keys)
+            {
+                snapshot[key] = jsonValueForVariant(
+                    SettingsStorage::instance()->loadValue<QVariant>(key));
+            }
+            QString error;
+            if (!Git::GitRepositoryStore::writeFileAtomically(
+                    QDir(m_settingsStore->rootPath()).filePath(u"settings.json"_s),
+                    QJsonDocument(snapshot).toJson(QJsonDocument::Indented), &error))
+            {
+                qCWarning(lcApp) << "Settings journal initial snapshot write failed:" << error;
+            }
+            else
+            {
+                bool committed = false;
+                const QString message = encodeCommitMessage(
+                    u"init: preferences snapshot (%1 keys)"_s.arg(keys.size()),
+                    {}, JournalOrigin::Snapshot);
+                if (!m_settingsStore->commitAll(message, nullptr, &committed, &error))
+                    qCWarning(lcApp) << "Settings journal initial snapshot failed:" << error;
+            }
+        }
+    }
 }
 
 void TorrentJournal::writeStaticFiles()
