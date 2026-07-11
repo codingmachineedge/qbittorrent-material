@@ -271,6 +271,28 @@ int Application::run()
 
     connect(this, &QCoreApplication::aboutToQuit, this, &Application::cleanup);
 
+    // Cold-start torrent/magnet argument: when the OS launches us for a
+    // double-clicked .torrent or a magnet: link (file associations registered
+    // by the installer), the source arrives as argv[1] on THIS (primary)
+    // process — the single-instance handoff only covers later launches. Add it
+    // once the session has settled. Skipped in capture mode.
+    if (captureOutput.isEmpty())
+    {
+        const QStringList args = QCoreApplication::arguments();
+        for (qsizetype i = 1; i < args.size(); ++i)
+        {
+            const QString &arg = args.at(i);
+            if (arg.startsWith(u"--"_s))
+                continue;
+            QTimer::singleShot(0, this, [this, arg]
+            {
+                if (m_appController)
+                    m_appController->handleActivationRequest(arg);
+            });
+            break;
+        }
+    }
+
     qCInfo(lcApp) << "Entering Qt event loop";
     const int rc = QApplication::exec();
     qCInfo(lcApp) << "Qt event loop exited with code" << rc;

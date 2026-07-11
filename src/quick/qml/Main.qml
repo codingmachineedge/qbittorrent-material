@@ -884,7 +884,10 @@ ApplicationWindow {
         }
         function onAddTorrentRequested(source) {
             Log.info("ui", "Add-torrent requested from source")
-            AppController.addTorrentFromSource(source)
+            // Route to the add manager, which presents the Add dialog (or adds
+            // silently per prefs). Calling AppController.addTorrentFromSource
+            // here would re-emit this same signal — an infinite loop.
+            GuiAddTorrentManager.addTorrent(source)
         }
         function onUpdateCheckFinished(available, latestVersion) {
             Log.info("ui", "Update check finished; available=" + available)

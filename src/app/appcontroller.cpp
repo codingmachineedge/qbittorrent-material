@@ -51,6 +51,12 @@ namespace
         if (t.startsWith(u"http://", Qt::CaseInsensitive)
             || t.startsWith(u"https://", Qt::CaseInsensitive))
             return true;
+        // A local .torrent file (as passed by the OS on double-click / file
+        // association) — accept both a plain path and a file:// URL.
+        if (t.startsWith(u"file:", Qt::CaseInsensitive))
+            return true;
+        if (t.endsWith(u".torrent", Qt::CaseInsensitive) && QFileInfo::exists(t))
+            return true;
         // Bare v1 (40 hex) or v2 (64 hex) info-hash.
         static const QRegularExpression hashRe(u"^[0-9A-Fa-f]{40}$|^[0-9A-Fa-f]{64}$"_qs);
         return hashRe.match(t).hasMatch();
