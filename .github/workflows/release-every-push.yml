@@ -102,7 +102,8 @@ jobs:
             throw "Qt platform plugin is missing: $platformPlugin"
           }
 
-          $gitExecutable = (Get-Command git.exe -CommandType Application -ErrorAction Stop).Source
+          $gitExecutable = (Get-Command git.exe -CommandType Application -ErrorAction Stop `
+            | Select-Object -First 1).Source
           $originalPath = $env:PATH
           $env:PATH = (@($originalPath -split ";" | Where-Object {
             $segment = $_.Trim()
