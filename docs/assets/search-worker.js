@@ -124,16 +124,24 @@ function runPreview(message) {
     matches.push({
       index: match.index,
       text: match[0],
-      groups: match.slice(1)
+      groups: match.slice(1),
+      namedGroups: match.groups ? Object.assign({}, match.groups) : null
     });
     if (match[0] === "") regex.lastIndex++;
   }
-  return {
+  var result = {
     type: "preview",
     matches: matches,
     sampleLength: sample.length,
     truncated: String(message.sample || "").length > sample.length
   };
+  // Optional substitution preview — run in this isolated worker so a
+  // pathological replace can never block the page.
+  if (typeof message.replacement === "string" && message.replacement.length) {
+    regex.lastIndex = 0;
+    result.replaced = sample.replace(regex, message.replacement).slice(0, MAX_SAMPLE_LENGTH);
+  }
+  return result;
 }
 
 self.addEventListener("message", function (event) {

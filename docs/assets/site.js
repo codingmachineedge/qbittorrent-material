@@ -6,7 +6,8 @@
   var STORAGE = {
     theme: "qbt-material-theme-v1",
     imported: "qbt-material-imported-docs-v1",
-    search: "qbt-material-search-state-v1"
+    search: "qbt-material-search-state-v1",
+    regexLibrary: "qbt-material-regex-library-v1"
   };
   var CATEGORY_ORDER = [
     "Overview", "Wiki", "Get started", "Interface", "Design",
@@ -976,6 +977,37 @@
       + (result.truncated ? " · sample truncated safely" : "") + "</span><code>"
       + (highlighted || "No matches in sample text") + "</code>"
       + (groups.length ? "<small>" + escapeHtml(groups.slice(0, 12).join(" | ")) + "</small>" : "");
+
+    // Compact match list with positions.
+    var listHost = byId("regex-match-list");
+    if (listHost) {
+      if (!matches.length) {
+        listHost.hidden = true;
+      } else {
+        listHost.hidden = false;
+        listHost.innerHTML = "<span>Matches</span>" + matches.slice(0, 30).map(function (item, i) {
+          var named = item.namedGroups && Object.keys(item.namedGroups).length
+            ? " · " + Object.keys(item.namedGroups).map(function (k) {
+                return k + "=" + (item.namedGroups[k] == null ? "∅" : item.namedGroups[k]);
+              }).join(", ")
+            : "";
+          return '<div class="regex-match-row"><b>' + (i + 1) + '</b><code>'
+            + escapeHtml(item.text || "∅") + '</code><small>@' + item.index + escapeHtml(named) + '</small></div>';
+        }).join("") + (matches.length > 30 ? '<div class="regex-match-row regex-match-row--more">+ '
+          + (matches.length - 30) + ' more</div>' : "");
+      }
+    }
+
+    // Replacement preview (only when a replacement string is set).
+    var replaceHost = byId("regex-replace-preview");
+    if (replaceHost) {
+      if (typeof result.replaced === "string") {
+        replaceHost.hidden = false;
+        replaceHost.querySelector("code").textContent = result.replaced || "(empty result)";
+      } else {
+        replaceHost.hidden = true;
+      }
+    }
   }
 
   function updateRegexPreview() {
@@ -987,11 +1019,21 @@
     var pattern = patternInput.value;
     var flags = flagsInput ? flagsInput.value : "gi";
     var sample = sampleInput ? sampleInput.value : "";
+    var replaceInput = byId("regex-replace");
+    var replacement = replaceInput ? replaceInput.value : "";
     var requestId = ++previewRequestId;
     stopPreviewWorker();
+
+    var explain = byId("regex-explain");
+    if (explain) explain.innerHTML = "<span>Explanation</span><p>" + escapeHtml(explainPattern(pattern)) + "</p>";
+
     if (!pattern) {
       preview.classList.remove("is-error");
       preview.innerHTML = "<span>Pattern preview</span><code>No pattern entered</code>";
+      var emptyList = byId("regex-match-list");
+      if (emptyList) emptyList.hidden = true;
+      var emptyReplace = byId("regex-replace-preview");
+      if (emptyReplace) emptyReplace.hidden = true;
       return;
     }
     try {
@@ -1053,7 +1095,8 @@
         pattern: pattern,
         flags: flags,
         caseSensitive: flags.indexOf("i") < 0,
-        sample: sample
+        sample: sample,
+        replacement: replacement
       });
     } catch (error) {
       clearTimeout(timeout);
@@ -1069,10 +1112,125 @@
     var start = input.selectionStart == null ? input.value.length : input.selectionStart;
     var end = input.selectionEnd == null ? input.value.length : input.selectionEnd;
     input.value = input.value.slice(0, start) + token + input.value.slice(end);
-    var caret = token === "(?:)" ? start + 3 : start + token.length;
+    // Drop the caret inside bracketed/lookaround tokens so the next keystroke
+    // types where you'd expect.
+    var inner = { "( )": 1, "(?: )": 3, "(?= )": 3, "(?! )": 3, "(?<= )": 4, "(?<name> )": 8, "[a-z]": 1, "[^ ]": 2, "{2,4}": 1 };
+    var caret = inner[token] != null ? start + inner[token] : start + token.length;
     input.focus();
     input.setSelectionRange(caret, caret);
     updateRegexPreview();
+  }
+
+  // ---- Regex builder: flags, explainer, and saved-pattern library ----------
+
+  var REGEX_FLAG_ORDER = ["g", "i", "m", "s", "u", "y"];
+
+  function getRegexFlags() {
+    var input = byId("regex-flags");
+    return input ? String(input.value || "") : "";
+  }
+
+  function setRegexFlags(value) {
+    var cleaned = REGEX_FLAG_ORDER.filter(function (flag) { return value.indexOf(flag) >= 0; }).join("");
+    var input = byId("regex-flags");
+    if (input) input.value = cleaned;
+    syncFlagChips();
+  }
+
+  function syncFlagChips() {
+    var flags = getRegexFlags();
+    var display = byId("regex-flags-display");
+    if (display) display.textContent = flags || "—";
+    document.querySelectorAll("[data-regex-flag]").forEach(function (chip) {
+      chip.classList.toggle("is-on", flags.indexOf(chip.getAttribute("data-regex-flag")) >= 0);
+    });
+  }
+
+  function toggleRegexFlag(flag) {
+    var flags = getRegexFlags();
+    setRegexFlags(flags.indexOf(flag) >= 0 ? flags.replace(flag, "") : flags + flag);
+    updateRegexPreview();
+  }
+
+  var REGEX_SAMPLES = {
+    version: "Version 5.3.0 shipped 2026-07-11. See v5.2.1, v5.3.0-rc.2, and build.14.423929a0.",
+    paths: "src/quick/qml/shell/AppHeader.qml\ndocs/wiki.html\nsrc/base/torrentjournal/torrentjournal.cpp\n/home/user/Downloads/ubuntu-24.04.2-desktop-amd64.iso",
+    dates: "2026-07-11, 11/07/2026, July 11 2026, 2026-01-31T14:32:00Z, and 07-04-1998.",
+    mixed: "The Material design system defines reusable color, typography, shape, and motion tokens across Transfers, Search, RSS, and the Workspace."
+  };
+
+  // Heuristic plain-English explanation of a regex. Deliberately shallow — it
+  // narrates the common tokens rather than fully parsing the grammar.
+  function explainPattern(pattern) {
+    if (!pattern) return "Type a pattern to see a plain-English explanation.";
+    var parts = [];
+    var rules = [
+      [/^\^/, "anchored to the start"],
+      [/\$$/, "anchored to the end"],
+      [/\(\?:/, "a non-capturing group"],
+      [/\(\?<[^>]+>/, "a named capture group"],
+      [/\(\?=/, "a positive lookahead"],
+      [/\(\?!/, "a negative lookahead"],
+      [/\(\?<=/, "a positive lookbehind"],
+      [/\(\?<!/, "a negative lookbehind"],
+      [/\((?!\?)/, "a capture group"],
+      [/\|/, "alternatives (or)"],
+      [/\\d/, "digits"],
+      [/\\w/, "word characters"],
+      [/\\s/, "whitespace"],
+      [/\\b/, "word boundaries"],
+      [/\[[^\]]*-[^\]]*\]/, "a character range"],
+      [/\{\d+,?\d*\}/, "a counted repetition"],
+      [/\*/, "zero or more of the preceding"],
+      [/\+/, "one or more of the preceding"],
+      [/\?/, "an optional part"],
+      [/\./, "any character"]
+    ];
+    rules.forEach(function (rule) {
+      if (rule[0].test(pattern) && parts.indexOf(rule[1]) < 0) parts.push(rule[1]);
+    });
+    if (!parts.length) return "Matches the literal text “" + pattern + "”.";
+    var flags = getRegexFlags();
+    var flagText = [];
+    if (flags.indexOf("i") >= 0) flagText.push("case-insensitively");
+    if (flags.indexOf("g") >= 0) flagText.push("every occurrence");
+    if (flags.indexOf("m") >= 0) flagText.push("across lines");
+    return "Matches " + parts.slice(0, 6).join(", ")
+      + (flagText.length ? " — " + flagText.join(", ") : "") + ".";
+  }
+
+  function loadRegexLibrary() {
+    var list = loadStored(STORAGE.regexLibrary, []);
+    return Array.isArray(list) ? list : [];
+  }
+
+  function renderRegexLibrary() {
+    var host = byId("regex-lib-list");
+    if (!host) return;
+    var list = loadRegexLibrary();
+    if (!list.length) {
+      host.innerHTML = '<span class="regex-lib-empty">No saved patterns yet.</span>';
+      return;
+    }
+    host.innerHTML = list.map(function (item, index) {
+      return '<span class="regex-lib-item"><button type="button" data-regex-load="' + index
+        + '" title="/' + escapeHtml(item.pattern) + '/' + escapeHtml(item.flags || "")
+        + '">' + escapeHtml(item.name) + '</button><button type="button" class="regex-lib-remove" data-regex-remove="'
+        + index + '" aria-label="Delete ' + escapeHtml(item.name) + '">×</button></span>';
+    }).join("");
+  }
+
+  function saveRegexToLibrary() {
+    var patternInput = byId("regex-pattern");
+    var nameInput = byId("regex-lib-name");
+    if (!patternInput || !patternInput.value) return showSnackbar("Enter a pattern before saving.");
+    var name = (nameInput && nameInput.value.trim()) || ("pattern " + (loadRegexLibrary().length + 1));
+    var list = loadRegexLibrary().filter(function (item) { return item.name !== name; });
+    list.unshift({ name: name.slice(0, 60), pattern: patternInput.value.slice(0, 320), flags: getRegexFlags() });
+    saveStored(STORAGE.regexLibrary, list.slice(0, 40));
+    if (nameInput) nameInput.value = "";
+    renderRegexLibrary();
+    showSnackbar("Saved “" + name + "”.");
   }
 
   function downloadJson(filename, value) {
@@ -1307,6 +1465,30 @@
       }
       var token = event.target.closest("[data-regex-token]");
       if (token) insertRegexToken(token.getAttribute("data-regex-token"));
+      var flag = event.target.closest("[data-regex-flag]");
+      if (flag) toggleRegexFlag(flag.getAttribute("data-regex-flag"));
+      var samplePreset = event.target.closest("[data-regex-sample]");
+      if (samplePreset) {
+        var sampleBox = byId("regex-sample");
+        var key = samplePreset.getAttribute("data-regex-sample");
+        if (sampleBox && REGEX_SAMPLES[key]) { sampleBox.value = REGEX_SAMPLES[key]; updateRegexPreview(); }
+      }
+      var libLoad = event.target.closest("[data-regex-load]");
+      if (libLoad) {
+        var loaded = loadRegexLibrary()[Number(libLoad.getAttribute("data-regex-load"))];
+        if (loaded) {
+          if (byId("regex-pattern")) byId("regex-pattern").value = loaded.pattern;
+          setRegexFlags(loaded.flags || "gi");
+          updateRegexPreview();
+        }
+      }
+      var libRemove = event.target.closest("[data-regex-remove]");
+      if (libRemove) {
+        var libList = loadRegexLibrary();
+        libList.splice(Number(libRemove.getAttribute("data-regex-remove")), 1);
+        saveStored(STORAGE.regexLibrary, libList);
+        renderRegexLibrary();
+      }
       var removeImport = event.target.closest("[data-remove-import]");
       if (removeImport) {
         state.imported.splice(Number(removeImport.getAttribute("data-remove-import")), 1);
@@ -1400,19 +1582,33 @@
       if (flags) {
         var effectiveFlags = state.regexFlags.replace(/i/g, "");
         if (!state.caseSensitive) effectiveFlags += "i";
-        flags.value = Array.from(new Set(effectiveFlags.split(""))).join("");
+        setRegexFlags(Array.from(new Set(effectiveFlags.split(""))).join(""));
       }
+      renderRegexLibrary();
       updateRegexPreview();
       showDialog(regexDialog);
     });
-    ["regex-pattern", "regex-flags", "regex-sample"].forEach(function (id) {
+    ["regex-pattern", "regex-sample", "regex-replace"].forEach(function (id) {
       var input = byId(id);
       if (input) input.addEventListener("input", updateRegexPreview);
+    });
+    var regexLibSave = byId("regex-lib-save");
+    if (regexLibSave) regexLibSave.addEventListener("click", saveRegexToLibrary);
+    var regexCopy = byId("regex-copy");
+    if (regexCopy) regexCopy.addEventListener("click", function () {
+      var pattern = byId("regex-pattern") ? byId("regex-pattern").value : "";
+      if (!pattern) return showSnackbar("Enter a pattern to copy.");
+      var text = "/" + pattern + "/" + getRegexFlags();
+      if (navigator.clipboard && navigator.clipboard.writeText) {
+        navigator.clipboard.writeText(text).then(function () { showSnackbar("Copied " + text); },
+          function () { showSnackbar("Copy blocked by the browser."); });
+      } else showSnackbar("Clipboard is unavailable in this browser.");
     });
     var clearRegex = byId("regex-clear");
     if (clearRegex) clearRegex.addEventListener("click", function () {
       if (byId("regex-pattern")) byId("regex-pattern").value = "";
-      if (byId("regex-flags")) byId("regex-flags").value = "gi";
+      if (byId("regex-replace")) byId("regex-replace").value = "";
+      setRegexFlags("gi");
       updateRegexPreview();
     });
     var applyRegex = byId("regex-apply");
@@ -1457,7 +1653,7 @@
         if (!value || typeof value.pattern !== "string") return showSnackbar("That file is not a regex profile.");
         if (value.pattern.length > 320) return showSnackbar("Regex patterns are limited to 320 characters.");
         if (byId("regex-pattern")) byId("regex-pattern").value = value.pattern;
-        if (byId("regex-flags")) byId("regex-flags").value = String(value.flags || "gi").replace(/[^gimsu]/g, "");
+        setRegexFlags(String(value.flags || "gi"));
         if (byId("regex-sample") && typeof value.sample === "string") byId("regex-sample").value = value.sample.slice(0, 200000);
         updateRegexPreview();
       });

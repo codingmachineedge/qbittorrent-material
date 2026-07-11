@@ -161,17 +161,92 @@
     </form>
   </dialog>
 
-  <dialog class="builder-dialog" id="regex-dialog" aria-labelledby="regex-dialog-title">
+  <dialog class="builder-dialog builder-dialog--wide" id="regex-dialog" aria-labelledby="regex-dialog-title">
     <form method="dialog">
-      <header><div><span class="dialog-icon"><svg aria-hidden="true" viewBox="0 0 24 24"><path d="m4 16 4-8 4 8m-6-3h4M15 8v8m0-4h5"/></svg></span><span><strong id="regex-dialog-title">Regex search builder</strong><small>Build, test, import, and export a precise pattern</small></span></div><button class="icon-button" value="cancel" aria-label="Close regex builder"><svg aria-hidden="true" viewBox="0 0 24 24"><path d="M6 6l12 12M18 6 6 18"/></svg></button></header>
+      <header><div><span class="dialog-icon"><svg aria-hidden="true" viewBox="0 0 24 24"><path d="m4 16 4-8 4 8m-6-3h4M15 8v8m0-4h5"/></svg></span><span><strong id="regex-dialog-title">Regex builder</strong><small>Build, explain, test, replace, and save a precise pattern</small></span></div><button class="icon-button" value="cancel" aria-label="Close regex builder"><svg aria-hidden="true" viewBox="0 0 24 24"><path d="M6 6l12 12M18 6 6 18"/></svg></button></header>
       <div class="dialog-body regex-builder">
-        <label class="outlined-field regex-pattern-field"><span>Regular expression</span><span class="regex-slash">/</span><input id="regex-pattern" type="text" spellcheck="false" autocomplete="off" placeholder="(?:material|design)\\s+system"><span class="regex-slash">/</span><input id="regex-flags" class="regex-flags" type="text" value="gi" maxlength="6" aria-label="Regular expression flags"></label>
-        <div class="regex-tokens" aria-label="Pattern building blocks"><button type="button" data-regex-token=".">Any character</button><button type="button" data-regex-token="\\w+">Word</button><button type="button" data-regex-token="\\d+">Number</button><button type="button" data-regex-token="\\s+">Whitespace</button><button type="button" data-regex-token="^">Starts with</button><button type="button" data-regex-token="$">Ends with</button><button type="button" data-regex-token="(?:)">Group</button><button type="button" data-regex-token="|">Or</button><button type="button" data-regex-token=".*?">Anything</button><button type="button" data-regex-token="[A-Z]">Range</button></div>
-        <label class="outlined-field outlined-field--area"><span>Test text</span><textarea id="regex-sample" rows="5" placeholder="Paste sample documentation text here to test the expression…">The Material design system defines reusable color, typography, shape, and motion tokens.</textarea></label>
+        <label class="outlined-field regex-pattern-field"><span>Regular expression</span><span class="regex-slash">/</span><input id="regex-pattern" type="text" spellcheck="false" autocomplete="off" placeholder="(?:material|design)\\s+system"><span class="regex-slash">/</span><span class="regex-flags-display" id="regex-flags-display" aria-hidden="true">gi</span><input id="regex-flags" type="hidden" value="gi"></label>
+
+        <div class="regex-flags-row" aria-label="Flags">
+          <span class="regex-group-label">Flags</span>
+          <button type="button" class="regex-flag is-on" data-regex-flag="g" title="global — find every match, not just the first">g <small>global</small></button>
+          <button type="button" class="regex-flag is-on" data-regex-flag="i" title="ignore case">i <small>ignore case</small></button>
+          <button type="button" class="regex-flag" data-regex-flag="m" title="multiline — ^ and $ match line boundaries">m <small>multiline</small></button>
+          <button type="button" class="regex-flag" data-regex-flag="s" title="dotAll — . also matches newlines">s <small>dotall</small></button>
+          <button type="button" class="regex-flag" data-regex-flag="u" title="unicode">u <small>unicode</small></button>
+          <button type="button" class="regex-flag" data-regex-flag="y" title="sticky — match from lastIndex only">y <small>sticky</small></button>
+        </div>
+
+        <div class="regex-explain" id="regex-explain" aria-live="polite"><span>Explanation</span><p>Type a pattern to see a plain-English explanation.</p></div>
+
+        <div class="regex-token-groups" aria-label="Pattern building blocks">
+          <div class="regex-token-group"><span class="regex-group-label">Character classes</span>
+            <button type="button" data-regex-token="." title="any character except newline">.</button>
+            <button type="button" data-regex-token="\\d" title="digit 0-9">\\d</button>
+            <button type="button" data-regex-token="\\w" title="word character">\\w</button>
+            <button type="button" data-regex-token="\\s" title="whitespace">\\s</button>
+            <button type="button" data-regex-token="\\D" title="non-digit">\\D</button>
+            <button type="button" data-regex-token="\\W" title="non-word">\\W</button>
+            <button type="button" data-regex-token="[a-z]" title="character range">[a-z]</button>
+            <button type="button" data-regex-token="[^ ]" title="negated set">[^ ]</button>
+          </div>
+          <div class="regex-token-group"><span class="regex-group-label">Anchors</span>
+            <button type="button" data-regex-token="^" title="start of string / line">^</button>
+            <button type="button" data-regex-token="$" title="end of string / line">$</button>
+            <button type="button" data-regex-token="\\b" title="word boundary">\\b</button>
+            <button type="button" data-regex-token="\\B" title="non-boundary">\\B</button>
+          </div>
+          <div class="regex-token-group"><span class="regex-group-label">Quantifiers</span>
+            <button type="button" data-regex-token="*" title="0 or more">*</button>
+            <button type="button" data-regex-token="+" title="1 or more">+</button>
+            <button type="button" data-regex-token="?" title="optional">?</button>
+            <button type="button" data-regex-token="{2,4}" title="between 2 and 4">{2,4}</button>
+            <button type="button" data-regex-token="*?" title="lazy 0 or more">*?</button>
+          </div>
+          <div class="regex-token-group"><span class="regex-group-label">Groups &amp; lookaround</span>
+            <button type="button" data-regex-token="( )" title="capturing group">( )</button>
+            <button type="button" data-regex-token="(?: )" title="non-capturing group">(?: )</button>
+            <button type="button" data-regex-token="(?&lt;name&gt; )" title="named group">(?&lt;n&gt; )</button>
+            <button type="button" data-regex-token="|" title="alternation (or)">|</button>
+            <button type="button" data-regex-token="(?= )" title="positive lookahead">(?= )</button>
+            <button type="button" data-regex-token="(?! )" title="negative lookahead">(?! )</button>
+            <button type="button" data-regex-token="(?&lt;= )" title="positive lookbehind">(?&lt;= )</button>
+          </div>
+          <div class="regex-token-group"><span class="regex-group-label">Escapes</span>
+            <button type="button" data-regex-token="\\." title="literal dot">\\.</button>
+            <button type="button" data-regex-token="\\/" title="literal slash">\\/</button>
+            <button type="button" data-regex-token="\\t" title="tab">\\t</button>
+            <button type="button" data-regex-token="\\n" title="newline">\\n</button>
+          </div>
+        </div>
+
+        <label class="outlined-field outlined-field--area"><span>Test text</span><textarea id="regex-sample" rows="5" placeholder="Paste sample text here to test the expression…">The Material design system defines reusable color, typography, shape, and motion tokens. Version 5.3.0 shipped 2026-07-11.</textarea></label>
+        <div class="regex-sample-presets" aria-label="Sample presets">
+          <span class="regex-group-label">Samples</span>
+          <button type="button" data-regex-sample="version">Versions</button>
+          <button type="button" data-regex-sample="paths">File paths</button>
+          <button type="button" data-regex-sample="dates">Dates</button>
+          <button type="button" data-regex-sample="mixed">Mixed prose</button>
+        </div>
+
         <div class="regex-preview" id="regex-preview" role="status" aria-live="polite"><span>Pattern preview</span><code>No pattern entered</code></div>
-        <div class="regex-builder__io"><button class="button button--text" id="regex-import" type="button"><svg aria-hidden="true" viewBox="0 0 24 24"><path d="M12 21V9m0 12-4-4m4 4 4-4M5 3h14v5"/></svg>Import pattern</button><button class="button button--text" id="regex-export" type="button"><svg aria-hidden="true" viewBox="0 0 24 24"><path d="M12 3v12m0-12 4 4m-4-4L8 7M5 21h14v-5"/></svg>Export pattern</button></div>
+        <div class="regex-match-list" id="regex-match-list" hidden></div>
+
+        <label class="outlined-field regex-replace-field"><span>Replace with (optional)</span><input id="regex-replace" type="text" spellcheck="false" autocomplete="off" placeholder="$1 — use $1, $2 or $&lt;name&gt; for captures"></label>
+        <div class="regex-replace-preview" id="regex-replace-preview" hidden><span>Replacement result</span><code></code></div>
+
+        <div class="regex-library">
+          <span class="regex-group-label">Saved patterns</span>
+          <div class="regex-lib-list" id="regex-lib-list" aria-live="polite"></div>
+          <div class="regex-lib-add">
+            <input id="regex-lib-name" type="text" placeholder="name this pattern" autocomplete="off" aria-label="Pattern name">
+            <button class="button button--tonal" id="regex-lib-save" type="button"><svg aria-hidden="true" viewBox="0 0 24 24"><path d="M12 3v12m0-12 4 4m-4-4L8 7M5 21h14v-5"/></svg>Save</button>
+          </div>
+        </div>
+
+        <div class="regex-builder__io"><button class="button button--text" id="regex-copy" type="button"><svg aria-hidden="true" viewBox="0 0 24 24"><path d="M9 9h10v10H9zM5 15V5h10"/></svg>Copy /pattern/flags</button><button class="button button--text" id="regex-import" type="button"><svg aria-hidden="true" viewBox="0 0 24 24"><path d="M12 21V9m0 12-4-4m4 4 4-4M5 3h14v5"/></svg>Import</button><button class="button button--text" id="regex-export" type="button"><svg aria-hidden="true" viewBox="0 0 24 24"><path d="M12 3v12m0-12 4 4m-4-4L8 7M5 21h14v-5"/></svg>Export</button></div>
       </div>
-      <footer><button class="button button--text" id="regex-clear" type="button">Reset</button><span></span><button class="button button--text" value="cancel">Cancel</button><button class="button button--filled" id="regex-apply" value="apply">Use expression</button></footer>
+      <footer><button class="button button--text" id="regex-clear" type="button">Reset</button><span></span><button class="button button--text" value="cancel">Cancel</button><button class="button button--filled" id="regex-apply" value="apply">Use in search</button></footer>
     </form>
   </dialog>
 

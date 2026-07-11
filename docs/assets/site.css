@@ -570,7 +570,49 @@
   .regex-preview code { overflow-wrap: anywhere; font-size: .74rem; }
   .regex-preview mark { border-radius: .2rem; background: var(--inverse-primary); color: var(--inverse-surface); padding-inline: .1rem; }
   .regex-preview.is-error { background: var(--error-container); color: var(--on-error-container, var(--on-surface)); }
-  .regex-builder__io { display: flex; justify-content: flex-end; }
+  .regex-builder__io { display: flex; flex-wrap: wrap; justify-content: flex-end; gap: .25rem; }
+
+  /* --- Expanded regex builder --- */
+  .builder-dialog--wide { width: min(52rem, calc(100vw - 2rem)); }
+  .regex-flags-display { min-width: 2.5rem; color: var(--on-surface-variant); font-family: monospace; font-size: .82rem; text-align: right; }
+  .regex-group-label { color: var(--on-surface-variant); font-size: .6rem; font-weight: 700; letter-spacing: .09em; text-transform: uppercase; }
+  .regex-flags-row { display: flex; flex-wrap: wrap; align-items: center; gap: .4rem; }
+  .regex-flag { display: inline-flex; align-items: baseline; gap: .3rem; border: 1px solid var(--outline-variant); border-radius: var(--radius-full); background: var(--surface-container-low); padding: .3rem .7rem; color: var(--on-surface-variant); font-family: monospace; font-size: .78rem; font-weight: 700; }
+  .regex-flag small { font-family: var(--font-sans, inherit); font-size: .58rem; font-weight: 600; opacity: .8; }
+  .regex-flag:hover { border-color: var(--primary); }
+  .regex-flag.is-on { border-color: var(--primary); background: var(--primary-container); color: var(--on-primary-container); }
+  .regex-explain { display: grid; gap: .2rem; border: 1px dashed var(--outline-variant); border-radius: var(--radius-sm); background: var(--surface-container-low); padding: .6rem .8rem; }
+  .regex-explain > span { color: var(--on-surface-variant); font-size: .6rem; font-weight: 700; letter-spacing: .08em; text-transform: uppercase; }
+  .regex-explain p { color: var(--on-surface); font-size: .78rem; }
+  .regex-token-groups { display: grid; gap: .5rem; }
+  .regex-token-group { display: flex; flex-wrap: wrap; align-items: center; gap: .35rem; }
+  .regex-token-group .regex-group-label { width: 100%; }
+  .regex-token-group button { border: 1px solid var(--outline-variant); border-radius: var(--radius-full); background: var(--surface-container-low); padding: .28rem .6rem; color: var(--on-surface-variant); font-family: monospace; font-size: .68rem; }
+  .regex-token-group button:hover { border-color: var(--primary); color: var(--primary); }
+  .regex-sample-presets { display: flex; flex-wrap: wrap; align-items: center; gap: .35rem; }
+  .regex-sample-presets button { border: 1px solid var(--outline-variant); border-radius: var(--radius-full); background: transparent; padding: .25rem .6rem; color: var(--on-surface-variant); font-size: .66rem; }
+  .regex-sample-presets button:hover { border-color: var(--primary); color: var(--primary); }
+  .regex-match-list { display: grid; gap: .2rem; border: 1px solid var(--outline-variant); border-radius: var(--radius-sm); background: var(--surface-container-low); padding: .6rem .8rem; max-height: 11rem; overflow: auto; }
+  .regex-match-list > span { color: var(--on-surface-variant); font-size: .6rem; font-weight: 700; letter-spacing: .08em; text-transform: uppercase; }
+  .regex-match-row { display: flex; align-items: baseline; gap: .5rem; font-size: .72rem; }
+  .regex-match-row b { min-width: 1.2rem; color: var(--on-surface-variant); font-size: .62rem; }
+  .regex-match-row code { overflow-wrap: anywhere; background: var(--primary-container); border-radius: .2rem; padding: 0 .25rem; color: var(--on-primary-container); font-size: .72rem; }
+  .regex-match-row small { color: var(--on-surface-variant); font-size: .62rem; }
+  .regex-match-row--more { color: var(--on-surface-variant); font-size: .66rem; font-style: italic; }
+  .regex-replace-preview { display: grid; gap: .35rem; border-radius: var(--radius-sm); background: var(--surface-container-high); padding: .7rem .9rem; }
+  .regex-replace-preview > span { color: var(--on-surface-variant); font-size: .6rem; font-weight: 700; letter-spacing: .08em; text-transform: uppercase; }
+  .regex-replace-preview code { overflow-wrap: anywhere; font-family: "Cascadia Code", Consolas, monospace; font-size: .74rem; }
+  .regex-library { display: grid; gap: .5rem; }
+  .regex-lib-list { display: flex; flex-wrap: wrap; gap: .4rem; }
+  .regex-lib-empty { color: var(--on-surface-variant); font-size: .68rem; }
+  .regex-lib-item { display: inline-flex; align-items: stretch; overflow: hidden; border: 1px solid var(--outline); border-radius: var(--radius-full); }
+  .regex-lib-item > button:first-child { background: var(--surface-container-low); padding: .3rem .7rem; color: var(--on-surface); font-size: .68rem; font-weight: 600; }
+  .regex-lib-item > button:first-child:hover { background: var(--surface-container); color: var(--primary); }
+  .regex-lib-remove { border-left: 1px solid var(--outline-variant); background: var(--surface-container-low); padding: 0 .55rem; color: var(--on-surface-variant); font-size: .9rem; }
+  .regex-lib-remove:hover { background: var(--error-container); color: var(--error); }
+  .regex-lib-add { display: flex; gap: .5rem; }
+  .regex-lib-add input { flex: 1; height: 2.3rem; border: 1px solid var(--outline); border-radius: var(--radius-full); background: var(--surface-container-lowest); padding: 0 .9rem; font-size: .72rem; }
+  .regex-lib-add input:focus-visible { outline: 2px solid var(--primary); outline-offset: -1px; }
 
   .transfer-options { display: grid; gap: .8rem; }
   .transfer-options section { display: grid; grid-template-columns: auto 1fr; gap: 1rem; border: 1px solid var(--outline-variant); border-radius: var(--radius-md); background: var(--surface-container-low); padding: 1rem; }
