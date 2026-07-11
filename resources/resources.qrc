@@ -24,6 +24,7 @@
         <file alias="fonts/Roboto.ttf">fonts/Roboto.ttf</file>
         <file alias="fonts/RobotoMono.ttf">fonts/RobotoMono.ttf</file>
         <file alias="i18n/cantonese.json">i18n/cantonese.json</file>
+        <file alias="branding/logo-mark.svg">branding/logo-mark.svg</file>
         <file alias="html/gpl.html">html/gpl.html</file>
         <file alias="icons/tray/qbittorrent-tray.png">icons/tray/qbittorrent-tray.png</file>
         <file alias="icons/tray/qbittorrent-tray-light.png">icons/tray/qbittorrent-tray-light.png</file>

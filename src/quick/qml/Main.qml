@@ -42,6 +42,126 @@ ApplicationWindow {
     minimumHeight: 400
     visible: true
 
+    // Size the first normal window to 80% of the screen's usable area.  This is
+    // deliberately imperative instead of a width/height binding: users remain
+    // free to resize the window without a binding snapping it back afterwards.
+    readonly property real preferredScreenCoverage: 0.8
+    property rect _lastAvailableScreenGeometry: Qt.rect(0, 0, 0, 0)
+    property bool _screenSizingInitialized: false
+    property bool _screenSizingScheduled: false
+    property bool _initialScreenSizingPending: false
+
+    function availableScreenGeometry() {
+        // Window.screen is a QScreen, whose availableGeometry excludes taskbars
+        // and other areas reserved by the window manager.
+        if (root.screen) {
+            var available = root.screen.availableGeometry
+            if (available && available.width > 0 && available.height > 0)
+                return Qt.rect(available.x, available.y, available.width, available.height)
+        }
+
+        // Screen attached properties become valid after the window is shown.
+        // Keep conservative defaults for headless and unusual platform plugins.
+        var fallbackWidth = Number(Screen.width)
+        var fallbackHeight = Number(Screen.height)
+        var fallbackX = Number(Screen.virtualX)
+        var fallbackY = Number(Screen.virtualY)
+        if (!isFinite(fallbackWidth) || fallbackWidth <= 0)
+            fallbackWidth = 1280
+        if (!isFinite(fallbackHeight) || fallbackHeight <= 0)
+            fallbackHeight = 720
+        if (!isFinite(fallbackX))
+            fallbackX = 0
+        if (!isFinite(fallbackY))
+            fallbackY = 0
+        return Qt.rect(fallbackX, fallbackY, fallbackWidth, fallbackHeight)
+    }
+
+    function boundedWindowDimension(value, minimum, available) {
+        // If an exceptionally small screen cannot accommodate the minimum, keep
+        // the documented minimum-size contract and let the window manager cope.
+        return Math.max(minimum, Math.min(Math.round(value), Math.floor(available)))
+    }
+
+    function applyScreenGeometry(initialSizing) {
+        var available = root.availableScreenGeometry()
+
+        // Maximized/full-screen/minimized windows belong to the window manager.
+        // Remember the new screen but leave their restore geometry untouched.
+        if (!initialSizing && root.visibility !== Window.Windowed) {
+            root._lastAvailableScreenGeometry = available
+            return
+        }
+
+        var previous = root._lastAvailableScreenGeometry
+        var hasPrevious = previous.width > 0 && previous.height > 0
+        var targetWidth
+        var targetHeight
+
+        if (initialSizing || !hasPrevious) {
+            targetWidth = available.width * root.preferredScreenCoverage
+            targetHeight = available.height * root.preferredScreenCoverage
+        } else {
+            // Preserve the user's chosen percentage when crossing screens or
+            // when the usable area changes (for example, a relocated taskbar).
+            targetWidth = root.width * available.width / previous.width
+            targetHeight = root.height * available.height / previous.height
+        }
+
+        targetWidth = root.boundedWindowDimension(
+                    targetWidth, root.minimumWidth, available.width)
+        targetHeight = root.boundedWindowDimension(
+                    targetHeight, root.minimumHeight, available.height)
+
+        var targetX
+        var targetY
+        if (initialSizing) {
+            targetX = available.x + (available.width - targetWidth) / 2
+            targetY = available.y + (available.height - targetHeight) / 2
+        } else {
+            // Keep the current visual center during a screen transition, then
+            // clamp the full window into the new screen's usable bounds.
+            targetX = root.x + (root.width - targetWidth) / 2
+            targetY = root.y + (root.height - targetHeight) / 2
+        }
+
+        var maximumX = available.x + Math.max(0, available.width - targetWidth)
+        var maximumY = available.y + Math.max(0, available.height - targetHeight)
+
+        root.width = targetWidth
+        root.height = targetHeight
+        root.x = Math.round(Math.max(available.x, Math.min(targetX, maximumX)))
+        root.y = Math.round(Math.max(available.y, Math.min(targetY, maximumY)))
+        root._lastAvailableScreenGeometry = available
+        root._screenSizingInitialized = true
+    }
+
+    function scheduleScreenGeometryUpdate(initialSizing) {
+        if (initialSizing)
+            root._initialScreenSizingPending = true
+        if (root._screenSizingScheduled)
+            return
+
+        root._screenSizingScheduled = true
+        Qt.callLater(function() {
+            root._screenSizingScheduled = false
+            var initialize = root._initialScreenSizingPending
+                             || !root._screenSizingInitialized
+            root._initialScreenSizingPending = false
+            root.applyScreenGeometry(initialize)
+        })
+    }
+
+    onScreenChanged: root.scheduleScreenGeometryUpdate(false)
+
+    Connections {
+        target: root.screen
+
+        function onAvailableGeometryChanged() {
+            root.scheduleScreenGeometryUpdate(false)
+        }
+    }
+
     // -- Material palette wiring (done once, at the root; §4.3) ----------------
     Material.theme: Theme.isDark ? Material.Dark : Material.Light
     Material.accent: Theme.color("primary")
@@ -694,7 +814,7 @@ ApplicationWindow {
     }
     function openDocumentation() {
         Log.info("ui", "Action: Documentation")
-        Qt.openUrlExternally("https://doc.qbittorrent.org")
+        Qt.openUrlExternally("https://codingmachineedge.github.io/qbittorrent-material/#wiki")
     }
     function donate() {
         Log.info("ui", "Action: Donate")
@@ -847,6 +967,7 @@ ApplicationWindow {
 
     Component.onCompleted: {
         Log.info("ui", "Main window constructed; initializing shell state from Preferences")
+        root.scheduleScreenGeometryUpdate(true)
         root.toolbarVisible = Preferences.isToolbarDisplayed()
         root.statusbarVisible = Preferences.isStatusbarDisplayed()
         root.sidebarVisible = Preferences.isFiltersSidebarVisible()

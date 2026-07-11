@@ -120,3 +120,18 @@ Each push receives a unique tag in the form
 commit and records the branch, build ID, and installer SHA-256 checksum in its
 release notes. The workflow can also be started manually with
 `workflow_dispatch`.
+
+## Preview the documentation site
+
+The complete Material documentation site is committed under `docs` and publishes
+directly through GitHub Pages. Regenerate its embedded corpus, then serve it over
+HTTP for local testing:
+
+```powershell
+powershell -ExecutionPolicy Bypass -File .\scripts\generate-pages-content.ps1
+py -3 -m http.server 4173 --directory docs
+```
+
+Open `http://127.0.0.1:4173/`. See [Documentation Site and Wiki](PAGES.md)
+for regex/filter testing, import/export round trips, responsive QA, and GitHub
+Wiki synchronization.

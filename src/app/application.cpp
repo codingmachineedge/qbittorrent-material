@@ -97,6 +97,11 @@ Application::Application(int &argc, char **argv)
     setApplicationVersion(QCoreApplication::applicationVersion().isEmpty()
             ? u"5.3.0-material"_qs : QCoreApplication::applicationVersion());
     setApplicationDisplayName(u"qBittorrent"_qs);
+    const QIcon brandIcon(u":/branding/logo-mark.svg"_qs);
+    if (!brandIcon.isNull())
+        setWindowIcon(brandIcon);
+    else
+        qCWarning(lcApp) << "Brand icon resource is unavailable";
     setQuitOnLastWindowClosed(false);  // closing the window may just hide to tray
 
     qCInfo(lcApp) << "Application constructed:" << applicationName()
