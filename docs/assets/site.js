@@ -1263,7 +1263,7 @@
     var dark = stored ? stored === "dark" : window.matchMedia && window.matchMedia("(prefers-color-scheme: dark)").matches;
     document.documentElement.dataset.theme = dark ? "dark" : "light";
     var meta = document.querySelector('meta[name="theme-color"]');
-    if (meta) meta.content = dark ? "#1d1b20" : "#6750a4";
+    if (meta) meta.content = dark ? "#202124" : "#1a73e8";
   }
 
   function toggleTheme() {
@@ -1271,7 +1271,7 @@
     document.documentElement.dataset.theme = dark ? "dark" : "light";
     try { localStorage.setItem(STORAGE.theme, dark ? "dark" : "light"); } catch (error) {}
     var meta = document.querySelector('meta[name="theme-color"]');
-    if (meta) meta.content = dark ? "#1d1b20" : "#6750a4";
+    if (meta) meta.content = dark ? "#202124" : "#1a73e8";
     showSnackbar((dark ? "Dark" : "Light") + " theme enabled.");
   }
 

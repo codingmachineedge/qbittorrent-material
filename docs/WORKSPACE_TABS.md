@@ -24,6 +24,14 @@ inside that view behaves like a browser tab strip:
 Closing every tab is supported. The empty view offers a **Create tab** action to
 start again. A workspace can contain up to 100 tabs.
 
+![Persistent browser-style Workspace tabs](images/app/09-custom-workspace-tabs.png)
+
+> **LowLevel Workspace Studio** in these screenshots is a user-selected display
+> name that demonstrates the rename feature. It is not a separate application
+> edition or project rebrand.
+
+![Tab actions anchored to the selected page](images/app/10-tab-context-menu.png)
+
 ## Rename the application display
 
 Choose **Workspace > Rename application**, select **Rename app** in the workspace
@@ -49,6 +57,8 @@ page stores these settings independently:
 The color editor is unrestricted: adjust hue, saturation, value, and alpha, or
 enter `#RRGGBB` or `#AARRGGBB` directly. Its preview shows the combined font and
 color settings before **Apply** is selected.
+
+![Per-tab name, font, style, size, emphasis, and color controls](images/app/11-tab-typography-color.png)
 
 Pages use a plain-text editor. Their repository files use the `.md` extension so
 they remain convenient to inspect and diff, but the application does not render
@@ -91,6 +101,8 @@ The portability menu and the **Workspace** application menu offer two formats:
 | --- | --- | --- |
 | Workspace JSON | Display name, active tab, ordered pages, content, timestamps, and appearance | A compact snapshot or exchange with another profile |
 | Complete Git repository | `workspace.json`, page files, README, and the entire `.git` history | Backup, migration, or continued version history on another computer |
+
+![Workspace JSON and complete Git repository portability menu](images/app/12-workspace-portability.png)
 
 ### Export or import JSON
 
@@ -141,6 +153,13 @@ interrupted import, the application checks the newest valid
 
 ## Startup recovery
 
+If the process stops after a new tab body reaches `tabs/<uuid>.md` but before
+the matching metadata update reaches `workspace.json`, the next launch sees
+that the body is untracked, adopts it as a **Recovered tab**, and commits it. If
+the manifest already records a close but the formerly tracked body remains, the
+next launch completes that intentional close instead of resurrecting the tab.
+The embedded Git index makes the two crash windows unambiguous.
+
 Existing workspace files are never overwritten just because they fail startup
 validation. If the managed repository exists but its metadata or page files are
 invalid, the application first moves the complete directory to a hidden sibling
@@ -149,7 +168,9 @@ workspace and reports the preserved path in the Workspace status.
 
 If the invalid directory cannot be moved safely, it is left untouched. The app
 shows an in-memory Welcome page but blocks workspace saves and Git operations so
-the original files cannot be replaced accidentally.
+the original files cannot be replaced accidentally. The editor and mutating
+actions visibly switch to read-only while navigation and repository inspection
+remain available.
 
 The backup and recovery directories live beside the normal `workspace-tabs`
 folder and may be hidden by the operating-system file manager. Use **Open managed
@@ -158,6 +179,11 @@ them. Do not remove a `.workspace-backup-*`, `.workspace-recovery-*`,
 `.workspace-import-*`, or `.workspace-failed-import-*` directory until the
 active workspace is verified and any needed files or history have been copied
 somewhere safe.
+
+The restored-state capture below shows the renamed application, ordered tabs,
+active page, typography, and content available again after relaunch.
+
+![Workspace state restored after relaunch](images/app/13-restored-workspace.png)
 
 ## Validation and privacy
 

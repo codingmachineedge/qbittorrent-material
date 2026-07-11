@@ -199,7 +199,10 @@ ApplicationWindow {
     // -- Window title (§14) ---------------------------------------------------
     readonly property string appVersion: Qt.application.version.length > 0 ? Qt.application.version : "5.x"
     title: {
-        var base = qsTr("%1 %2").arg(WorkspaceManager.appDisplayName).arg(root.appVersion)
+        // Qt's platform integration appends applicationDisplayName to an
+        // explicit title. Keep the user-selected name in that single native
+        // source so renamed apps never render as "Name - Name".
+        var base = root.appVersion
         if (root.speedInTitleBar) {
             base = qsTr("[D: %1, U: %2] %3")
                 .arg(statusBar.formatSpeed(Session.downloadRate || 0))
@@ -316,6 +319,7 @@ ApplicationWindow {
         id: actionWorkspaceNewTab
         text: qsTr("&New Workspace Tab")
         shortcut: "Ctrl+T"
+        enabled: WorkspaceManager.writable
         onTriggered: centralTabs.newWorkspaceTab()
     }
     property alias actionWorkspaceCloseTab: actionWorkspaceCloseTab
@@ -323,20 +327,21 @@ ApplicationWindow {
         id: actionWorkspaceCloseTab
         text: qsTr("&Close Workspace Tab")
         shortcut: "Ctrl+W"
-        enabled: root.currentTabIndex === 4 && WorkspaceManager.count > 0
+        enabled: WorkspaceManager.writable && root.currentTabIndex === 4 && WorkspaceManager.count > 0
         onTriggered: centralTabs.closeWorkspaceTab()
     }
     property alias actionWorkspaceCustomizeTab: actionWorkspaceCustomizeTab
     Action {
         id: actionWorkspaceCustomizeTab
         text: qsTr("Tab Name && &Appearance…")
-        enabled: WorkspaceManager.count > 0
+        enabled: WorkspaceManager.writable && WorkspaceManager.count > 0
         onTriggered: centralTabs.customizeWorkspaceTab()
     }
     property alias actionWorkspaceRenameApp: actionWorkspaceRenameApp
     Action {
         id: actionWorkspaceRenameApp
         text: qsTr("&Rename Application…")
+        enabled: WorkspaceManager.writable
         onTriggered: centralTabs.renameWorkspaceApplication()
     }
     property alias actionWorkspaceSync: actionWorkspaceSync
@@ -344,13 +349,14 @@ ApplicationWindow {
         id: actionWorkspaceSync
         text: qsTr("&Save && Commit Workspace")
         shortcut: "Ctrl+S"
-        enabled: root.currentTabIndex === 4
+        enabled: WorkspaceManager.writable && root.currentTabIndex === 4
         onTriggered: centralTabs.syncWorkspace()
     }
     property alias actionWorkspaceImport: actionWorkspaceImport
     Action {
         id: actionWorkspaceImport
         text: qsTr("Import Workspace &JSON…")
+        enabled: WorkspaceManager.writable
         onTriggered: centralTabs.importWorkspace()
     }
     property alias actionWorkspaceExport: actionWorkspaceExport
@@ -363,12 +369,14 @@ ApplicationWindow {
     Action {
         id: actionWorkspaceImportRepository
         text: qsTr("Import Complete Git &Repository…")
+        enabled: WorkspaceManager.writable
         onTriggered: centralTabs.importWorkspaceRepository()
     }
     property alias actionWorkspaceExportRepository: actionWorkspaceExportRepository
     Action {
         id: actionWorkspaceExportRepository
         text: qsTr("Export Complete &Git Repository…")
+        enabled: WorkspaceManager.writable
         onTriggered: centralTabs.exportWorkspaceRepository()
     }
     property alias actionWorkspaceOpenRepository: actionWorkspaceOpenRepository

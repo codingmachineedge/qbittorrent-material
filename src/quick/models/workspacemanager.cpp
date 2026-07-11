@@ -168,6 +168,8 @@ QString WorkspaceManager::appDisplayName() const
 
 void WorkspaceManager::setAppDisplayName(const QString &name)
 {
+    if (!requireWritable())
+        return;
     const QString normalized = normalizedName(name, 80, QString::fromLatin1(ProductDisplayName));
     if (m_appDisplayName == normalized)
         return;
@@ -194,7 +196,7 @@ void WorkspaceManager::setActiveIndex(const int index)
         return;
     m_activeIndex = normalized;
     emit activeIndexChanged();
-    if (!m_loading)
+    if (!m_loading && writable())
         scheduleSave(QStringLiteral("workspace: select tab"));
 }
 
@@ -229,6 +231,22 @@ bool WorkspaceManager::dirty() const
     return m_dirty;
 }
 
+bool WorkspaceManager::writable() const
+{
+    return !m_initializationBlocked;
+}
+
+bool WorkspaceManager::requireWritable()
+{
+    if (writable())
+        return true;
+    emit operationFinished(false,
+        tr("The workspace is read-only because automatic recovery needs attention. "
+           "Open the managed repository folder before closing the application."),
+        QUrl::fromLocalFile(QFileInfo(m_repositoryPath).absolutePath()));
+    return false;
+}
+
 QVariantMap WorkspaceManager::tabAt(const int index) const
 {
     return (index >= 0 && index < m_tabs.size()) ? tabMap(m_tabs.at(index)) : QVariantMap();
@@ -242,6 +260,8 @@ QVariantMap WorkspaceManager::tabById(const QString &tabId) const
 
 QString WorkspaceManager::createTab(const QString &name)
 {
+    if (!requireWritable())
+        return {};
     if (m_tabs.size() >= MaximumTabs)
     {
         emit operationFinished(false, tr("A workspace can contain at most %1 tabs.").arg(MaximumTabs), {});
@@ -269,6 +289,8 @@ QString WorkspaceManager::createTab(const QString &name)
 
 int WorkspaceManager::duplicateTab(const int index)
 {
+    if (!requireWritable())
+        return -1;
     if (index < 0 || index >= m_tabs.size() || m_tabs.size() >= MaximumTabs)
         return -1;
     Tab copy = m_tabs.at(index);
@@ -287,6 +309,8 @@ int WorkspaceManager::duplicateTab(const int index)
 
 bool WorkspaceManager::closeTab(const int index)
 {
+    if (!requireWritable())
+        return false;
     if (index < 0 || index >= m_tabs.size())
         return false;
     beginRemoveRows({}, index, index);
@@ -309,6 +333,8 @@ bool WorkspaceManager::closeTab(const int index)
 
 bool WorkspaceManager::closeOtherTabs(const int index)
 {
+    if (!requireWritable())
+        return false;
     if (index < 0 || index >= m_tabs.size())
         return false;
     const Tab retained = m_tabs.at(index);
@@ -324,6 +350,8 @@ bool WorkspaceManager::closeOtherTabs(const int index)
 
 bool WorkspaceManager::moveTab(const int from, const int to)
 {
+    if (!requireWritable())
+        return false;
     if (from < 0 || from >= m_tabs.size() || to < 0 || to >= m_tabs.size() || from == to)
         return false;
     const int destinationChild = (to > from) ? to + 1 : to;
@@ -344,6 +372,8 @@ bool WorkspaceManager::moveTab(const int from, const int to)
 
 bool WorkspaceManager::setTabContent(const QString &tabId, const QString &content)
 {
+    if (!requireWritable())
+        return false;
     const int row = indexOfTab(tabId);
     if (row < 0)
         return false;
@@ -366,6 +396,8 @@ bool WorkspaceManager::updateTab(const QString &tabId, const QString &name,
     const QString &fontFamily, const QString &fontStyle, const double fontPointSize,
     const bool bold, const bool italic, const QString &fontColor)
 {
+    if (!requireWritable())
+        return false;
     const int row = indexOfTab(tabId);
     const QColor parsedColor(fontColor);
     if (row < 0 || fontPointSize < 6.0 || fontPointSize > 144.0 || !parsedColor.isValid())
@@ -434,6 +466,8 @@ bool WorkspaceManager::openRepository() const
 
 bool WorkspaceManager::syncNow()
 {
+    if (!requireWritable())
+        return false;
     m_saveTimer.stop();
     QString error;
     const bool ok = saveNow(QStringLiteral("workspace: manual sync"), &error);
@@ -487,6 +521,8 @@ bool WorkspaceManager::exportWorkspace(const QUrl &destination)
 
 bool WorkspaceManager::importWorkspace(const QUrl &source)
 {
+    if (!requireWritable())
+        return false;
     const QString path = localPath(source);
     const QFileInfo info(path);
     if (path.isEmpty() || !info.isFile() || info.size() > MaximumWorkspaceBytes || hasSymlinkIdentity(info))
@@ -514,9 +550,47 @@ bool WorkspaceManager::importWorkspace(const QUrl &source)
         emit operationFinished(false, error, repositoryUrl());
         return false;
     }
+    const QSet<QString> previousManagedTabFiles = m_managedTabFiles;
+    QHash<QString, QByteArray> rollbackCandidateContents;
+    for (const Tab &tab : std::as_const(snapshot.tabs))
+    {
+        const QString fileName = tab.id + QStringLiteral(".md");
+        const QString path = QDir(m_repositoryPath).filePath(
+            QStringLiteral("tabs/%1").arg(fileName));
+        const QByteArray incomingBytes = tab.content.toUtf8();
+        if (!QFileInfo::exists(path))
+        {
+            rollbackCandidateContents.insert(fileName, incomingBytes);
+            continue;
+        }
+        if (previousManagedTabFiles.contains(fileName))
+            continue;
+
+        QFile collision(path);
+        if (!collision.open(QIODevice::ReadOnly) || collision.readAll() != incomingBytes)
+        {
+            emit operationFinished(false,
+                tr("Import was cancelled because an untracked recovery page already uses tab identifier %1. "
+                   "The existing file was left untouched.").arg(tab.id),
+                QUrl::fromLocalFile(path));
+            return false;
+        }
+    }
     applySnapshot(std::move(snapshot));
     if (!saveNow(QStringLiteral("workspace: import JSON snapshot"), &error))
     {
+        // writeManagedFiles can fail after writing only part of the imported
+        // bodies. Delete only candidate files whose bytes prove this import
+        // wrote them; preserve every preexisting unmanaged recovery file.
+        QSet<QString> rollbackManagedFiles = previousManagedTabFiles;
+        for (auto it = rollbackCandidateContents.cbegin(); it != rollbackCandidateContents.cend(); ++it)
+        {
+            QFile candidate(QDir(m_repositoryPath).filePath(
+                QStringLiteral("tabs/%1").arg(it.key())));
+            if (candidate.open(QIODevice::ReadOnly) && candidate.readAll() == it.value())
+                rollbackManagedFiles.insert(it.key());
+        }
+        m_managedTabFiles = std::move(rollbackManagedFiles);
         applySnapshot(std::move(previous));
         QString rollbackError;
         const bool restored = saveNow(QStringLiteral("workspace: restore after failed JSON import"), &rollbackError);
@@ -580,6 +654,8 @@ bool WorkspaceManager::exportRepository(const QUrl &destinationFolder)
 
 bool WorkspaceManager::importRepository(const QUrl &sourceFolder)
 {
+    if (!requireWritable())
+        return false;
     const QString source = localPath(sourceFolder);
     QString error;
     if (source.isEmpty() || isInsidePath(source, m_repositoryPath)
@@ -592,6 +668,7 @@ bool WorkspaceManager::importRepository(const QUrl &sourceFolder)
     }
 
     Snapshot previous {m_appDisplayName, activeTabId(), m_tabs};
+    const QSet<QString> previousManagedTabFiles = m_managedTabFiles;
     if (!saveNow(QStringLiteral("workspace: backup before repository import"), &error))
     {
         emit operationFinished(false, error, repositoryUrl());
@@ -606,15 +683,20 @@ bool WorkspaceManager::importRepository(const QUrl &sourceFolder)
     const QString backup = QDir(parent).filePath(QStringLiteral(".workspace-backup-%1").arg(nonce));
     qint64 copied = 0;
     Snapshot importedSnapshot;
+    QSet<QString> importedTrackedExtras;
     if (!copyTree(source, staging, &copied, &error)
         || !validateRepositoryRoot(staging, &error)
-        || !loadSnapshotFromRoot(staging, &importedSnapshot, &error))
+        || !loadSnapshotFromRoot(staging, &importedSnapshot, &error, &importedTrackedExtras))
     {
         QString removeError;
         (void)removeTree(staging, &removeError);
         emit operationFinished(false, error, QUrl::fromLocalFile(source));
         return false;
     }
+    QSet<QString> importedManagedTabFiles;
+    for (const Tab &tab : std::as_const(importedSnapshot.tabs))
+        importedManagedTabFiles.insert(tab.id + QStringLiteral(".md"));
+    importedManagedTabFiles.unite(importedTrackedExtras);
 
     QDir parentDir(parent);
     const QString currentName = QFileInfo(m_repositoryPath).fileName();
@@ -632,6 +714,7 @@ bool WorkspaceManager::importRepository(const QUrl &sourceFolder)
         else
         {
             m_initializationBlocked = true;
+            emit writableChanged();
             m_repositoryStatus = tr("Repository import was interrupted; recovery copies were preserved");
             emit repositoryStatusChanged();
         }
@@ -644,6 +727,7 @@ bool WorkspaceManager::importRepository(const QUrl &sourceFolder)
     }
 
     applySnapshot(std::move(importedSnapshot));
+    m_managedTabFiles = std::move(importedManagedTabFiles);
     QString activationError;
     if (!saveNow(QStringLiteral("workspace: activate imported repository"), &activationError))
     {
@@ -654,6 +738,7 @@ bool WorkspaceManager::importRepository(const QUrl &sourceFolder)
         if (restored)
         {
             applySnapshot(std::move(previous));
+            m_managedTabFiles = previousManagedTabFiles;
             updateRepositoryStatus();
             setDirty(false);
         }
@@ -662,6 +747,7 @@ bool WorkspaceManager::importRepository(const QUrl &sourceFolder)
             if (movedFailedImport)
                 parentDir.rename(failedName, currentName);
             m_initializationBlocked = true;
+            emit writableChanged();
             setDirty(true);
             m_repositoryStatus = tr("Imported repository needs manual recovery; all copies were preserved");
             emit repositoryStatusChanged();
@@ -949,7 +1035,7 @@ bool WorkspaceManager::parseWorkspace(const QByteArray &bytes, Snapshot *snapsho
 }
 
 bool WorkspaceManager::loadSnapshotFromRoot(const QString &root, Snapshot *snapshot,
-    QString *error) const
+    QString *error, QSet<QString> *trackedExtras) const
 {
     const QString workspacePath = QDir(root).filePath(QStringLiteral("workspace.json"));
     const QFileInfo workspaceInfo(workspacePath);
@@ -991,6 +1077,101 @@ bool WorkspaceManager::loadSnapshotFromRoot(const QString &root, Snapshot *snaps
             return false;
         }
     }
+
+    QSet<QString> trackedFiles;
+    if (QFileInfo::exists(QDir(root).filePath(QStringLiteral(".git"))))
+    {
+        git_repository *repository = nullptr;
+        git_index *indexHandle = nullptr;
+        const QByteArray encodedRoot = QDir::fromNativeSeparators(root).toUtf8();
+        if (git_repository_open_ext(&repository, encodedRoot.constData(),
+                GIT_REPOSITORY_OPEN_NO_SEARCH, nullptr) != 0
+            || git_repository_index(&indexHandle, repository) != 0)
+        {
+            if (error) *error = tr("Could not inspect the workspace Git index during recovery.");
+            git_index_free(indexHandle);
+            git_repository_free(repository);
+            return false;
+        }
+        const size_t entryCount = git_index_entrycount(indexHandle);
+        for (size_t i = 0; i < entryCount; ++i)
+        {
+            const git_index_entry *entry = git_index_get_byindex(indexHandle, i);
+            if (!entry || !entry->path)
+                continue;
+            const QString relativePath = QString::fromUtf8(entry->path);
+            if (relativePath.startsWith(QStringLiteral("tabs/")))
+                trackedFiles.insert(QFileInfo(relativePath).fileName());
+        }
+        git_index_free(indexHandle);
+        git_repository_free(repository);
+    }
+
+    // A process can stop after a new page body is atomically replaced but
+    // before workspace.json is replaced. Adopt those valid UUID-named bodies
+    // as recovered tabs. An extra body already tracked by Git represents the
+    // opposite crash window: workspace.json recorded an intentional close but
+    // the body was not removed yet. Keep that file in the managed cleanup set
+    // without resurrecting the closed tab.
+    QSet<QString> manifestIds;
+    for (const Tab &tab : std::as_const(snapshot->tabs))
+        manifestIds.insert(tab.id);
+    const QFileInfoList tabEntries = QDir(QDir(root).filePath(QStringLiteral("tabs"))).entryInfoList(
+        QDir::NoDotAndDotDot | QDir::AllEntries | QDir::Hidden | QDir::System,
+        QDir::Name);
+    for (const QFileInfo &entry : tabEntries)
+    {
+        const QUuid parsedId(entry.completeBaseName());
+        const QString canonicalId = parsedId.toString(QUuid::WithoutBraces);
+        if (!entry.isFile() || hasSymlinkIdentity(entry)
+            || entry.suffix() != QStringLiteral("md") || parsedId.isNull()
+            || entry.completeBaseName() != canonicalId
+            || entry.size() > MaximumContentCharacters * 4LL)
+        {
+            if (error) *error = tr("Repository tabs contain an unexpected or unsafe path.");
+            return false;
+        }
+        if (manifestIds.contains(canonicalId))
+            continue;
+        if (trackedFiles.contains(entry.fileName()))
+        {
+            if (trackedExtras)
+                trackedExtras->insert(entry.fileName());
+            continue;
+        }
+        if (snapshot->tabs.size() >= MaximumTabs)
+        {
+            if (error) *error = tr("Workspace contains too many tabs after crash recovery.");
+            return false;
+        }
+
+        QFile recoveredFile(entry.absoluteFilePath());
+        if (!recoveredFile.open(QIODevice::ReadOnly))
+        {
+            if (error) *error = recoveredFile.errorString();
+            return false;
+        }
+        Tab recovered;
+        recovered.id = canonicalId;
+        recovered.name = tr("Recovered tab %1").arg(canonicalId.left(8));
+        recovered.content = QString::fromUtf8(recoveredFile.readAll());
+        if (recovered.content.size() > MaximumContentCharacters)
+        {
+            if (error) *error = tr("A recovered tab exceeds the 4 MB content limit.");
+            return false;
+        }
+        recovered.fontFamily = QFontDatabase::systemFont(QFontDatabase::GeneralFont).family();
+        const QStringList styles = QFontDatabase::styles(recovered.fontFamily);
+        recovered.fontStyle = styles.contains(QStringLiteral("Regular"))
+            ? QStringLiteral("Regular") : styles.value(0, QStringLiteral("Regular"));
+        recovered.createdAt = recovered.updatedAt = entry.lastModified().toUTC();
+        if (!recovered.createdAt.isValid())
+            recovered.createdAt = recovered.updatedAt = QDateTime::currentDateTimeUtc();
+        snapshot->tabs.push_back(std::move(recovered));
+        manifestIds.insert(canonicalId);
+    }
+    if (snapshot->activeTabId.isEmpty() && !snapshot->tabs.isEmpty())
+        snapshot->activeTabId = snapshot->tabs.constFirst().id;
     return true;
 }
 
@@ -1040,11 +1221,24 @@ void WorkspaceManager::loadWorkspace()
 
     Snapshot snapshot;
     QString error;
-    if (QFileInfo::exists(QDir(m_repositoryPath).filePath(QStringLiteral("workspace.json")))
-        && loadSnapshotFromRoot(m_repositoryPath, &snapshot, &error))
+    const QString workspacePath = QDir(m_repositoryPath).filePath(QStringLiteral("workspace.json"));
+    const QString gitPath = QDir(m_repositoryPath).filePath(QStringLiteral(".git"));
+    if (QFileInfo::exists(workspacePath))
     {
-        applySnapshot(std::move(snapshot));
-        return;
+        bool validExistingState = validateManagedWorkingTree(m_repositoryPath, &error, false);
+        if (validExistingState && QFileInfo::exists(gitPath))
+            validExistingState = validateRepositoryRoot(m_repositoryPath, &error, true);
+        QSet<QString> trackedExtras;
+        if (validExistingState
+            && loadSnapshotFromRoot(m_repositoryPath, &snapshot, &error, &trackedExtras))
+        {
+            applySnapshot(std::move(snapshot));
+            m_managedTabFiles.clear();
+            for (const Tab &tab : std::as_const(m_tabs))
+                m_managedTabFiles.insert(tab.id + QStringLiteral(".md"));
+            m_managedTabFiles.unite(trackedExtras);
+            return;
+        }
     }
     if (!error.isEmpty())
         qCWarning(lcUi) << "Ignoring invalid workspace state:" << error;
@@ -1070,6 +1264,7 @@ void WorkspaceManager::loadWorkspace()
         else
         {
             m_initializationBlocked = true;
+            emit writableChanged();
             m_repositoryStatus = tr("Existing workspace needs recovery; its files were left untouched");
             qCWarning(lcUi) << "Could not preserve invalid workspace; automatic initialization blocked";
         }
@@ -1092,11 +1287,12 @@ void WorkspaceManager::loadWorkspace()
     snapshot.tabs.push_back(welcome);
     snapshot.activeTabId = welcome.id;
     applySnapshot(std::move(snapshot));
+    m_managedTabFiles.clear();
 }
 
 void WorkspaceManager::scheduleSave(const QString &commitMessage)
 {
-    if (m_loading)
+    if (m_loading || !writable())
         return;
     m_pendingCommitMessage = commitMessage;
     setDirty(true);
@@ -1164,8 +1360,20 @@ bool WorkspaceManager::writeManagedFiles(QString *error)
     {
         const QString fileName = tab.id + QStringLiteral(".md");
         expectedFiles.insert(fileName);
-        if (!writeFileAtomically(root.filePath(QStringLiteral("tabs/%1").arg(fileName)),
-            tab.content.toUtf8(), error))
+        const QString contentPath = root.filePath(QStringLiteral("tabs/%1").arg(fileName));
+        const QByteArray contentBytes = tab.content.toUtf8();
+        const QFileInfo existingInfo(contentPath);
+        if (existingInfo.exists() && !m_managedTabFiles.contains(fileName))
+        {
+            QFile existingFile(contentPath);
+            if (!existingFile.open(QIODevice::ReadOnly) || existingFile.readAll() != contentBytes)
+            {
+                if (error) *error = tr("An untracked page already uses tab identifier %1; its file was left untouched.")
+                    .arg(tab.id);
+                return false;
+            }
+        }
+        if (!writeFileAtomically(contentPath, contentBytes, error))
             return false;
     }
     if (!writeFileAtomically(root.filePath(QStringLiteral("workspace.json")),
@@ -1184,19 +1392,20 @@ bool WorkspaceManager::writeManagedFiles(QString *error)
         return false;
 
     QDir tabsDirectory(root.filePath(QStringLiteral("tabs")));
-    const QStringList existing = tabsDirectory.entryList({QStringLiteral("*.md")}, QDir::Files);
-    for (const QString &fileName : existing)
+    const QSet<QString> intentionallyRemovedFiles = m_managedTabFiles - expectedFiles;
+    for (const QString &fileName : intentionallyRemovedFiles)
     {
-        if (!expectedFiles.contains(fileName))
+        const QString path = tabsDirectory.filePath(fileName);
+        const QFileInfo info(path);
+        if (!info.exists())
+            continue;
+        if (!info.isFile() || containsReparsePoint(path, m_repositoryPath) || !QFile::remove(path))
         {
-            const QString path = tabsDirectory.filePath(fileName);
-            if (containsReparsePoint(path, m_repositoryPath) || !QFile::remove(path))
-            {
-                if (error) *error = tr("Could not remove a closed tab from the repository.");
-                return false;
-            }
+            if (error) *error = tr("Could not remove a closed tab from the repository.");
+            return false;
         }
     }
+    m_managedTabFiles = expectedFiles;
     return true;
 }
 
@@ -1459,21 +1668,22 @@ bool WorkspaceManager::removeTree(const QString &path, QString *error)
     return true;
 }
 
-bool WorkspaceManager::validateRepositoryRoot(const QString &path, QString *error,
-    const bool allowUnbornMain)
+bool WorkspaceManager::validateManagedWorkingTree(const QString &path, QString *error,
+    const bool requireRepositoryFiles)
 {
     const QFileInfo root(path);
     const QFileInfo gitDirectory(QDir(path).filePath(QStringLiteral(".git")));
     const QFileInfo workspaceFile(QDir(path).filePath(QStringLiteral("workspace.json")));
     const QFileInfo readmeFile(QDir(path).filePath(QStringLiteral("README.md")));
     const QFileInfo tabsDirectory(QDir(path).filePath(QStringLiteral("tabs")));
-    if (!root.isDir() || hasSymlinkIdentity(root) || !gitDirectory.isDir()
-        || hasSymlinkIdentity(gitDirectory)
+    if (!root.isDir() || hasSymlinkIdentity(root)
         || !workspaceFile.isFile() || hasSymlinkIdentity(workspaceFile)
-        || !readmeFile.isFile() || hasSymlinkIdentity(readmeFile)
-        || !tabsDirectory.isDir() || hasSymlinkIdentity(tabsDirectory))
+        || !tabsDirectory.isDir() || hasSymlinkIdentity(tabsDirectory)
+        || (readmeFile.exists() && (!readmeFile.isFile() || hasSymlinkIdentity(readmeFile)))
+        || (gitDirectory.exists() && (!gitDirectory.isDir() || hasSymlinkIdentity(gitDirectory)))
+        || (requireRepositoryFiles && (!readmeFile.isFile() || !gitDirectory.isDir())))
     {
-        if (error) *error = QObject::tr("Selected folder is not a safe workspace Git repository.");
+        if (error) *error = QObject::tr("Selected folder is not a safe workspace working tree.");
         return false;
     }
 
@@ -1491,19 +1701,31 @@ bool WorkspaceManager::validateRepositoryRoot(const QString &path, QString *erro
             return false;
         }
     }
+
     const QFileInfoList tabEntries = QDir(tabsDirectory.absoluteFilePath()).entryInfoList(
         QDir::NoDotAndDotDot | QDir::AllEntries | QDir::Hidden | QDir::System);
     for (const QFileInfo &entry : tabEntries)
     {
         const QUuid id(entry.completeBaseName());
+        const QString canonicalId = id.toString(QUuid::WithoutBraces);
         if (!entry.isFile() || hasSymlinkIdentity(entry)
-            || entry.suffix().compare(QStringLiteral("md"), Qt::CaseInsensitive) != 0
-            || id.isNull())
+            || entry.suffix() != QStringLiteral("md") || id.isNull()
+            || entry.completeBaseName() != canonicalId
+            || entry.size() > MaximumContentCharacters * 4LL)
         {
             if (error) *error = QObject::tr("Repository tabs contain an unexpected or unsafe path.");
             return false;
         }
     }
+    return true;
+}
+
+bool WorkspaceManager::validateRepositoryRoot(const QString &path, QString *error,
+    const bool allowUnbornMain)
+{
+    const QFileInfo gitDirectory(QDir(path).filePath(QStringLiteral(".git")));
+    if (!validateManagedWorkingTree(path, error, true))
+        return false;
     if (QFileInfo::exists(QDir(gitDirectory.absoluteFilePath()).filePath(QStringLiteral("commondir")))
         || QFileInfo::exists(QDir(gitDirectory.absoluteFilePath()).filePath(
             QStringLiteral("objects/info/alternates"))))

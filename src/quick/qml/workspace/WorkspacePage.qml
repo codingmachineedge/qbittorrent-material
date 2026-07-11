@@ -71,10 +71,14 @@ Item {
             }
 
             Label {
-                text: WorkspaceManager.dirty ? qsTr("Saving…") : qsTr("Saved")
+                text: !WorkspaceManager.writable
+                    ? qsTr("Read only")
+                    : (WorkspaceManager.dirty ? qsTr("Saving…") : qsTr("Saved"))
                 font: Typography.labelSmall
-                color: WorkspaceManager.dirty
-                    ? Theme.color("primary") : Theme.color("onSurfaceVariant")
+                color: !WorkspaceManager.writable
+                    ? Theme.color("error")
+                    : (WorkspaceManager.dirty
+                        ? Theme.color("primary") : Theme.color("onSurfaceVariant"))
             }
         }
 
@@ -97,6 +101,7 @@ Item {
                     Accessible.name: qsTr("Page editor for %1").arg(root.tabName)
                     text: root.tabContent
                     textFormat: TextEdit.PlainText
+                    readOnly: !WorkspaceManager.writable
                     wrapMode: TextEdit.Wrap
                     selectByMouse: true
                     persistentSelection: true
@@ -104,7 +109,9 @@ Item {
                     rightPadding: Spacing.xl
                     topPadding: Spacing.lg
                     bottomPadding: Spacing.lg
-                    placeholderText: qsTr("Write anything on this page. Changes save automatically to local Git.")
+                    placeholderText: WorkspaceManager.writable
+                        ? qsTr("Write anything on this page. Changes save automatically to local Git.")
+                        : qsTr("Workspace recovery is required before this page can be edited.")
                     color: root.fontColor
                     selectionColor: Theme.color("primaryContainer")
                     selectedTextColor: Theme.color("onPrimaryContainer")

@@ -79,6 +79,12 @@ If invalid startup state could not be moved aside, the original files remain
 untouched and the Welcome page is in memory only. Resolve the file-system issue
 or recover the original repository before expecting Workspace saves to resume.
 
+The restored-state example shows the user display name and persistent tab state
+available again after relaunch. **LowLevel Workspace Studio** is only the
+user-selected rename demonstration.
+
+![Workspace state restored after relaunch](images/app/13-restored-workspace.png)
+
 ## Renaming the application did not rename its files
 
 Workspace renaming changes the user-facing display name in the window,

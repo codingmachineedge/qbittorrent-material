@@ -32,6 +32,10 @@ MenuBar {
     component IconMenuItem: MenuItem {
         id: ctl
         property string glyph: ""
+        function displayText(value) {
+            return String(value).replace(/&&/g, "\uE000")
+                .replace(/&/g, "").replace(/\uE000/g, "&")
+        }
         implicitHeight: 40
         contentItem: RowLayout {
             spacing: Spacing.md
@@ -44,7 +48,7 @@ MenuBar {
                 Layout.leftMargin: Spacing.xs
             }
             Label {
-                text: ctl.text
+                text: ctl.displayText(ctl.text)
                 font: Typography.bodyMedium
                 color: Theme.color("onSurface")
                 opacity: ctl.enabled ? 1.0 : 0.4

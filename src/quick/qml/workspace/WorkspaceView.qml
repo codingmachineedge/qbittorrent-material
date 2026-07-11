@@ -105,8 +105,10 @@ Item {
                         textFormat: Text.PlainText
                         elide: Text.ElideMiddle
                         font: Typography.bodySmall
-                        color: WorkspaceManager.dirty
-                            ? Theme.color("primary") : Theme.color("onSurfaceVariant")
+                        color: !WorkspaceManager.writable
+                            ? Theme.color("error")
+                            : (WorkspaceManager.dirty
+                                ? Theme.color("primary") : Theme.color("onSurfaceVariant"))
                         Layout.fillWidth: true
                     }
                 }
@@ -115,6 +117,7 @@ Item {
                     id: renameButton
                     objectName: "workspaceRenameAppButton"
                     visible: root.width >= 720
+                    enabled: WorkspaceManager.writable
                     flat: true
                     text: qsTr("Rename app")
                     icon.source: ""
@@ -123,6 +126,7 @@ Item {
 
                 IconButton {
                     objectName: "workspaceSyncButton"
+                    enabled: WorkspaceManager.writable
                     symbol: Icons.refresh
                     tooltip: qsTr("Commit pending changes to local Git")
                     onClicked: WorkspaceManager.syncNow()
@@ -204,6 +208,7 @@ Item {
                                 symbol: Icons.close
                                 size: 14
                                 tooltip: qsTr("Close tab")
+                                enabled: WorkspaceManager.writable
                                 onClicked: WorkspaceManager.closeTab(tabButton.index)
                             }
                         }
@@ -218,10 +223,12 @@ Item {
                         }
                         TapHandler {
                             acceptedButtons: Qt.MiddleButton
+                            enabled: WorkspaceManager.writable
                             onTapped: WorkspaceManager.closeTab(tabButton.index)
                         }
                         TapHandler {
                             acceptedButtons: Qt.LeftButton
+                            enabled: WorkspaceManager.writable
                             onDoubleTapped: tabSettings.openForIndex(tabButton.index)
                         }
                     }
@@ -241,6 +248,7 @@ Item {
                     Layout.fillHeight: true
                     symbol: Icons.add
                     tooltip: qsTr("New tab (Ctrl+T)")
+                    enabled: WorkspaceManager.writable
                     onClicked: root.createTab()
                 }
             }
@@ -326,6 +334,7 @@ Item {
                     Layout.alignment: Qt.AlignHCenter
                     text: qsTr("Create tab")
                     highlighted: true
+                    enabled: WorkspaceManager.writable
                     onClicked: root.createTab()
                 }
             }
@@ -337,25 +346,35 @@ Item {
         objectName: "workspaceTabContextMenu"
         property int targetIndex: -1
         Material.elevation: Spacing.elevationMenu
+        background: Rectangle {
+            implicitWidth: 260
+            radius: Spacing.radiusCard
+            color: Theme.color("surface")
+            border.width: 1
+            border.color: Theme.color("outlineVariant")
+        }
 
         MenuItem {
             id: customizeTabAction
             objectName: "workspaceCustomizeTabAction"
-            text: qsTr("Name & appearance…")
+            text: qsTr("Name && appearance…")
+            enabled: WorkspaceManager.writable
             onTriggered: tabSettings.openForIndex(tabContextMenu.targetIndex)
         }
         MenuItem {
             text: qsTr("Duplicate tab")
+            enabled: WorkspaceManager.writable
             onTriggered: WorkspaceManager.duplicateTab(tabContextMenu.targetIndex)
         }
         MenuItem {
             text: qsTr("Close other tabs")
-            enabled: WorkspaceManager.count > 1
+            enabled: WorkspaceManager.writable && WorkspaceManager.count > 1
             onTriggered: WorkspaceManager.closeOtherTabs(tabContextMenu.targetIndex)
         }
         MenuSeparator {}
         MenuItem {
             text: qsTr("Close tab")
+            enabled: WorkspaceManager.writable
             onTriggered: WorkspaceManager.closeTab(tabContextMenu.targetIndex)
         }
     }
@@ -363,9 +382,17 @@ Item {
     Menu {
         id: portabilityMenu
         Material.elevation: Spacing.elevationMenu
+        background: Rectangle {
+            implicitWidth: 360
+            radius: Spacing.radiusCard
+            color: Theme.color("surface")
+            border.width: 1
+            border.color: Theme.color("outlineVariant")
+        }
         MenuItem {
             objectName: "workspaceImportAction"
             text: qsTr("Import workspace JSON…")
+            enabled: WorkspaceManager.writable
             onTriggered: root.showImportWarning("json")
         }
         MenuItem {
@@ -377,16 +404,19 @@ Item {
         MenuItem {
             objectName: "workspaceImportRepoAction"
             text: qsTr("Import complete Git repository…")
+            enabled: WorkspaceManager.writable
             onTriggered: root.showImportWarning("repository")
         }
         MenuItem {
             objectName: "workspaceExportRepoAction"
             text: qsTr("Export complete Git repository…")
+            enabled: WorkspaceManager.writable
             onTriggered: exportRepositoryDialog.open()
         }
         MenuSeparator {}
         MenuItem {
             text: qsTr("Rename application…")
+            enabled: WorkspaceManager.writable
             onTriggered: root.renameApplication()
         }
         MenuItem {

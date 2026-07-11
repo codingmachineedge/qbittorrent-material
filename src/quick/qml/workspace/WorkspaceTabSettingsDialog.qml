@@ -75,17 +75,19 @@ Popup {
     function applySelectedColor(colorValue) {
         updatingColor = true
         selectedColor = colorValue
-        hueRow.value = colorValue.hsvHue < 0 ? 0 : colorValue.hsvHue * 360
-        saturationRow.value = colorValue.hsvSaturation * 1000
-        valueRow.value = colorValue.hsvValue * 1000
-        alphaRow.value = colorValue.a * 1000
-        colorHexField.text = colorHex(colorValue)
+        var normalizedColor = selectedColor
+        hueRow.value = normalizedColor.hsvHue < 0 ? 0 : normalizedColor.hsvHue * 360
+        saturationRow.value = normalizedColor.hsvSaturation * 1000
+        valueRow.value = normalizedColor.hsvValue * 1000
+        alphaRow.value = normalizedColor.a * 1000
+        colorHexField.text = colorHex(normalizedColor)
         updatingColor = false
     }
 
     function updateColorFromSliders() {
         if (updatingColor)
             return
+        errorText = ""
         selectedColor = Qt.hsva(hueRow.value / 360,
                                 saturationRow.value / 1000,
                                 valueRow.value / 1000,
@@ -107,6 +109,8 @@ Popup {
     }
 
     function openForIndex(index) {
+        if (!WorkspaceManager.writable)
+            return
         var tab = WorkspaceManager.tabAt(index)
         if (!tab || !tab.tabId)
             return
@@ -130,6 +134,13 @@ Popup {
     }
 
     function applyChanges() {
+        var parsedColor = parseHex(colorHexField.text)
+        if (parsedColor === null) {
+            errorText = qsTr("Enter a color as #RRGGBB or #AARRGGBB.")
+            colorHexField.forceActiveFocus()
+            return
+        }
+        applySelectedColor(parsedColor)
         var family = fontFamilyCombo.currentText.trim()
         var style = fontStyleCombo.currentText.trim()
         var ok = WorkspaceManager.updateTab(tabId, tabNameField.text, family, style,
@@ -425,7 +436,10 @@ Popup {
         DialogButtonBox {
             Layout.fillWidth: true
             Layout.margins: Spacing.md
-            background: null
+            spacing: Spacing.sm
+            padding: 0
+            topPadding: Spacing.sm
+            background: Rectangle { color: Theme.color("surface") }
             Button {
                 text: qsTr("Cancel")
                 flat: true
@@ -436,6 +450,7 @@ Popup {
                 objectName: "workspaceSettingsApplyButton"
                 text: qsTr("Apply")
                 highlighted: true
+                enabled: WorkspaceManager.writable
                 DialogButtonBox.buttonRole: DialogButtonBox.AcceptRole
                 onClicked: root.applyChanges()
             }

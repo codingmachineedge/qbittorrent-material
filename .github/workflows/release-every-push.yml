@@ -102,6 +102,23 @@ jobs:
             throw "Qt platform plugin is missing: $platformPlugin"
           }
 
+          $gitExecutable = (Get-Command git.exe -CommandType Application -ErrorAction Stop).Source
+          $originalPath = $env:PATH
+          $env:PATH = (@($originalPath -split ";" | Where-Object {
+            $segment = $_.Trim()
+            if ([string]::IsNullOrWhiteSpace($segment)) { return $false }
+            -not (Test-Path -LiteralPath (Join-Path $segment "git.exe")) `
+              -and -not (Test-Path -LiteralPath (Join-Path $segment "git.cmd"))
+          }) -join ";")
+          $gitOnPath = @($env:PATH -split ";" | Where-Object {
+            $segment = $_.Trim()
+            $segment -and ((Test-Path -LiteralPath (Join-Path $segment "git.exe")) `
+              -or (Test-Path -LiteralPath (Join-Path $segment "git.cmd")))
+          })
+          if ($gitOnPath.Count -ne 0) {
+            throw "Git must be absent from PATH during the installed-app smoke test."
+          }
+
           $workspaceRoot = Join-Path $env:RUNNER_TEMP "qbt-material-workspace-smoke"
           if (Test-Path -LiteralPath $workspaceRoot) {
             Remove-Item -Recurse -Force -LiteralPath $workspaceRoot
@@ -136,13 +153,77 @@ jobs:
               -or @($workspaceState.tabs).Count -ne 1) {
             throw "Persisted workspace metadata failed schema validation."
           }
-          git -C $workspaceRoot rev-parse --verify HEAD | Out-Null
+
+          # Simulate a crash after a new tab body was atomically written but
+          # before workspace.json was replaced. The next launch must adopt the
+          # orphan as a recovered tab instead of deleting the only copy.
+          $orphanId = [guid]::NewGuid().ToString()
+          $orphanContent = "Recovered after interrupted metadata save"
+          $orphanPath = Join-Path $workspaceRoot "tabs/$orphanId.md"
+          [IO.File]::WriteAllText($orphanPath, $orphanContent, [Text.UTF8Encoding]::new($false))
+
+          $recoveryProcess = Start-Process -FilePath $installedExe -PassThru
+          Start-Sleep -Seconds 10
+          if ($recoveryProcess.HasExited) {
+            throw "Installed application exited during crash-recovery smoke test with code $($recoveryProcess.ExitCode)."
+          }
+          Stop-Process -Id $recoveryProcess.Id -Force
+          $recoveryProcess.WaitForExit()
+
+          $recoveredState = Get-Content -Raw -LiteralPath $workspaceJson | ConvertFrom-Json
+          $recoveredTabs = @($recoveredState.tabs)
+          $recoveredRecord = @($recoveredTabs | Where-Object { $_.id -eq $orphanId })
+          if ($recoveredTabs.Count -ne 2 -or $recoveredRecord.Count -ne 1 `
+              -or $recoveredRecord[0].name -notlike "Recovered tab *" `
+              -or (Get-Content -Raw -LiteralPath $orphanPath) -ne $orphanContent) {
+            throw "Interrupted tab body was not recovered without data loss."
+          }
+
+          $recoveryHeadFiles = @(& $gitExecutable -C $workspaceRoot ls-tree -r --name-only HEAD)
+          if ($recoveryHeadFiles -notcontains "tabs/$orphanId.md") {
+            throw "Recovered tab was not committed by embedded libgit2."
+          }
+
+          # Simulate the opposite crash window: workspace.json recorded a close,
+          # but the previously tracked body still exists. It must be cleaned up
+          # without resurrecting the intentionally closed tab.
+          $remainingTabs = @($recoveredTabs | Where-Object { $_.id -ne $orphanId })
+          $recoveredState.tabs = $remainingTabs
+          $recoveredState.activeTabId = $remainingTabs[0].id
+          $closedMetadata = $recoveredState | ConvertTo-Json -Depth 20
+          [IO.File]::WriteAllText($workspaceJson, $closedMetadata, [Text.UTF8Encoding]::new($false))
+
+          $closeRecoveryProcess = Start-Process -FilePath $installedExe -PassThru
+          Start-Sleep -Seconds 10
+          if ($closeRecoveryProcess.HasExited) {
+            throw "Installed application exited during interrupted-close smoke test with code $($closeRecoveryProcess.ExitCode)."
+          }
+          Stop-Process -Id $closeRecoveryProcess.Id -Force
+          $closeRecoveryProcess.WaitForExit()
+
+          $closedState = Get-Content -Raw -LiteralPath $workspaceJson | ConvertFrom-Json
+          if (@($closedState.tabs).Count -ne 1 `
+              -or @($closedState.tabs | Where-Object { $_.id -eq $orphanId }).Count -ne 0 `
+              -or (Test-Path -LiteralPath $orphanPath)) {
+            throw "Interrupted close was resurrected instead of completed."
+          }
+
+          $env:PATH = $originalPath
+          & $gitExecutable -C $workspaceRoot rev-parse --verify HEAD | Out-Null
           if ($LASTEXITCODE -ne 0) {
             throw "Embedded libgit2 did not create the initial workspace commit."
           }
-          git -C $workspaceRoot fsck --strict
+          & $gitExecutable -C $workspaceRoot fsck --strict
           if ($LASTEXITCODE -ne 0) {
             throw "Workspace repository failed git fsck."
+          }
+          $headFiles = @(& $gitExecutable -C $workspaceRoot ls-tree -r --name-only HEAD)
+          if ($headFiles -contains "tabs/$orphanId.md") {
+            throw "Closed tab remains in the final embedded Git commit."
+          }
+          $workspaceStatus = @(& $gitExecutable -C $workspaceRoot status --porcelain)
+          if ($workspaceStatus.Count -ne 0) {
+            throw "Recovered workspace repository is not clean."
           }
 
           $uninstaller = Join-Path $smokeRoot "Uninstall.exe"

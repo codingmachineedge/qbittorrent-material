@@ -42,13 +42,18 @@ status, manual save-and-commit, repository access, and portability actions.
 
 Read [Workspace Tabs](Workspace-Tabs.md) for the complete workflow.
 
-<!-- WORKSPACE_SCREENSHOT_SLOTS
-Insert verified installed-app captures when available:
-images/app/09-custom-workspace-tabs.png
-images/app/10-tab-context-menu.png
-images/app/11-tab-typography-color.png
-images/app/12-workspace-portability.png
--->
+**LowLevel Workspace Studio** is a user-defined display name shown to verify
+that renaming survives relaunch; it is not a separate edition.
+
+![Persistent Workspace tabs](images/app/09-custom-workspace-tabs.png)
+
+| Tab actions | Name and appearance |
+| --- | --- |
+| ![Workspace tab context menu](images/app/10-tab-context-menu.png) | ![Typography and unlimited color editor](images/app/11-tab-typography-color.png) |
+
+| Portable workspace | Restored state |
+| --- | --- |
+| ![JSON and complete Git repository actions](images/app/12-workspace-portability.png) | ![Workspace restored after relaunch](images/app/13-restored-workspace.png) |
 
 ## Session status
 

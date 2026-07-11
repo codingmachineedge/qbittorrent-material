@@ -36,22 +36,36 @@ Sources, Content, and Speed tabs.
 
 ![Main workspace](images/app/08-main-workspace.png)
 
-## Custom workspace capture slots
+## Persistent custom workspace
 
-The following installed-package captures are reserved for the persistent
-Workspace feature. Add only images produced by the verified app build; the
-documentation deliberately does not use mock screenshots.
+These views were captured from the verified installed application. **LowLevel
+Workspace Studio** is a user-defined display name used to demonstrate renaming;
+it is still qBittorrent Material.
 
-| Planned file | Required view |
-| --- | --- |
-| `images/app/09-custom-workspace-tabs.png` | Workspace header, browser-style tab strip, and two or more real pages |
-| `images/app/10-tab-context-menu.png` | Right-click tab menu with customize, duplicate, close-others, and close actions |
-| `images/app/11-tab-typography-color.png` | Name and appearance dialog with font controls, unrestricted color controls, and preview |
-| `images/app/12-workspace-portability.png` | Import/export menu with JSON and complete Git repository choices |
+The Workspace combines a browser-style tab strip, one plain-text page per tab,
+per-tab appearance, and visible local Git status.
 
-After capture, replace this queue with the four images and concise captions,
-then add matching cards to the Pages gallery, README, service-worker shell, and
-Wiki export.
+![Custom Workspace tabs](images/app/09-custom-workspace-tabs.png)
+
+Right-clicking a tab keeps page actions anchored to that tab in a compact,
+bordered menu.
+
+![Workspace tab context menu](images/app/10-tab-context-menu.png)
+
+Each page owns its name, installed font family and style, 6–144 point size,
+bold/italic state, and unrestricted HSV/alpha or hexadecimal font color.
+
+![Tab typography and color editor](images/app/11-tab-typography-color.png)
+
+The portability menu separates compact JSON snapshots from complete Git
+repository transfers that include history.
+
+![Workspace import and export menu](images/app/12-workspace-portability.png)
+
+After relaunch, the user display name, tabs, active page, content, typography,
+and color return from the managed repository.
+
+![Workspace restored after relaunch](images/app/13-restored-workspace.png)
 
 ## Status information
 

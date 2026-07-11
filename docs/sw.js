@@ -1,5 +1,5 @@
 const CACHE_PREFIX = "qbt-material-docs-";
-const CACHE_VERSION = CACHE_PREFIX + "v2";
+const CACHE_VERSION = CACHE_PREFIX + "v3";
 const APP_SHELL = [
   "./",
   "./index.html",
@@ -17,6 +17,11 @@ const APP_SHELL = [
   "./images/app/06-statusbar.png",
   "./images/app/07-navigation-and-toolbar.png",
   "./images/app/08-main-workspace.png",
+  "./images/app/09-custom-workspace-tabs.png",
+  "./images/app/10-tab-context-menu.png",
+  "./images/app/11-tab-typography-color.png",
+  "./images/app/12-workspace-portability.png",
+  "./images/app/13-restored-workspace.png",
   "./images/site/01-landing-desktop.png",
   "./images/site/02-wiki-search.png",
   "./images/site/03-regex-builder.png",

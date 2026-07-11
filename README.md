@@ -81,18 +81,26 @@ The full annotated gallery lives in [`docs/SCREENSHOTS.md`](docs/SCREENSHOTS.md)
 
 ![Application status bar](docs/images/app/06-statusbar.png)
 
-<!-- WORKSPACE_SCREENSHOT_SLOTS
-Real installed-package captures will be inserted here after UI verification:
-docs/images/app/09-custom-workspace-tabs.png
-docs/images/app/10-tab-context-menu.png
-docs/images/app/11-tab-typography-color.png
-docs/images/app/12-workspace-portability.png
--->
+### Persistent Workspace
+
+The screenshots below come from the installed app. **LowLevel Workspace Studio**
+is a user-selected display name that demonstrates application renaming; it is
+not a separate edition or project rebrand.
+
+![Persistent browser-style Workspace tabs with a user-renamed application](docs/images/app/09-custom-workspace-tabs.png)
+
+| Tab context menu | Per-tab typography and unlimited color |
+| --- | --- |
+| ![Workspace tab context menu](docs/images/app/10-tab-context-menu.png) | ![Tab name, font, style, size, emphasis, and color controls](docs/images/app/11-tab-typography-color.png) |
+
+| JSON and complete Git portability | Restored after relaunch |
+| --- | --- |
+| ![Workspace JSON and complete Git repository portability menu](docs/images/app/12-workspace-portability.png) | ![Renamed application and persistent tabs restored after relaunch](docs/images/app/13-restored-workspace.png) |
 
 ## Building
 
-On Windows, the helper provisions Qt 6.8.3 and the remaining repository-local
-dependencies, then builds with MSVC 2022 and Ninja:
+On Windows, the helper provisions Git, CMake, Ninja, Python, Qt 6.8.3, vcpkg,
+and the remaining repository-local dependencies, then builds with MSVC 2022:
 
 ```powershell
 # Build and run

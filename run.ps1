@@ -16,7 +16,7 @@
     - Visual Studio 2022 Build Tools (MSVC, C++). MUST be installed by you
       (Microsoft does not allow silent redistribution). If missing, the script
       prints the one-line winget command to get it.
-    - CMake >= 3.21, Ninja  -> installed via winget if missing
+    - Git, CMake >= 3.21, Ninja -> installed via winget if missing
     - Python 3              -> used to fetch Qt (aqtinstall)
     - Qt 6.8.3 (msvc2022_64) -> fetched into .\.qt via aqtinstall
     - vcpkg + libtorrent/libgit2/zlib -> cloned into .\.vcpkg and built
@@ -64,7 +64,7 @@ function Find-Python {
     return $null
 }
 
-# --- 0. winget helper for cmake/ninja -----------------------------------------
+# --- 0. winget helper for Git/CMake/Ninja -------------------------------------
 function Ensure-Tool($cmd, $wingetId, $friendly) {
     if (Have $cmd) { return }
     # Reuse tools bundled with an existing Visual Studio installation before
@@ -83,6 +83,14 @@ function Ensure-Tool($cmd, $wingetId, $friendly) {
                 (Join-Path $env:ProgramFiles 'Ninja'),
                 (Join-Path $env:ProgramFiles 'Microsoft Visual Studio\18\Enterprise\Common7\IDE\CommonExtensions\Microsoft\CMake\Ninja'),
                 (Join-Path $env:ProgramFiles 'Microsoft Visual Studio\2022\Community\Common7\IDE\CommonExtensions\Microsoft\CMake\Ninja')
+            )
+        }
+        'git' {
+            @(
+                (Join-Path $env:LOCALAPPDATA 'Programs\Git\cmd'),
+                (Join-Path $env:LOCALAPPDATA 'Microsoft\WinGet\Links'),
+                (Join-Path $env:ProgramFiles 'Git\cmd'),
+                (Join-Path ${env:ProgramFiles(x86)} 'Git\cmd')
             )
         }
         default { @() }
@@ -266,6 +274,7 @@ $env:VCPKG_VISUAL_STUDIO_PATH = $VcDir.Parent.FullName
 Info "Pinning vcpkg to the selected Visual Studio: $env:VCPKG_VISUAL_STUDIO_PATH"
 Import-VcVars $vcvars
 
+Ensure-Tool 'git' 'Git.Git' 'Git'
 Ensure-Tool 'cmake' 'Kitware.CMake' 'CMake'
 Ensure-Tool 'ninja' 'Ninja-build.Ninja' 'Ninja'
 Ensure-Qt

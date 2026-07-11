@@ -12,6 +12,7 @@
 #include <QHash>
 #include <QJsonObject>
 #include <QQmlEngine>
+#include <QSet>
 #include <QStringList>
 #include <QTimer>
 #include <QUrl>
@@ -34,6 +35,7 @@ class WorkspaceManager : public QAbstractListModel
     Q_PROPERTY(QString repositoryStatus READ repositoryStatus NOTIFY repositoryStatusChanged)
     Q_PROPERTY(QString lastCommitId READ lastCommitId NOTIFY repositoryStatusChanged)
     Q_PROPERTY(bool dirty READ dirty NOTIFY dirtyChanged)
+    Q_PROPERTY(bool writable READ writable NOTIFY writableChanged)
 
 public:
     enum Roles
@@ -74,6 +76,7 @@ public:
     [[nodiscard]] QString repositoryStatus() const;
     [[nodiscard]] QString lastCommitId() const;
     [[nodiscard]] bool dirty() const;
+    [[nodiscard]] bool writable() const;
 
     Q_INVOKABLE QVariantMap tabAt(int index) const;
     Q_INVOKABLE QVariantMap tabById(const QString &tabId) const;
@@ -105,6 +108,7 @@ signals:
     void activeIndexChanged();
     void repositoryStatusChanged();
     void dirtyChanged();
+    void writableChanged();
     void operationFinished(bool success, const QString &message, const QUrl &location);
 
 private:
@@ -146,11 +150,12 @@ private:
     [[nodiscard]] bool parseWorkspace(const QByteArray &bytes, Snapshot *snapshot,
         QString *error, bool requireContent = false) const;
     [[nodiscard]] bool loadSnapshotFromRoot(const QString &root, Snapshot *snapshot,
-        QString *error) const;
+        QString *error, QSet<QString> *trackedExtras = nullptr) const;
     void applySnapshot(Snapshot snapshot);
     void loadWorkspace();
 
     void scheduleSave(const QString &commitMessage);
+    [[nodiscard]] bool requireWritable();
     [[nodiscard]] bool saveNow(const QString &commitMessage, QString *error = nullptr);
     [[nodiscard]] bool writeManagedFiles(QString *error);
     [[nodiscard]] bool ensureRepository(QString *error);
@@ -163,6 +168,8 @@ private:
     [[nodiscard]] static bool copyTree(const QString &source, const QString &destination,
         qint64 *bytesCopied, QString *error);
     [[nodiscard]] static bool removeTree(const QString &path, QString *error);
+    [[nodiscard]] static bool validateManagedWorkingTree(const QString &path,
+        QString *error, bool requireRepositoryFiles);
     [[nodiscard]] static bool validateRepositoryRoot(const QString &path, QString *error,
         bool allowUnbornMain = false);
 
@@ -173,6 +180,7 @@ private:
     QString m_lastCommitId;
     QString m_pendingCommitMessage;
     QString m_recoveryPath;
+    QSet<QString> m_managedTabFiles;
     int m_activeIndex = -1;
     bool m_dirty = false;
     bool m_loading = false;
