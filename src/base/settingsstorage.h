@@ -92,6 +92,12 @@ public:
     void removeValue(const QString &key);
     bool hasKey(const QString &key) const;
     bool isEmpty() const;
+    QStringList allKeys() const;
+
+signals:
+    // Emitted (possibly from a non-main thread) after a key's stored value
+    // actually changed. A removed key reports an invalid newValue.
+    void valueChanged(const QString &key, const QVariant &oldValue, const QVariant &newValue);
 
 public slots:
     bool save();

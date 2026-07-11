@@ -52,6 +52,12 @@
 #define QBT_HAS_RSS 1
 #endif
 
+#if __has_include("base/torrentjournal/torrentjournal.h")
+#include "base/torrentjournal/torrentjournal.h"
+#include "base/torrentjournal/torrentundomanager.h"
+#define QBT_HAS_TORRENT_JOURNAL 1
+#endif
+
 #if __has_include("base/net/proxyconfigurationmanager.h")
 #include "base/net/proxyconfigurationmanager.h"
 #define QBT_HAS_PROXY_MANAGER 1
@@ -349,6 +355,15 @@ void Application::initEngine()
     qCWarning(lcEngine) << "BitTorrent::Session header not present at build time";
 #endif
 
+#if defined(QBT_HAS_TORRENT_JOURNAL) && defined(QBT_HAS_SESSION)
+    // The git-backed journal observes Session signals, so it must come up
+    // right after the session and BEFORE the RSS session below so RSS
+    // auto-downloads are captured from the first one.
+    TorrentJournal::initInstance();
+    TorrentUndoManager::initInstance();
+    qCInfo(lcEngine) << "TorrentJournal + TorrentUndoManager initialized";
+#endif
+
 #ifdef QBT_HAS_TORRENT_FILES_WATCHER
     // Options owns the watched-folders model, so the backing engine singleton
     // must exist before the QML module instantiates OptionsController.
@@ -416,6 +431,12 @@ void Application::cleanup()
 
     qCInfo(lcApp) << "Application cleanup started";
     emit aboutToShutDown();
+
+#if defined(QBT_HAS_TORRENT_JOURNAL) && defined(QBT_HAS_SESSION)
+    // Flush the journal while the session's torrents are still alive.
+    if (TorrentJournal *journal = TorrentJournal::instance())
+        journal->shutdownFlush();
+#endif
 
     // Drop the QML engine first so bindings stop touching engine singletons.
     if (m_engine)

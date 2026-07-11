@@ -1,0 +1,578 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+  <style>
+    @font-face { font-family: 'Roboto'; src: url('fonts/Roboto.ttf'); font-weight: 100 900; }
+    @font-face { font-family: 'Roboto Mono'; src: url('fonts/RobotoMono.ttf'); font-weight: 100 900; }
+    @font-face { font-family: 'Material Symbols Outlined'; src: url('fonts/MaterialSymbolsOutlined.ttf'); }
+    html, body { margin: 0; padding: 0; background: #dfe3e8; }
+    a { color: #0969da; } a:hover { color: #0550ae; }
+    ::-webkit-scrollbar { width: 10px; height: 10px; }
+    ::-webkit-scrollbar-thumb { background: #d0d7de; border-radius: 5px; border: 2px solid #ffffff; }
+    ::-webkit-scrollbar-track { background: transparent; }
+  </style>
+</helmet>
+
+<div data-screen-label="Main window — current UI (faithful recreation)" style="width: 1440px; height: 900px; display: flex; flex-direction: column; background: #ffffff; font-family: 'Roboto', sans-serif; color: #1f2328; overflow: hidden; box-shadow: 0 8px 32px rgba(31,35,40,0.25); user-select: none;">
+
+  <!-- ===== OS title bar (native Windows chrome) ===== -->
+  <div style="height: 32px; display: flex; align-items: center; background: #ffffff; flex: none;">
+    <div style="padding: 0 12px; font-size: 12px; color: #57606a; display: flex; align-items: center; gap: 8px;">
+      <span style="width: 16px; height: 16px; border-radius: 4px; background: #0969da; display: inline-block;"></span>
+      <span>{{ windowTitle }}</span>
+    </div>
+    <div style="flex: 1;"></div>
+    <div style="display: flex;">
+      <div style="width: 46px; height: 32px; display: flex; align-items: center; justify-content: center;" style-hover="background: rgba(31,35,40,0.08);"><span style="font-family: 'Material Symbols Outlined'; font-feature-settings: 'liga'; font-size: 16px; color: #57606a;">remove</span></div>
+      <div style="width: 46px; height: 32px; display: flex; align-items: center; justify-content: center;" style-hover="background: rgba(31,35,40,0.08);"><span style="font-family: 'Material Symbols Outlined'; font-feature-settings: 'liga'; font-size: 14px; color: #57606a;">crop_square</span></div>
+      <div style="width: 46px; height: 32px; display: flex; align-items: center; justify-content: center;" style-hover="background: #cf222e; color: #ffffff;"><span style="font-family: 'Material Symbols Outlined'; font-feature-settings: 'liga'; font-size: 16px; color: inherit;">close</span></div>
+    </div>
+  </div>
+
+  <!-- ===== Menu bar (AppMenuBar: File/Edit/View/Tools/Help) ===== -->
+  <div style="height: 30px; display: flex; align-items: center; padding: 0 4px; background: #ffffff; flex: none; gap: 2px;">
+    <sc-for list="{{ menus }}" as="m" hint-placeholder-count="5">
+      <div style="padding: 4px 10px; font-size: 13px; border-radius: 4px; color: #1f2328; cursor: default;" style-hover="background: rgba(31,35,40,0.08);">{{ m }}</div>
+    </sc-for>
+  </div>
+
+  <!-- ===== Top toolbar (AppToolBar) ===== -->
+  <div style="height: 48px; display: flex; align-items: center; padding: 0 8px; gap: 4px; border-bottom: 1px solid #eaeef2; flex: none;">
+    <sc-for list="{{ toolbarLeft }}" as="b" hint-placeholder-count="11">
+      <sc-if value="{{ b.sep }}" hint-placeholder-val="{{ false }}">
+        <div style="width: 1px; height: 24px; background: #eaeef2; margin: 0 6px;"></div>
+      </sc-if>
+      <sc-if value="{{ b.btn }}" hint-placeholder-val="{{ true }}">
+        <div title="{{ b.tip }}" style="width: 40px; height: 40px; border-radius: 4px; display: flex; align-items: center; justify-content: center; cursor: pointer; opacity: {{ b.op }}; transition: background 120ms;" style-hover="background: rgba(31,35,40,0.08);" style-active="background: rgba(31,35,40,0.16);">
+          <span style="font-family: 'Material Symbols Outlined'; font-feature-settings: 'liga'; font-size: 20px; color: #1f2328;">{{ b.icon }}</span>
+        </div>
+      </sc-if>
+    </sc-for>
+
+    <div style="flex: 1;"></div>
+
+    <!-- Transfer filter (Transfers tab only) -->
+    <div style="position: relative; width: 200px; height: 40px; display: flex; align-items: center;">
+      <span style="font-family: 'Material Symbols Outlined'; font-feature-settings: 'liga'; font-size: 18px; color: #57606a; position: absolute; left: 8px;">search</span>
+      <input value="{{ filterText }}" onInput="{{ onFilterInput }}" placeholder="Filter torrents..." style="width: 100%; height: 32px; border: none; outline: none; background: transparent; border-bottom: 1px solid #d0d7de; padding: 0 24px 0 32px; font-family: 'Roboto', sans-serif; font-size: 13px; color: #1f2328;" style-focus="border-bottom: 2px solid #0969da;"></input>
+      <span style="font-family: 'Material Symbols Outlined'; font-feature-settings: 'liga'; font-size: 16px; color: #57606a; position: absolute; right: 4px; cursor: pointer;">settings</span>
+    </div>
+    <span style="font-size: 13px; color: #57606a; margin: 0 4px 0 8px;">Filter by:</span>
+    <div style="width: 150px; height: 32px; display: flex; align-items: center; justify-content: space-between; border-bottom: 1px solid #d0d7de; padding: 0 4px 0 8px; font-size: 13px; cursor: pointer;" style-hover="background: rgba(31,35,40,0.04);">
+      <span>Name</span>
+      <span style="font-family: 'Material Symbols Outlined'; font-feature-settings: 'liga'; font-size: 18px; color: #57606a;">arrow_drop_down</span>
+    </div>
+
+    <div title="Options" style="width: 40px; height: 40px; border-radius: 4px; display: flex; align-items: center; justify-content: center; cursor: pointer; margin-left: 8px;" style-hover="background: rgba(31,35,40,0.08);"><span style="font-family: 'Material Symbols Outlined'; font-feature-settings: 'liga'; font-size: 20px; color: #1f2328;">settings</span></div>
+    <div title="Lock qBittorrent" style="width: 40px; height: 40px; border-radius: 4px; display: flex; align-items: center; justify-content: center; cursor: pointer;" style-hover="background: rgba(31,35,40,0.08);"><span style="font-family: 'Material Symbols Outlined'; font-feature-settings: 'liga'; font-size: 20px; color: #1f2328;">lock</span></div>
+  </div>
+
+  <!-- ===== Content: sidebar | transfer list / properties ===== -->
+  <div style="flex: 1; display: flex; min-height: 0;">
+
+    <!-- Filter sidebar -->
+    <sc-if value="{{ sidebarOn }}" hint-placeholder-val="{{ true }}">
+      <div style="width: 240px; flex: none; overflow-y: auto; overflow-x: hidden; background: #ffffff;">
+        <sc-for list="{{ sections }}" as="sec" hint-placeholder-count="4">
+          <div>
+            <div onClick="{{ sec.toggle }}" style="height: 36px; display: flex; align-items: center; gap: 8px; padding: 0 8px; cursor: pointer;" style-hover="background: rgba(31,35,40,0.08);">
+              <span style="font-family: 'Material Symbols Outlined'; font-feature-settings: 'liga'; font-size: 20px; color: #57606a; transform: rotate({{ sec.rot }}deg); transition: transform 150ms cubic-bezier(0.33,1,0.68,1);">expand_more</span>
+              <span style="font-family: 'Material Symbols Outlined'; font-feature-settings: 'liga'; font-size: 20px; color: #57606a;">{{ sec.icon }}</span>
+              <span style="font-size: 14px; font-weight: 600; letter-spacing: 0.1px; color: #1f2328;">{{ sec.title }}</span>
+            </div>
+            <div style="overflow: hidden; max-height: {{ sec.maxH }}px; transition: max-height 160ms cubic-bezier(0.33,1,0.68,1);">
+              <sc-for list="{{ sec.items }}" as="it" hint-placeholder-count="5">
+                <div onClick="{{ it.click }}" style="height: 32px; display: flex; align-items: center; gap: 8px; padding: 0 8px 0 16px; margin: 0 4px; border-radius: 8px; cursor: pointer; background: {{ it.bg }};" style-hover="background: rgba(31,35,40,0.08);">
+                  <span style="font-family: 'Material Symbols Outlined'; font-feature-settings: 'liga'; font-size: 18px; color: {{ it.iconColor }};">{{ it.icon }}</span>
+                  <span style="font-size: 13px; letter-spacing: 0.25px; color: {{ it.textColor }}; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;">{{ it.label }}</span>
+                </div>
+              </sc-for>
+            </div>
+          </div>
+        </sc-for>
+      </div>
+      <!-- Split handle -->
+      <div style="width: 4px; flex: none; background: #eaeef2; cursor: col-resize; transition: background 120ms;" style-hover="background: rgba(9,105,218,0.4);" style-active="background: #0969da;"></div>
+    </sc-if>
+
+    <!-- Right pane: list over properties -->
+    <div style="flex: 1; display: flex; flex-direction: column; min-width: 0;">
+
+      <!-- List filter bar -->
+      <div style="display: flex; align-items: center; gap: 8px; padding: 4px; flex: none;">
+        <div style="position: relative; flex: 1; height: 40px; display: flex; align-items: center;">
+          <span style="font-family: 'Material Symbols Outlined'; font-feature-settings: 'liga'; font-size: 18px; color: #57606a; position: absolute; left: 8px;">search</span>
+          <input value="{{ filterText }}" onInput="{{ onFilterInput }}" placeholder="Filter torrent list…" style="width: 100%; height: 36px; border: none; outline: none; background: transparent; border-bottom: 1px solid #d0d7de; padding: 0 28px 0 32px; font-family: 'Roboto', sans-serif; font-size: 13px; color: #1f2328;" style-focus="border-bottom: 2px solid #0969da;"></input>
+          <span style="font-family: 'Material Symbols Outlined'; font-feature-settings: 'liga'; font-size: 16px; color: #57606a; position: absolute; right: 6px; cursor: pointer;">settings</span>
+        </div>
+        <div title="Column visibility" style="width: 36px; height: 36px; border-radius: 4px; display: flex; align-items: center; justify-content: center; cursor: pointer; flex: none;" style-hover="background: rgba(31,35,40,0.08);">
+          <span style="font-family: 'Material Symbols Outlined'; font-feature-settings: 'liga'; font-size: 20px; color: #1f2328;">more_vert</span>
+        </div>
+      </div>
+
+      <!-- Transfer table -->
+      <div style="flex: 1; overflow: auto; min-height: 120px;">
+        <div style="width: 1464px;">
+          <!-- Header -->
+          <div style="display: flex; height: 36px; background: #f6f8fa; border-bottom: 1px solid #d0d7de; position: sticky; top: 0; z-index: 2;">
+            <sc-for list="{{ headers }}" as="h" hint-placeholder-count="13">
+              <div onClick="{{ h.click }}" style="width: {{ h.w }}px; flex: none; display: flex; align-items: center; gap: 4px; padding: 0 8px; border-right: 1px solid #eaeef2; font-size: 13px; color: #57606a; cursor: pointer; justify-content: {{ h.just }}; box-sizing: border-box; white-space: nowrap; overflow: hidden;" style-hover="background: rgba(31,35,40,0.05);">
+                <span style="overflow: hidden; text-overflow: ellipsis;">{{ h.title }}</span>
+                <sc-if value="{{ h.sorted }}" hint-placeholder-val="{{ false }}">
+                  <span style="font-family: 'Material Symbols Outlined'; font-feature-settings: 'liga'; font-size: 16px; color: #0969da;">{{ h.sortIcon }}</span>
+                </sc-if>
+              </div>
+            </sc-for>
+          </div>
+          <!-- Rows -->
+          <sc-for list="{{ rows }}" as="t" hint-placeholder-count="10">
+            <div onClick="{{ t.click }}" style="display: flex; height: 36px; background: {{ t.bg }}; border-bottom: 1px solid rgba(234,238,242,0.5); cursor: default;" style-hover="background: rgba(31,35,40,0.06);">
+              <div style="width: 44px; flex: none; display: flex; align-items: center; justify-content: flex-end; padding: 0 8px; box-sizing: border-box; font-size: 13px; color: {{ t.color }};">{{ t.q }}</div>
+              <div style="width: 320px; flex: none; display: flex; align-items: center; gap: 4px; padding: 0 8px; box-sizing: border-box; overflow: hidden;">
+                <span style="font-family: 'Material Symbols Outlined'; font-feature-settings: 'liga'; font-size: 18px; color: {{ t.color }}; flex: none;">{{ t.icon }}</span>
+                <span style="font-size: 13px; letter-spacing: 0.25px; color: {{ t.color }}; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;">{{ t.name }}</span>
+              </div>
+              <div style="width: 90px; flex: none; display: flex; align-items: center; justify-content: flex-end; padding: 0 8px; box-sizing: border-box; font-size: 13px; color: {{ t.color }};">{{ t.size }}</div>
+              <div style="width: 120px; flex: none; position: relative; display: flex; align-items: center; box-sizing: border-box;">
+                <div style="position: absolute; left: 4px; right: 4px; top: 50%; margin-top: -2px; height: 4px; border-radius: 2px; background: #f6f8fa; overflow: hidden;">
+                  <div style="width: {{ t.pct }}%; height: 100%; background: {{ t.barColor }};"></div>
+                </div>
+                <span style="position: relative; width: 100%; text-align: center; font-size: 11px; font-weight: 500; letter-spacing: 0.5px; color: {{ t.pctColor }}; text-shadow: 0 0 3px #ffffff, 0 0 3px #ffffff, 0 0 2px #ffffff;">{{ t.pctLabel }}</span>
+              </div>
+              <div style="width: 130px; flex: none; display: flex; align-items: center; padding: 0 8px; box-sizing: border-box; font-size: 13px; color: {{ t.color }}; white-space: nowrap; overflow: hidden;">{{ t.status }}</div>
+              <div style="width: 80px; flex: none; display: flex; align-items: center; justify-content: flex-end; padding: 0 8px; box-sizing: border-box; font-size: 13px; color: {{ t.color }};">{{ t.seeds }}</div>
+              <div style="width: 80px; flex: none; display: flex; align-items: center; justify-content: flex-end; padding: 0 8px; box-sizing: border-box; font-size: 13px; color: {{ t.color }};">{{ t.peers }}</div>
+              <div style="width: 100px; flex: none; display: flex; align-items: center; justify-content: flex-end; padding: 0 8px; box-sizing: border-box; font-size: 13px; color: {{ t.color }};">{{ t.dl }}</div>
+              <div style="width: 100px; flex: none; display: flex; align-items: center; justify-content: flex-end; padding: 0 8px; box-sizing: border-box; font-size: 13px; color: {{ t.color }};">{{ t.ul }}</div>
+              <div style="width: 90px; flex: none; display: flex; align-items: center; justify-content: flex-end; padding: 0 8px; box-sizing: border-box; font-size: 13px; color: {{ t.color }};">{{ t.eta }}</div>
+              <div style="width: 70px; flex: none; display: flex; align-items: center; justify-content: flex-end; padding: 0 8px; box-sizing: border-box; font-size: 13px; color: {{ t.color }};">{{ t.ratio }}</div>
+              <div style="width: 120px; flex: none; display: flex; align-items: center; padding: 0 8px; box-sizing: border-box; font-size: 13px; color: {{ t.color }}; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;">{{ t.cat }}</div>
+              <div style="width: 120px; flex: none; display: flex; align-items: center; padding: 0 8px; box-sizing: border-box; font-size: 13px; color: {{ t.color }}; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;">{{ t.tags }}</div>
+            </div>
+          </sc-for>
+        </div>
+      </div>
+
+      <!-- Split handle -->
+      <div style="height: 4px; flex: none; background: #eaeef2; cursor: row-resize; transition: background 120ms;" style-hover="background: rgba(9,105,218,0.4);" style-active="background: #0969da;"></div>
+
+      <!-- Properties panel -->
+      <div style="flex: none; display: flex; flex-direction: column;">
+        <sc-if value="{{ propOpen }}" hint-placeholder-val="{{ true }}">
+          <div style="height: 236px; overflow-y: auto; padding: 16px; box-sizing: border-box; display: flex; flex-direction: column; gap: 16px; background: #ffffff;">
+            <sc-if value="{{ propIsGeneral }}" hint-placeholder-val="{{ true }}">
+              <!-- Pieces card -->
+              <div style="border: 1px solid #eaeef2; border-radius: 12px; padding: 12px; box-shadow: 0 1px 2px rgba(31,35,40,0.08); display: grid; grid-template-columns: auto 1fr 64px; gap: 8px 12px; align-items: center;">
+                <span style="font-size: 13px; color: #57606a;">Progress:</span>
+                <div style="height: 18px; border-radius: 2px; background: #f6f8fa; overflow: hidden; position: relative;">
+                  <div style="position: absolute; inset: 0; background: linear-gradient(90deg, #0969da 0%, #0969da 19%, transparent 19%, transparent 20.2%, #0969da 20.2%, #0969da 37%, transparent 37%, transparent 38.4%, #0969da 38.4%, #0969da 54%, transparent 54%, transparent 55%, #0969da 55%, #0969da 62.4%, transparent 62.4%);"></div>
+                </div>
+                <span style="font-family: 'Roboto Mono', monospace; font-size: 13px; text-align: right;">{{ selPct }}</span>
+                <span style="font-size: 13px; color: #57606a;">Availability:</span>
+                <div style="height: 18px; border-radius: 2px; background: #f6f8fa; overflow: hidden; position: relative;">
+                  <div style="position: absolute; inset: 0; width: 97%; background: rgba(9,105,218,0.35);"></div>
+                </div>
+                <span style="font-family: 'Roboto Mono', monospace; font-size: 13px; text-align: right;">14.36</span>
+              </div>
+              <!-- Transfer card -->
+              <div style="border: 1px solid #eaeef2; border-radius: 12px; padding: 12px; box-shadow: 0 1px 2px rgba(31,35,40,0.08);">
+                <div style="font-size: 16px; font-weight: 600; letter-spacing: 0.15px; margin-bottom: 8px;">Transfer</div>
+                <div style="display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 8px 24px;">
+                  <sc-for list="{{ transferFields }}" as="f" hint-placeholder-count="16">
+                    <div style="display: flex; gap: 8px; min-width: 0;">
+                      <span style="font-size: 13px; color: #57606a; flex: none;">{{ f.l }}</span>
+                      <span style="font-size: 13px; color: #1f2328; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;">{{ f.v }}</span>
+                    </div>
+                  </sc-for>
+                </div>
+              </div>
+              <!-- Information card -->
+              <div style="border: 1px solid #eaeef2; border-radius: 12px; padding: 12px; box-shadow: 0 1px 2px rgba(31,35,40,0.08);">
+                <div style="font-size: 16px; font-weight: 600; letter-spacing: 0.15px; margin-bottom: 8px;">Information</div>
+                <div style="display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 8px 24px;">
+                  <sc-for list="{{ infoFields }}" as="f" hint-placeholder-count="7">
+                    <div style="display: flex; gap: 8px; min-width: 0;">
+                      <span style="font-size: 13px; color: #57606a; flex: none;">{{ f.l }}</span>
+                      <span style="font-size: 13px; color: #1f2328; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;">{{ f.v }}</span>
+                    </div>
+                  </sc-for>
+                </div>
+                <div style="height: 1px; background: #eaeef2; margin: 12px 0;"></div>
+                <div style="display: flex; flex-direction: column; gap: 8px;">
+                  <div style="display: flex; gap: 8px;"><span style="font-size: 13px; color: #57606a; flex: none;">Info Hash v1:</span><span style="font-family: 'Roboto Mono', monospace; font-size: 13px; user-select: text;">{{ selHash }}</span></div>
+                  <div style="display: flex; gap: 8px;"><span style="font-size: 13px; color: #57606a; flex: none;">Info Hash v2:</span><span style="font-family: 'Roboto Mono', monospace; font-size: 13px; color: #57606a;">N/A</span></div>
+                  <div style="display: flex; gap: 8px;"><span style="font-size: 13px; color: #57606a; flex: none;">Save Path:</span><span style="font-size: 13px; user-select: text;">C:/Users/sam/Downloads/ISOs</span></div>
+                </div>
+              </div>
+            </sc-if>
+            <sc-if value="{{ propIsOther }}" hint-placeholder-val="{{ false }}">
+              <div style="flex: 1; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 8px; min-height: 180px;">
+                <span style="font-family: 'Material Symbols Outlined'; font-feature-settings: 'liga'; font-size: 40px; color: #d0d7de;">{{ propTabIcon }}</span>
+                <span style="font-size: 13px; color: #57606a;">{{ propTabEmpty }}</span>
+              </div>
+            </sc-if>
+          </div>
+          <div style="height: 1px; background: #eaeef2; flex: none;"></div>
+        </sc-if>
+        <!-- Properties tab bar (bottom) -->
+        <div style="height: 44px; display: flex; flex: none; background: #ffffff;">
+          <sc-for list="{{ propTabs }}" as="pt" hint-placeholder-count="6">
+            <div onClick="{{ pt.click }}" style="display: flex; align-items: center; gap: 4px; padding: 0 16px; cursor: pointer; position: relative;" style-hover="background: rgba(31,35,40,0.05);">
+              <span style="font-family: 'Material Symbols Outlined'; font-feature-settings: 'liga'; font-size: 18px; color: {{ pt.color }}; transition: color 150ms;">{{ pt.icon }}</span>
+              <span style="font-size: 14px; font-weight: 600; letter-spacing: 0.1px; color: {{ pt.color }}; transition: color 150ms;">{{ pt.label }}</span>
+              <div style="position: absolute; left: 0; right: 0; bottom: 0; height: 2px; background: #0969da; opacity: {{ pt.ind }}; transition: opacity 150ms;"></div>
+            </div>
+          </sc-for>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ===== Status bar ===== -->
+  <div style="height: 32px; display: flex; align-items: center; gap: 8px; padding: 0 12px; border-top: 1px solid #eaeef2; flex: none; background: #ffffff;">
+    <span style="font-size: 13px; color: #57606a;">Free space: 412 GiB</span>
+    <div style="width: 1px; align-self: stretch; margin: 4px 0; background: #eaeef2;"></div>
+    <span style="font-size: 13px; color: #57606a;">External IP: 203.0.113.42</span>
+    <div style="width: 1px; align-self: stretch; margin: 4px 0; background: #eaeef2;"></div>
+    <span style="font-size: 13px; color: #57606a;">DHT: 387 nodes</span>
+    <div style="width: 1px; align-self: stretch; margin: 4px 0; background: #eaeef2;"></div>
+    <div title="Connection Status: Online" style="width: 28px; height: 28px; border-radius: 4px; display: flex; align-items: center; justify-content: center; cursor: pointer;" style-hover="background: rgba(31,35,40,0.08);">
+      <span style="font-family: 'Material Symbols Outlined'; font-feature-settings: 'liga'; font-size: 18px; color: #1a7f37;">cloud_done</span>
+    </div>
+    <div style="width: 1px; align-self: stretch; margin: 4px 0; background: #eaeef2;"></div>
+    <div onClick="{{ toggleAlt }}" title="Alternative speed limits" style="width: 28px; height: 28px; border-radius: 4px; display: flex; align-items: center; justify-content: center; cursor: pointer;" style-hover="background: rgba(31,35,40,0.08);">
+      <span style="font-family: 'Material Symbols Outlined'; font-feature-settings: 'liga'; font-size: 18px; color: {{ altColor }}; font-variation-settings: {{ altFill }};">speed</span>
+    </div>
+    <div style="width: 1px; align-self: stretch; margin: 4px 0; background: #eaeef2;"></div>
+    <div style="min-width: 180px; height: 28px; border-radius: 4px; display: flex; align-items: center; gap: 8px; padding: 0 8px; cursor: pointer;" style-hover="background: rgba(31,35,40,0.08);">
+      <span style="font-family: 'Material Symbols Outlined'; font-feature-settings: 'liga'; font-size: 16px; color: #57606a;">download</span>
+      <span style="font-family: 'Roboto Mono', monospace; font-size: 13px; color: #1f2328;">{{ dlStatus }}</span>
+    </div>
+    <div style="width: 1px; align-self: stretch; margin: 4px 0; background: #eaeef2;"></div>
+    <div style="min-width: 180px; height: 28px; border-radius: 4px; display: flex; align-items: center; gap: 8px; padding: 0 8px; cursor: pointer;" style-hover="background: rgba(31,35,40,0.08);">
+      <span style="font-family: 'Material Symbols Outlined'; font-feature-settings: 'liga'; font-size: 16px; color: #57606a;">upload</span>
+      <span style="font-family: 'Roboto Mono', monospace; font-size: 13px; color: #1f2328;">{{ ulStatus }}</span>
+    </div>
+    <div style="flex: 1;"></div>
+  </div>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props="{&quot;$preview&quot;: {&quot;width&quot;: 1440, &quot;height&quot;: 900}, &quot;useStateColors&quot;: {&quot;editor&quot;: &quot;boolean&quot;, &quot;default&quot;: true, &quot;tsType&quot;: &quot;boolean&quot;, &quot;section&quot;: &quot;Preferences&quot;}, &quot;alternatingRows&quot;: {&quot;editor&quot;: &quot;boolean&quot;, &quot;default&quot;: true, &quot;tsType&quot;: &quot;boolean&quot;, &quot;section&quot;: &quot;Preferences&quot;}, &quot;sidebarVisible&quot;: {&quot;editor&quot;: &quot;boolean&quot;, &quot;default&quot;: true, &quot;tsType&quot;: &quot;boolean&quot;, &quot;section&quot;: &quot;Preferences&quot;}}">
+class Component extends DCLogic {
+  state = {
+    selId: "t1",
+    propTab: 0,
+    propOpen: true,
+    secOpen: { status: true, cats: true, tags: true, trackers: true },
+    fStatus: "all",
+    fCat: "__all",
+    fTag: "__all",
+    fTracker: "__all",
+    text: "",
+    sortCol: "q",
+    sortAsc: true,
+    alt: false
+  };
+
+  // Palette (light) — from thememanager.cpp
+  P = {
+    primary: "#0969da", primaryEmphasis: "#0550ae", onSurface: "#1f2328",
+    onSurfaceVariant: "#57606a", surfaceVariant: "#f6f8fa", outline: "#d0d7de",
+    outlineVariant: "#eaeef2", error: "#cf222e", success: "#1a7f37",
+    successEmphasis: "#2da44e", warning: "#7d4e00", done: "#8250df", muted: "#57606a"
+  };
+
+  // Torrent inventory. state ints match TransferState (CONTRACTS §6.3).
+  data = [
+    { id: "t1", state: 1, name: "ubuntu-24.04.2-desktop-amd64.iso", size: "6.14 GiB", pct: 62.4, status: "Downloading", seeds: "84 (312)", peers: "31 (89)", dl: "3.1 MiB/s", ul: "212 KiB/s", eta: "28m 14s", ratio: "0.42", cat: "linux-iso", tags: "verified", q: "1", tracker: "torrent.ubuntu.com", active: true },
+    { id: "t2", state: 1, name: "debian-13.1.0-amd64-DVD-1.iso", size: "3.91 GiB", pct: 18.7, status: "Downloading", seeds: "45 (198)", peers: "22 (64)", dl: "1.8 MiB/s", ul: "96 KiB/s", eta: "2h 05m", ratio: "0.11", cat: "linux-iso", tags: "verified", q: "2", tracker: "bttracker.debian.org", active: true },
+    { id: "t3", state: 4, name: "Fedora-Workstation-Live-x86_64-42-1.6.iso", size: "2.63 GiB", pct: 91.2, status: "Stalled", seeds: "0 (57)", peers: "4 (12)", dl: "0 B/s", ul: "18 KiB/s", eta: "\u221e", ratio: "0.87", cat: "linux-iso", tags: "", q: "3", tracker: "torrent.fedoraproject.org", active: true },
+    { id: "t4", state: 6, name: "archlinux-2026.07.01-x86_64.iso", size: "1.21 GiB", pct: 100, status: "Seeding", seeds: "141 (503)", peers: "12 (77)", dl: "0 B/s", ul: "1.4 MiB/s", eta: "\u221e", ratio: "3.86", cat: "linux-iso", tags: "verified", q: "*", tracker: "tracker.archlinux.org", active: true },
+    { id: "t5", state: 14, name: "linuxmint-22.1-cinnamon-64bit.iso", size: "2.88 GiB", pct: 100, status: "Completed", seeds: "0 (214)", peers: "0 (36)", dl: "0 B/s", ul: "0 B/s", eta: "\u221e", ratio: "1.52", cat: "linux-iso", tags: "archive", q: "*", tracker: "torrents.linuxmint.com", active: false },
+    { id: "t6", state: 9, name: "openSUSE-Tumbleweed-DVD-x86_64-Current.iso", size: "4.37 GiB", pct: 0.0, status: "Queued", seeds: "0 (166)", peers: "0 (0)", dl: "0 B/s", ul: "0 B/s", eta: "\u221e", ratio: "0.00", cat: "linux-iso", tags: "weekly", q: "4", tracker: "tracker.opensuse.org", active: false },
+    { id: "t7", state: 13, name: "raspios-bookworm-arm64-full.img.xz", size: "2.72 GiB", pct: 34.5, status: "Stopped", seeds: "0 (88)", peers: "0 (0)", dl: "0 B/s", ul: "0 B/s", eta: "\u221e", ratio: "0.03", cat: "", tags: "", q: "5", tracker: "fosstorrents.com", active: false },
+    { id: "t8", state: 16, name: "nixos-25.05-graphical-x86_64.iso", size: "2.41 GiB", pct: 66.0, status: "Missing Files", seeds: "0 (73)", peers: "0 (0)", dl: "0 B/s", ul: "0 B/s", eta: "\u221e", ratio: "0.29", cat: "", tags: "", q: "*", tracker: "", active: false },
+    { id: "t9", state: 12, name: "kali-linux-2026.2-installer-amd64.iso", size: "4.02 GiB", pct: 76.8, status: "Checking", seeds: "0 (129)", peers: "0 (0)", dl: "0 B/s", ul: "0 B/s", eta: "\u221e", ratio: "0.18", cat: "", tags: "", q: "*", tracker: "tracker.kali.org", active: false },
+    { id: "t10", state: 15, name: "tails-amd64-6.8.img", size: "1.34 GiB", pct: 100, status: "Moving", seeds: "0 (91)", peers: "0 (0)", dl: "0 B/s", ul: "0 B/s", eta: "\u221e", ratio: "0.95", cat: "media", tags: "archive", q: "*", tracker: "tracker.tails.boum.org", active: false },
+    { id: "t11", state: 7, name: "LibreOffice_25.2.4_Linux_x86-64_rpm.tar.gz", size: "332 MiB", pct: 100, status: "Stalled", seeds: "0 (44)", peers: "2 (6)", dl: "0 B/s", ul: "0 B/s", eta: "\u221e", ratio: "5.11", cat: "software", tags: "verified", q: "*", tracker: "tracker.documentfoundation.org", active: false },
+    { id: "t12", state: 0, name: "FreeBSD-14.2-RELEASE-amd64-dvd1.iso", size: "4.51 GiB", pct: 44.1, status: "[F] Downloading", seeds: "19 (77)", peers: "9 (31)", dl: "924 KiB/s", ul: "44 KiB/s", eta: "1h 12m", ratio: "0.35", cat: "software", tags: "", q: "*", tracker: "tracker.freebsd.org", active: true }
+  ];
+
+  // TorrentState -> row text color (StateColors / DESIGN_SYSTEM §1)
+  stateColor(s) {
+    const P = this.P;
+    switch (s) {
+      case 0: case 1: case 2: case 3: case 8: case 11: case 12: case 15: return P.success;
+      case 4: return P.successEmphasis;
+      case 5: case 6: return P.primary;
+      case 7: return P.primaryEmphasis;
+      case 9: case 10: return P.warning;
+      case 13: return P.muted;
+      case 14: return P.done;
+      case 16: case 17: return P.error;
+      default: return P.muted;
+    }
+  }
+
+  // TorrentState -> name-cell glyph (TransferListView.stateIconId)
+  stateIcon(s) {
+    switch (s) {
+      case 0: case 1: case 2: case 3: return "download";
+      case 4: case 7: return "hourglass_empty";
+      case 5: case 6: return "upload";
+      case 8: case 11: case 12: return "fact_check";
+      case 9: case 10: return "low_priority";
+      case 13: return "pause";
+      case 14: return "check_circle";
+      case 15: return "drive_file_move";
+      case 16: case 17: return "error";
+      default: return "insert_drive_file";
+    }
+  }
+
+  // TorrentFilter::Status membership
+  statusMatch(t, key) {
+    const s = t.state;
+    switch (key) {
+      case "all": return true;
+      case "downloading": return [0, 1, 2, 3].includes(s);
+      case "seeding": return [5, 6, 7].includes(s);
+      case "completed": return [14, 15].includes(s);
+      case "running": return ![13, 14, 9, 10].includes(s);
+      case "stopped": return [13, 14].includes(s);
+      case "active": return t.active;
+      case "inactive": return !t.active;
+      case "stalled": return [4, 7].includes(s);
+      case "stalledUp": return s === 7;
+      case "stalledDl": return s === 4;
+      case "checking": return [8, 11, 12].includes(s);
+      case "moving": return s === 15;
+      case "errored": return [16, 17].includes(s);
+      default: return true;
+    }
+  }
+
+  sortVal(t, col) {
+    switch (col) {
+      case "q": return t.q === "*" ? 999 : parseInt(t.q, 10);
+      case "name": return t.name.toLowerCase();
+      case "size": { const m = parseFloat(t.size); return t.size.includes("MiB") ? m / 1024 : m; }
+      case "pct": return t.pct;
+      case "status": return t.status;
+      case "seeds": return parseInt(t.seeds, 10) || 0;
+      case "peers": return parseInt(t.peers, 10) || 0;
+      case "dl": { const m = parseFloat(t.dl); return t.dl.includes("MiB") ? m * 1024 : (t.dl.includes("KiB") ? m : 0); }
+      case "ul": { const m = parseFloat(t.ul); return t.ul.includes("MiB") ? m * 1024 : (t.ul.includes("KiB") ? m : 0); }
+      case "eta": return t.eta === "\u221e" ? 999999 : t.eta;
+      case "ratio": return parseFloat(t.ratio);
+      case "cat": return t.cat;
+      case "tags": return t.tags;
+      default: return 0;
+    }
+  }
+
+  renderVals() {
+    const S = this.state, P = this.P;
+    const set = (patch) => this.setState(patch);
+    const stateColorsOn = this.props.useStateColors ?? true;
+    const altRows = this.props.alternatingRows ?? true;
+
+    // ---- filtering + sorting ----
+    let list = this.data.filter(t =>
+      this.statusMatch(t, S.fStatus) &&
+      (S.fCat === "__all" || (S.fCat === "__none" ? t.cat === "" : t.cat === S.fCat)) &&
+      (S.fTag === "__all" || (S.fTag === "__none" ? t.tags === "" : t.tags.includes(S.fTag))) &&
+      (S.fTracker === "__all" || (S.fTracker === "__none" ? t.tracker === "" : t.tracker === S.fTracker)) &&
+      (S.text === "" || t.name.toLowerCase().includes(S.text.toLowerCase()))
+    );
+    list = list.slice().sort((a, b) => {
+      const va = this.sortVal(a, S.sortCol), vb = this.sortVal(b, S.sortCol);
+      const c = va < vb ? -1 : va > vb ? 1 : 0;
+      return S.sortAsc ? c : -c;
+    });
+
+    const rows = list.map((t, i) => {
+      const sel = t.id === S.selId;
+      const color = stateColorsOn ? this.stateColor(t.state) : P.onSurface;
+      const dis = [17, 13, 16].includes(t.state);
+      return {
+        ...t,
+        icon: this.stateIcon(t.state),
+        color: color,
+        bg: sel ? "rgba(9,105,218,0.12)" : (altRows && i % 2 === 1 ? "rgba(246,248,250,0.6)" : "transparent"),
+        barColor: dis ? P.outline : P.primary,
+        pctColor: dis ? P.onSurfaceVariant : P.onSurface,
+        pctLabel: Math.round(t.pct) + "%",
+        click: () => set({ selId: t.id })
+      };
+    });
+
+    // ---- headers ----
+    const cols = [
+      { c: "q", title: "#", w: 44, just: "flex-end" },
+      { c: "name", title: "Name", w: 320, just: "flex-start" },
+      { c: "size", title: "Size", w: 90, just: "flex-end" },
+      { c: "pct", title: "Progress", w: 120, just: "center" },
+      { c: "status", title: "Status", w: 130, just: "flex-start" },
+      { c: "seeds", title: "Seeds", w: 80, just: "flex-end" },
+      { c: "peers", title: "Peers", w: 80, just: "flex-end" },
+      { c: "dl", title: "Down Speed", w: 100, just: "flex-end" },
+      { c: "ul", title: "Up Speed", w: 100, just: "flex-end" },
+      { c: "eta", title: "ETA", w: 90, just: "flex-end" },
+      { c: "ratio", title: "Ratio", w: 70, just: "flex-end" },
+      { c: "cat", title: "Category", w: 120, just: "flex-start" },
+      { c: "tags", title: "Tags", w: 120, just: "flex-start" }
+    ];
+    const headers = cols.map(h => ({
+      ...h,
+      sorted: S.sortCol === h.c,
+      sortIcon: S.sortAsc ? "arrow_upward" : "arrow_downward",
+      click: () => set(S.sortCol === h.c ? { sortAsc: !S.sortAsc } : { sortCol: h.c, sortAsc: true })
+    }));
+
+    // ---- sidebar sections ----
+    const cnt = (key) => this.data.filter(t => this.statusMatch(t, key)).length;
+    const statusDefs = [
+      ["all", "All", "apps"], ["downloading", "Downloading", "download"], ["seeding", "Seeding", "upload"],
+      ["completed", "Completed", "check_circle"], ["running", "Running", "play_arrow"], ["stopped", "Stopped", "pause"],
+      ["active", "Active", "trending_up"], ["inactive", "Inactive", "trending_down"], ["stalled", "Stalled", "hourglass_empty"],
+      ["stalledUp", "Stalled Uploading", "hourglass_empty"], ["stalledDl", "Stalled Downloading", "hourglass_empty"],
+      ["checking", "Checking", "fact_check"], ["moving", "Moving", "drive_file_move"], ["errored", "Errored", "error"]
+    ];
+    const mkItem = (label, icon, sel, click) => ({
+      label, icon, click,
+      bg: sel ? "rgba(9,105,218,0.12)" : "transparent",
+      iconColor: sel ? P.primary : P.onSurfaceVariant,
+      textColor: sel ? P.primary : P.onSurface
+    });
+
+    const statusItems = statusDefs.map(([k, l, ic]) =>
+      mkItem(l + " (" + cnt(k) + ")", ic, S.fStatus === k, () => set({ fStatus: k })));
+
+    const catCount = (c) => this.data.filter(t => c === "__none" ? t.cat === "" : t.cat === c).length;
+    const cats = ["linux-iso", "media", "software"];
+    const catItems = [
+      mkItem("All (" + this.data.length + ")", "apps", S.fCat === "__all", () => set({ fCat: "__all" })),
+      mkItem("Uncategorized (" + catCount("__none") + ")", "category", S.fCat === "__none", () => set({ fCat: "__none" })),
+      ...cats.map(c => mkItem(c + " (" + catCount(c) + ")", "category", S.fCat === c, () => set({ fCat: c })))
+    ];
+
+    const tagCount = (g) => this.data.filter(t => g === "__none" ? t.tags === "" : t.tags.includes(g)).length;
+    const tags = ["archive", "verified", "weekly"];
+    const tagItems = [
+      mkItem("All (" + this.data.length + ")", "apps", S.fTag === "__all", () => set({ fTag: "__all" })),
+      mkItem("Untagged (" + tagCount("__none") + ")", "sell", S.fTag === "__none", () => set({ fTag: "__none" })),
+      ...tags.map(g => mkItem(g + " (" + tagCount(g) + ")", "sell", S.fTag === g, () => set({ fTag: g })))
+    ];
+
+    const trackers = [...new Set(this.data.map(t => t.tracker).filter(x => x))].sort();
+    const trCount = (d) => this.data.filter(t => d === "__none" ? t.tracker === "" : t.tracker === d).length;
+    const trackerItems = [
+      mkItem("All (" + this.data.length + ")", "apps", S.fTracker === "__all", () => set({ fTracker: "__all" })),
+      mkItem("Trackerless (" + trCount("__none") + ")", "cloud_off", S.fTracker === "__none", () => set({ fTracker: "__none" })),
+      ...trackers.map(d => mkItem(d + " (" + trCount(d) + ")", "dns", S.fTracker === d, () => set({ fTracker: d })))
+    ];
+
+    const mkSec = (key, title, icon, items) => ({
+      key, title, icon, items: S.secOpen[key] ? items : [],
+      rot: S.secOpen[key] ? 0 : -90,
+      maxH: S.secOpen[key] ? items.length * 32 : 0,
+      toggle: () => set({ secOpen: { ...S.secOpen, [key]: !S.secOpen[key] } })
+    });
+    const sections = [
+      mkSec("status", "Status", "filter_list", statusItems),
+      mkSec("cats", "Categories", "category", catItems),
+      mkSec("tags", "Tags", "sell", tagItems),
+      mkSec("trackers", "Trackers", "dns", trackerItems)
+    ];
+
+    // ---- toolbar ----
+    const hasSel = rows.some(r => r.id === S.selId);
+    const op = hasSel ? "1" : "0.4";
+    const toolbarLeft = [
+      { btn: true, icon: "note_add", tip: "Add Torrent File...", op: "1" },
+      { btn: true, icon: "add_link", tip: "Add Torrent Link...", op: "1" },
+      { btn: true, icon: "delete", tip: "Remove", op },
+      { sep: true },
+      { btn: true, icon: "play_arrow", tip: "Start", op },
+      { btn: true, icon: "pause", tip: "Stop", op },
+      { btn: true, icon: "folder_open", tip: "Open Destination Folder", op },
+      { btn: true, icon: "vertical_align_top", tip: "Top of Queue", op },
+      { btn: true, icon: "arrow_upward", tip: "Move Up Queue", op },
+      { btn: true, icon: "arrow_downward", tip: "Move Down Queue", op },
+      { btn: true, icon: "vertical_align_bottom", tip: "Bottom of Queue", op },
+      { sep: true },
+      { btn: true, icon: "build", tip: "Torrent Creator", op: "1" }
+    ];
+
+    // ---- properties panel ----
+    const sel = this.data.find(t => t.id === S.selId) || this.data[0];
+    const propTabDefs = [
+      ["General", "description"], ["Trackers", "dns"], ["Peers", "groups"],
+      ["HTTP Sources", "public"], ["Content", "folder"], ["Speed", "show_chart"]
+    ];
+    const propTabs = propTabDefs.map(([label, icon], i) => ({
+      label, icon,
+      color: S.propTab === i ? P.primary : P.onSurfaceVariant,
+      ind: S.propTab === i ? 1 : 0,
+      click: () => {
+        if (S.propTab === i && S.propOpen) set({ propOpen: false });
+        else set({ propTab: i, propOpen: true });
+      }
+    }));
+
+    const transferFields = [
+      { l: "Time Active:", v: "1h 47m" }, { l: "ETA:", v: sel.eta },
+      { l: "Connections:", v: "115 (900 max)" }, { l: "Downloaded:", v: "3.83 GiB (3.85 GiB this session)" },
+      { l: "Uploaded:", v: "1.61 GiB (1.62 GiB this session)" }, { l: "Seeds:", v: sel.seeds + " total" },
+      { l: "Download Speed:", v: sel.dl + " (2.8 MiB/s avg.)" }, { l: "Upload Speed:", v: sel.ul + " (198 KiB/s avg.)" },
+      { l: "Peers:", v: sel.peers + " total" }, { l: "Download Limit:", v: "\u221e" },
+      { l: "Upload Limit:", v: "\u221e" }, { l: "Wasted:", v: "14.2 MiB" },
+      { l: "Share Ratio:", v: sel.ratio }, { l: "Reannounce In:", v: "24m 51s" },
+      { l: "Last Seen Complete:", v: "11/07/2026 09:12" }, { l: "Popularity:", v: "0.29" }
+    ];
+    const infoFields = [
+      { l: "Total Size:", v: sel.size }, { l: "Pieces:", v: "12568 x 512 KiB (have 7842)" },
+      { l: "Created By:", v: "mktorrent 1.1" }, { l: "Added On:", v: "11/07/2026 08:03" },
+      { l: "Completed On:", v: "" }, { l: "Created On:", v: "27/02/2026 14:20" },
+      { l: "Private:", v: "No" }
+    ];
+
+    return {
+      windowTitle: "qBittorrent v5.1",
+      menus: ["File", "Edit", "View", "Tools", "Help"],
+      toolbarLeft,
+      sidebarOn: this.props.sidebarVisible ?? true,
+      sections,
+      headers,
+      rows,
+      filterText: S.text,
+      onFilterInput: (e) => set({ text: e.target.value }),
+      propOpen: S.propOpen,
+      propIsGeneral: S.propTab === 0,
+      propIsOther: S.propTab !== 0,
+      propTabs,
+      propTabIcon: propTabDefs[S.propTab][1],
+      propTabEmpty: propTabDefs[S.propTab][0] + " — " + sel.name,
+      selPct: sel.pct.toFixed(1) + "%",
+      selHash: "2a6f0f3b93c8e41d7a5b0c69f2d84e17a3b5c6d9",
+      transferFields,
+      infoFields,
+      toggleAlt: () => set({ alt: !S.alt }),
+      altColor: S.alt ? P.primary : P.onSurfaceVariant,
+      altFill: S.alt ? "'FILL' 1" : "'FILL' 0",
+      dlStatus: "3.2 MiB/s (14.6 GiB)",
+      ulStatus: "890 KiB/s (22.1 GiB)"
+    };
+  }
+}
+</script>
+</body>
+</html>

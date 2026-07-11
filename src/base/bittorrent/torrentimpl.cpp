@@ -974,9 +974,10 @@ void TorrentImpl::setName(const QString &name)
         return;
 
     qCDebug(lcTorrent) << "Renaming torrent" << m_name << "->" << name;
+    const QString oldName = m_name;
     m_name = name;
     deferredRequestResumeData();
-    m_session->handleTorrentNameChanged(this);
+    m_session->handleTorrentNameChanged(this, oldName);
 }
 
 void TorrentImpl::setSequentialDownload(const bool enable)
@@ -1657,6 +1658,12 @@ void TorrentImpl::requestResumeData(const lt::resume_data_flags_t flags)
 
 void TorrentImpl::deferredRequestResumeData()
 {
+    // Every configuration mutator funnels through here, so this is the single
+    // observation point for "something about this torrent changed". The
+    // notification stays on the calling thread; only the resume-data request
+    // below is deferred.
+    m_session->handleTorrentConfigChanged(this);
+
     if (!m_deferredRequestResumeDataInvoked)
     {
         m_session->invoke([this]()

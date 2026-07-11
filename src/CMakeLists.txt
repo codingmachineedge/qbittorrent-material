@@ -60,6 +60,7 @@ target_link_libraries(qbt_base
         Boost::headers
         ZLIB::ZLIB
         LibtorrentRasterbar::torrent-rasterbar
+        libgit2::libgit2package
 )
 
 # Qt6::Xml is optional (only some engine parsers need it); link it if present.

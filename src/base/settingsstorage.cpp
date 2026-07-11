@@ -111,15 +111,24 @@ QVariant SettingsStorage::loadValueImpl(const QString &key, const QVariant &defa
 
 void SettingsStorage::storeValueImpl(const QString &key, const QVariant &value)
 {
-    const QWriteLocker locker(&m_lock);
-    QVariant &currentValue = m_data[key];
-    if (currentValue != value)
+    QVariant oldValue;
+    bool changed = false;
     {
-        m_dirty = true;
-        currentValue = value;
-        qCDebug(lcApp).nospace() << "SettingsStorage: key changed [" << key << "], flush scheduled";
-        QMetaObject::invokeMethod(&m_timer, qOverload<>(&QTimer::start));
+        const QWriteLocker locker(&m_lock);
+        QVariant &currentValue = m_data[key];
+        if (currentValue != value)
+        {
+            oldValue = currentValue;
+            m_dirty = true;
+            currentValue = value;
+            changed = true;
+            qCDebug(lcApp).nospace() << "SettingsStorage: key changed [" << key << "], flush scheduled";
+            QMetaObject::invokeMethod(&m_timer, qOverload<>(&QTimer::start));
+        }
     }
+    // Emitted outside the lock so a directly-connected slot can read settings.
+    if (changed)
+        emit valueChanged(key, oldValue, value);
 }
 
 void SettingsStorage::readNativeSettings()
@@ -233,13 +242,28 @@ bool SettingsStorage::writeNativeSettings() const
 
 void SettingsStorage::removeValue(const QString &key)
 {
-    const QWriteLocker locker(&m_lock);
-    if (m_data.remove(key))
+    QVariant oldValue;
+    bool removed = false;
     {
-        m_dirty = true;
-        qCDebug(lcApp).nospace() << "SettingsStorage: key removed [" << key << "], flush scheduled";
-        QMetaObject::invokeMethod(&m_timer, qOverload<>(&QTimer::start));
+        const QWriteLocker locker(&m_lock);
+        if (const auto it = m_data.constFind(key); it != m_data.cend())
+        {
+            oldValue = it.value();
+            m_data.erase(it);
+            m_dirty = true;
+            removed = true;
+            qCDebug(lcApp).nospace() << "SettingsStorage: key removed [" << key << "], flush scheduled";
+            QMetaObject::invokeMethod(&m_timer, qOverload<>(&QTimer::start));
+        }
     }
+    if (removed)
+        emit valueChanged(key, oldValue, QVariant());
+}
+
+QStringList SettingsStorage::allKeys() const
+{
+    const QReadLocker locker {&m_lock};
+    return m_data.keys();
 }
 
 bool SettingsStorage::hasKey(const QString &key) const

@@ -1357,7 +1357,7 @@ bool SessionImpl::removeTorrent(const TorrentID &id, const TorrentRemoveOption d
     qCInfo(lcSession) << "Removing torrent" << torrent->name()
                       << "deleteContent:" << (deleteOption == TorrentRemoveOption::RemoveContent);
 
-    emit torrentAboutToBeRemoved(torrent);
+    emit torrentAboutToBeRemoved(torrent, deleteOption);
 
     m_torrents.remove(id);
     if (const InfoHash infoHash = torrent->infoHash(); infoHash.isHybrid())
@@ -1736,7 +1736,15 @@ void SessionImpl::handleTorrentShareLimitChanged(TorrentImpl *torrent)
     Q_UNUSED(torrent);
 }
 
-void SessionImpl::handleTorrentNameChanged(TorrentImpl *) {}
+void SessionImpl::handleTorrentNameChanged(TorrentImpl *torrent, const QString &oldName)
+{
+    emit torrentNameChanged(torrent, oldName);
+}
+
+void SessionImpl::handleTorrentConfigChanged(TorrentImpl *torrent)
+{
+    emit torrentConfigChanged(torrent);
+}
 
 void SessionImpl::handleTorrentSavePathChanged(TorrentImpl *torrent)
 {

@@ -1,0 +1,2144 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+  <meta name="design_doc_mode" content="canvas"></meta>
+  <style>
+    @font-face { font-family: 'Roboto'; src: url('fonts/Roboto.ttf'); font-weight: 100 900; }
+    @font-face { font-family: 'Roboto Mono'; src: url('fonts/RobotoMono.ttf'); font-weight: 100 900; }
+    @font-face { font-family: 'Material Symbols Outlined'; src: url('fonts/MaterialSymbolsOutlined.ttf'); }
+    html, body { margin: 0; padding: 0; background: #1c1b22; }
+    a { color: #b9b3ff; } a:hover { color: #d6d2ff; }
+    @keyframes rowIn { from { opacity: 0; transform: translateY(6px); } to { opacity: 1; transform: translateY(0); } }
+    @keyframes panelIn { from { opacity: 0; transform: translateX(24px); } to { opacity: 1; transform: translateX(0); } }
+    @keyframes popIn { from { opacity: 0; transform: translateY(12px) scale(0.97); } to { opacity: 1; transform: translateY(0) scale(1); } }
+    @keyframes snackIn { from { opacity: 0; transform: translateY(16px); } to { opacity: 1; transform: translateY(0); } }
+    @keyframes spin { from { transform: rotate(0deg); } to { transform: rotate(360deg); } }
+    @keyframes shimmer { 0%, 100% { opacity: 0.45; } 50% { opacity: 1; } }
+    ::-webkit-scrollbar { width: 8px; height: 8px; }
+    ::-webkit-scrollbar-thumb { background: rgba(128,128,140,0.4); border-radius: 4px; }
+    ::-webkit-scrollbar-track { background: transparent; }
+  </style>
+</helmet>
+
+<section style="padding: 40px 48px 96px 48px; font-family: 'Roboto', sans-serif;">
+  <div id="1a" style="display: flex; flex-direction: column; gap: 16px;">
+    <div style="display: flex; align-items: center; gap: 12px;">
+      <span style="background: #c4c0ff; color: #17106b; font-weight: 700; font-size: 13px; padding: 3px 10px; border-radius: 8px;">1a</span>
+      <span style="color: #f1eff9; font-size: 18px; font-weight: 600;">qBittorrent — Material 3 rebuild, unified prototype</span>
+      <span style="color: #9a97a8; font-size: 13px;">all three directions live inside Settings → Appearance</span>
+    </div>
+    <div style="display: flex; gap: 16px; flex-wrap: wrap; color: #9a97a8; font-size: 13px; align-items: center;">
+      <span style="display: flex; align-items: center; gap: 6px;"><span style="font-family: 'Material Symbols Outlined'; font-feature-settings: 'liga'; font-size: 16px;">settings</span>switch UI style + theme (each change = commit)</span>
+      <span style="display: flex; align-items: center; gap: 6px;"><span style="font-family: 'Material Symbols Outlined'; font-feature-settings: 'liga'; font-size: 16px;">notifications</span>notification center</span>
+      <span style="display: flex; align-items: center; gap: 6px;"><span style="font-family: 'Material Symbols Outlined'; font-feature-settings: 'liga'; font-size: 16px;">history</span>git history manager</span>
+      <span style="display: flex; align-items: center; gap: 6px;"><span style="font-family: 'Material Symbols Outlined'; font-feature-settings: 'liga'; font-size: 16px;">data_object</span>regex builder on every search</span>
+      <span style="display: flex; align-items: center; gap: 6px;"><span style="font-family: 'Material Symbols Outlined'; font-feature-settings: 'liga'; font-size: 16px;">add</span>in-app, non-blocking dialogs</span>
+    </div>
+
+    <!-- ═══════════════════════ APP WINDOW ═══════════════════════ -->
+    <div data-screen-label="Unified prototype window" style="width: 1440px; height: 900px; position: relative; display: flex; flex-direction: column; background: {{ pal.bg }}; color: {{ pal.on }}; border-radius: 16px; overflow: hidden; box-shadow: 0 16px 56px rgba(0,0,0,0.55); user-select: none; transition: background 300ms;">
+
+      <!-- Title bar -->
+      <div style="height: 40px; display: flex; align-items: center; padding: 0 8px 0 20px; flex: none;">
+        <span style="width: 18px; height: 18px; border-radius: 6px; background: {{ seedGrad }}; margin-right: 10px; transition: background 300ms;"></span>
+        <span style="font-size: 13px; font-weight: 500; color: {{ pal.onv }};">qBittorrent · {{ styleName }}</span>
+        <div style="flex: 1;"></div>
+        <div style="display: flex; gap: 2px;">
+          <div style="width: 40px; height: 30px; border-radius: 8px; display: flex; align-items: center; justify-content: center;" style-hover="background: {{ hov8 }};"><span style="font-family: 'Material Symbols Outlined'; font-feature-settings: 'liga'; font-size: 16px; color: {{ pal.onv }};">remove</span></div>
+          <div style="width: 40px; height: 30px; border-radius: 8px; display: flex; align-items: center; justify-content: center;" style-hover="background: {{ hov8 }};"><span style="font-family: 'Material Symbols Outlined'; font-feature-settings: 'liga'; font-size: 14px; color: {{ pal.onv }};">crop_square</span></div>
+          <div style="width: 40px; height: 30px; border-radius: 8px; display: flex; align-items: center; justify-content: center; color: {{ pal.onv }};" style-hover="background: #ba1a1a; color: #ffffff;"><span style="font-family: 'Material Symbols Outlined'; font-feature-settings: 'liga'; font-size: 16px; color: inherit;">close</span></div>
+        </div>
+      </div>
+
+      <!-- Header -->
+      <div style="height: 64px; display: flex; align-items: center; gap: 12px; padding: 0 20px; flex: none;">
+        <!-- B: header nav segments -->
+        <sc-if value="{{ isB }}" hint-placeholder-val="{{ false }}">
+          <div style="display: flex; gap: 4px; background: {{ pal.sc }}; border-radius: 20px; padding: 4px; flex: none;">
+            <sc-for list="{{ navItems }}" as="n" hint-placeholder-count="4">
+              <div onClick="{{ n.click }}" style="height: 32px; display: flex; align-items: center; gap: 6px; padding: 0 14px; border-radius: 16px; cursor: pointer; background: {{ n.pill }}; transition: background 200ms; position: relative;">
+                <span style="font-family: 'Material Symbols Outlined'; font-feature-settings: 'liga'; font-size: 17px; color: {{ n.ic }}; font-variation-settings: {{ n.fill }};">{{ n.icon }}</span>
+                <span style="font-size: 12.5px; font-weight: 600; color: {{ n.lc }};">{{ n.label }}</span>
+                <sc-if value="{{ n.badgeOn }}" hint-placeholder-val="{{ false }}">
+                  <span style="min-width: 16px; height: 16px; border-radius: 8px; background: {{ pal.pr }}; color: {{ pal.onPr }}; font-size: 10px; font-weight: 700; display: flex; align-items: center; justify-content: center; padding: 0 4px; box-sizing: border-box;">{{ n.badge }}</span>
+                </sc-if>
+              </div>
+            </sc-for>
+          </div>
+        </sc-if>
+        <!-- Search (transfers filter — Transfers tab only) -->
+        <sc-if value="{{ searchVisible }}" hint-placeholder-val="{{ true }}">
+        <div style="flex: 1; max-width: 560px; height: 44px; background: {{ pal.sc }}; border-radius: 22px; display: flex; align-items: center; padding: 0 6px 0 16px; gap: 8px; border: 1px solid {{ searchBorder }}; transition: background 300ms, border 200ms;">
+          <span style="font-family: 'Material Symbols Outlined'; font-feature-settings: 'liga'; font-size: 20px; color: {{ pal.onv }};">search</span>
+          <input value="{{ searchText }}" onInput="{{ onSearch }}" placeholder="{{ searchPlaceholder }}" style="flex: 1; border: none; outline: none; background: transparent; font-family: 'Roboto', sans-serif; font-size: 14px; color: {{ pal.on }}; min-width: 0;"></input>
+          <div onClick="{{ toggleRegex }}" title="{{ regexTip }}" style="height: 28px; padding: 0 10px; border-radius: 14px; display: flex; align-items: center; cursor: pointer; font-family: 'Roboto Mono', monospace; font-size: 12px; font-weight: 700; background: {{ rxBg }}; color: {{ rxColor }}; transition: background 200ms, color 200ms;">.*</div>
+          <div onClick="{{ openRegex }}" title="Open Regex Builder" style="width: 32px; height: 32px; border-radius: 16px; display: flex; align-items: center; justify-content: center; cursor: pointer; transition: background 150ms;" style-hover="background: {{ hov8 }};"><span style="font-family: 'Material Symbols Outlined'; font-feature-settings: 'liga'; font-size: 18px; color: {{ pal.onv }};">data_object</span></div>
+        </div>
+        </sc-if>
+        <div style="flex: 1;"></div>
+        <!-- Session speeds -->
+        <div style="display: flex; align-items: center; gap: 8px; background: {{ pal.sc }}; border-radius: 20px; padding: 7px 14px; transition: background 300ms;">
+          <span style="font-family: 'Material Symbols Outlined'; font-feature-settings: 'liga'; font-size: 18px; color: {{ st.succ }};">arrow_downward</span>
+          <span style="font-family: 'Roboto Mono', monospace; font-size: 13px;">5.8 MiB/s</span>
+          <span style="width: 1px; height: 14px; background: {{ pal.ol }};"></span>
+          <span style="font-family: 'Material Symbols Outlined'; font-feature-settings: 'liga'; font-size: 18px; color: {{ pal.pr }};">arrow_upward</span>
+          <span style="font-family: 'Roboto Mono', monospace; font-size: 13px;">1.7 MiB/s</span>
+        </div>
+        <!-- Alt speed -->
+        <div onClick="{{ toggleAlt }}" title="Alternative speed limits" style="height: 34px; border-radius: 17px; display: flex; align-items: center; gap: 6px; padding: 0 14px; cursor: pointer; background: {{ altBg }}; border: 1px solid {{ altBorder }}; color: {{ altColor }}; transition: background 250ms, border 250ms, color 250ms;">
+          <span style="font-family: 'Material Symbols Outlined'; font-feature-settings: 'liga'; font-size: 18px; color: inherit; font-variation-settings: {{ altFill }};">speed</span>
+          <span style="font-size: 13px; font-weight: 500;">Alt</span>
+        </div>
+        <!-- Icon actions -->
+        <div onClick="{{ openNotif }}" title="Notifications" style="width: 40px; height: 40px; border-radius: 20px; display: flex; align-items: center; justify-content: center; cursor: pointer; position: relative; background: {{ notifBtnBg }}; transition: background 200ms;" style-hover="background: {{ hov8 }};">
+          <span style="font-family: 'Material Symbols Outlined'; font-feature-settings: 'liga'; font-size: 22px; color: {{ pal.on }};">notifications</span>
+          <sc-if value="{{ hasUnread }}" hint-placeholder-val="{{ true }}">
+            <span style="position: absolute; top: 5px; right: 5px; min-width: 16px; height: 16px; border-radius: 8px; background: {{ st.err }}; color: #ffffff; font-size: 10px; font-weight: 700; display: flex; align-items: center; justify-content: center; padding: 0 4px; box-sizing: border-box;">{{ unreadCount }}</span>
+          </sc-if>
+        </div>
+        <div onClick="{{ openHist }}" title="History (git)" style="width: 40px; height: 40px; border-radius: 20px; display: flex; align-items: center; justify-content: center; cursor: pointer; background: {{ histBtnBg }}; transition: background 200ms;" style-hover="background: {{ hov8 }};"><span style="font-family: 'Material Symbols Outlined'; font-feature-settings: 'liga'; font-size: 22px; color: {{ pal.on }};">history</span></div>
+        <div onClick="{{ toggleTheme }}" title="Toggle light / dark" style="width: 40px; height: 40px; border-radius: 20px; display: flex; align-items: center; justify-content: center; cursor: pointer; transition: background 200ms;" style-hover="background: {{ hov8 }};"><span style="font-family: 'Material Symbols Outlined'; font-feature-settings: 'liga'; font-size: 22px; color: {{ pal.on }};">{{ themeIcon }}</span></div>
+        <div onClick="{{ openSettings }}" title="Settings" style="width: 40px; height: 40px; border-radius: 20px; display: flex; align-items: center; justify-content: center; cursor: pointer; background: {{ setBtnBg }}; transition: background 200ms;" style-hover="background: {{ hov8 }};"><span style="font-family: 'Material Symbols Outlined'; font-feature-settings: 'liga'; font-size: 22px; color: {{ pal.on }};">settings</span></div>
+      </div>
+
+      <!-- Body -->
+      <div style="flex: 1; display: flex; min-height: 0;">
+
+        <!-- A: labeled nav rail -->
+        <sc-if value="{{ isA }}" hint-placeholder-val="{{ true }}">
+          <div style="width: 84px; flex: none; display: flex; flex-direction: column; align-items: center; padding: 4px 0 16px 0; gap: 8px;">
+            <div onClick="{{ openAdd }}" title="Add torrent" style="width: 56px; height: 56px; border-radius: 16px; background: {{ pal.pc }}; display: flex; align-items: center; justify-content: center; cursor: pointer; box-shadow: 0 1px 4px {{ pal.shadow }}; margin-bottom: 10px; transition: box-shadow 200ms, transform 200ms;" style-hover="box-shadow: 0 6px 16px {{ pal.shadow }}; transform: translateY(-1px);" style-active="transform: scale(0.94);">
+              <span style="font-family: 'Material Symbols Outlined'; font-feature-settings: 'liga'; font-size: 24px; color: {{ pal.onPc }};">add</span>
+            </div>
+            <sc-for list="{{ navItems }}" as="n" hint-placeholder-count="4">
+              <div onClick="{{ n.click }}" style="width: 72px; display: flex; flex-direction: column; align-items: center; gap: 4px; cursor: pointer; padding: 2px 0;">
+                <div style="width: 56px; height: 32px; border-radius: 16px; display: flex; align-items: center; justify-content: center; background: {{ n.pill }}; transition: background 250ms; position: relative;" style-hover="background: {{ hov8 }};">
+                  <span style="font-family: 'Material Symbols Outlined'; font-feature-settings: 'liga'; font-size: 22px; color: {{ n.ic }}; font-variation-settings: {{ n.fill }};">{{ n.icon }}</span>
+                  <sc-if value="{{ n.badgeOn }}" hint-placeholder-val="{{ false }}">
+                    <span style="position: absolute; top: -3px; right: 2px; min-width: 16px; height: 16px; border-radius: 8px; background: {{ pal.pr }}; color: {{ pal.onPr }}; font-size: 10px; font-weight: 700; display: flex; align-items: center; justify-content: center; padding: 0 4px; box-sizing: border-box;">{{ n.badge }}</span>
+                  </sc-if>
+                </div>
+                <span style="font-size: 12px; font-weight: 500; letter-spacing: 0.3px; color: {{ n.lc }};">{{ n.label }}</span>
+              </div>
+            </sc-for>
+          </div>
+        </sc-if>
+
+        <!-- C: slim icon rail -->
+        <sc-if value="{{ isC }}" hint-placeholder-val="{{ false }}">
+          <div style="width: 64px; flex: none; display: flex; flex-direction: column; align-items: center; padding: 4px 0 16px 0; gap: 10px;">
+            <div onClick="{{ openAdd }}" title="Add torrent" style="width: 48px; height: 48px; border-radius: 14px; background: {{ pal.pc }}; display: flex; align-items: center; justify-content: center; cursor: pointer; box-shadow: 0 1px 4px {{ pal.shadow }}; margin-bottom: 8px; transition: transform 200ms, box-shadow 200ms;" style-hover="box-shadow: 0 6px 16px {{ pal.shadow }};" style-active="transform: scale(0.94);">
+              <span style="font-family: 'Material Symbols Outlined'; font-feature-settings: 'liga'; font-size: 22px; color: {{ pal.onPc }};">add</span>
+            </div>
+            <sc-for list="{{ navItems }}" as="n" hint-placeholder-count="4">
+              <div onClick="{{ n.click }}" title="{{ n.label }}" style="width: 44px; height: 44px; border-radius: 22px; display: flex; align-items: center; justify-content: center; cursor: pointer; background: {{ n.pill }}; transition: background 250ms; position: relative;" style-hover="background: {{ hov8 }};">
+                <span style="font-family: 'Material Symbols Outlined'; font-feature-settings: 'liga'; font-size: 22px; color: {{ n.ic }}; font-variation-settings: {{ n.fill }};">{{ n.icon }}</span>
+                <sc-if value="{{ n.badgeOn }}" hint-placeholder-val="{{ false }}">
+                  <span style="position: absolute; top: -2px; right: -2px; min-width: 16px; height: 16px; border-radius: 8px; background: {{ pal.pr }}; color: {{ pal.onPr }}; font-size: 10px; font-weight: 700; display: flex; align-items: center; justify-content: center; padding: 0 4px; box-sizing: border-box;">{{ n.badge }}</span>
+                </sc-if>
+              </div>
+            </sc-for>
+          </div>
+        </sc-if>
+
+        <!-- B: classic filter sidebar -->
+        <sc-if value="{{ sideOn }}" hint-placeholder-val="{{ false }}">
+          <div style="width: 232px; flex: none; display: flex; flex-direction: column; background: {{ pal.surf }}; border-right: 1px solid {{ pal.olv }}; overflow-y: auto; transition: background 300ms;">
+            <div style="display: flex; gap: 2px; padding: 8px;">
+              <div onClick="{{ openAdd }}" title="Add torrent" style="width: 36px; height: 36px; border-radius: 8px; display: flex; align-items: center; justify-content: center; cursor: pointer; background: {{ pal.pc }};" style-active="transform: scale(0.94);"><span style="font-family: 'Material Symbols Outlined'; font-feature-settings: 'liga'; font-size: 20px; color: {{ pal.onPc }};">note_add</span></div>
+              <div onClick="{{ actStart }}" title="Start" style="width: 36px; height: 36px; border-radius: 8px; display: flex; align-items: center; justify-content: center; cursor: pointer;" style-hover="background: {{ hov8 }};"><span style="font-family: 'Material Symbols Outlined'; font-feature-settings: 'liga'; font-size: 20px; color: {{ pal.on }};">play_arrow</span></div>
+              <div onClick="{{ actStop }}" title="Stop" style="width: 36px; height: 36px; border-radius: 8px; display: flex; align-items: center; justify-content: center; cursor: pointer;" style-hover="background: {{ hov8 }};"><span style="font-family: 'Material Symbols Outlined'; font-feature-settings: 'liga'; font-size: 20px; color: {{ pal.on }};">pause</span></div>
+              <div onClick="{{ askDelete }}" title="Remove" style="width: 36px; height: 36px; border-radius: 8px; display: flex; align-items: center; justify-content: center; cursor: pointer;" style-hover="background: {{ hov8 }};"><span style="font-family: 'Material Symbols Outlined'; font-feature-settings: 'liga'; font-size: 20px; color: {{ pal.on }};">delete</span></div>
+            </div>
+            <sc-for list="{{ sideSections }}" as="sec" hint-placeholder-count="3">
+              <div style="padding: 6px 0;">
+                <div style="display: flex; align-items: center; gap: 8px; padding: 6px 14px;">
+                  <span style="font-family: 'Material Symbols Outlined'; font-feature-settings: 'liga'; font-size: 18px; color: {{ pal.onv }};">{{ sec.icon }}</span>
+                  <span style="font-size: 12px; font-weight: 700; letter-spacing: 0.8px; text-transform: uppercase; color: {{ pal.onv }};">{{ sec.title }}</span>
+                </div>
+                <sc-for list="{{ sec.items }}" as="it" hint-placeholder-count="6">
+                  <div onClick="{{ it.click }}" style="height: 30px; display: flex; align-items: center; gap: 8px; padding: 0 10px; margin: 0 6px; border-radius: 8px; cursor: pointer; background: {{ it.bg }}; transition: background 150ms;" style-hover="background: {{ hov8 }};">
+                    <span style="font-family: 'Material Symbols Outlined'; font-feature-settings: 'liga'; font-size: 16px; color: {{ it.ic }};">{{ it.icon }}</span>
+                    <span style="flex: 1; font-size: 13px; color: {{ it.tc }}; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;">{{ it.label }}</span>
+                    <span style="font-size: 11px; font-family: 'Roboto Mono', monospace; color: {{ pal.onv }};">{{ it.count }}</span>
+                  </div>
+                </sc-for>
+              </div>
+            </sc-for>
+          </div>
+        </sc-if>
+
+        <!-- Main column -->
+        <div style="flex: 1; display: flex; flex-direction: column; min-width: 0; padding: 0 20px 16px 0;">
+
+          <!-- A/C: filter chips -->
+          <sc-if value="{{ chipsOn }}" hint-placeholder-val="{{ true }}">
+            <div style="display: flex; align-items: center; gap: 8px; padding: 2px 0 12px 4px; flex-wrap: wrap; flex: none;">
+              <sc-for list="{{ chips }}" as="c" hint-placeholder-count="6">
+                <div onClick="{{ c.click }}" style="height: 32px; display: flex; align-items: center; gap: 6px; padding: 0 14px; border-radius: 16px; cursor: pointer; font-size: 13px; font-weight: 500; background: {{ c.bg }}; color: {{ c.tc }}; border: 1px solid {{ c.border }}; transition: background 200ms, border 200ms, color 200ms;">
+                  <sc-if value="{{ c.sel }}" hint-placeholder-val="{{ false }}"><span style="font-family: 'Material Symbols Outlined'; font-feature-settings: 'liga'; font-size: 16px; color: inherit;">check</span></sc-if>
+                  <span>{{ c.label }}</span>
+                  <span style="font-family: 'Roboto Mono', monospace; font-size: 11px; opacity: 0.75;">{{ c.count }}</span>
+                </div>
+              </sc-for>
+            </div>
+          </sc-if>
+
+          <!-- A/B: table -->
+          <sc-if value="{{ isTable }}" hint-placeholder-val="{{ true }}">
+            <div style="flex: 1; min-height: 0; background: {{ pal.surf }}; border: 1px solid {{ pal.olv }}; border-radius: {{ tbl.radius }}px; overflow: auto; transition: background 300ms;">
+              <!-- header -->
+              <div style="display: flex; height: {{ tbl.headH }}px; background: {{ pal.sc }}; border-bottom: 1px solid {{ pal.olv }}; position: sticky; top: 0; z-index: 2; min-width: fit-content; transition: background 300ms;">
+                <sc-for list="{{ headers }}" as="h" hint-placeholder-count="9">
+                  <div onClick="{{ h.click }}" style="width: {{ h.w }}px; flex: {{ h.flex }}; min-width: {{ h.minW }}px; display: flex; align-items: center; gap: 4px; padding: 0 12px; font-size: 12px; font-weight: 600; letter-spacing: 0.4px; color: {{ pal.onv }}; cursor: pointer; justify-content: {{ h.just }}; box-sizing: border-box; white-space: nowrap;" style-hover="color: {{ pal.on }};">
+                    <span>{{ h.title }}</span>
+                    <sc-if value="{{ h.sorted }}" hint-placeholder-val="{{ false }}"><span style="font-family: 'Material Symbols Outlined'; font-feature-settings: 'liga'; font-size: 14px; color: {{ pal.pr }};">{{ h.sortIcon }}</span></sc-if>
+                  </div>
+                </sc-for>
+              </div>
+              <!-- rows -->
+              <sc-for list="{{ rows }}" as="t" hint-placeholder-count="8">
+                <div onClick="{{ t.click }}" style="display: flex; height: {{ tbl.rowH }}px; background: {{ t.bg }}; border-bottom: 1px solid {{ pal.olv }}; cursor: pointer; min-width: fit-content; animation: rowIn 280ms cubic-bezier(0.2,0,0,1) both; animation-delay: {{ t.delay }}ms; transition: background 150ms;" style-hover="background: {{ hov6 }};">
+                  <sc-if value="{{ tbl.q }}" hint-placeholder-val="{{ false }}">
+                    <div style="width: 40px; flex: none; display: flex; align-items: center; justify-content: flex-end; padding: 0 12px; box-sizing: border-box; font-size: 12px; font-family: 'Roboto Mono', monospace; color: {{ pal.onv }};">{{ t.q }}</div>
+                  </sc-if>
+                  <div style="flex: 1; min-width: {{ tbl.nameMin }}px; display: flex; align-items: center; gap: 10px; padding: 0 12px; box-sizing: border-box; overflow: hidden;">
+                    <div style="width: {{ tbl.iconBox }}px; height: {{ tbl.iconBox }}px; border-radius: {{ tbl.iconRad }}px; background: {{ t.iconBg }}; display: flex; align-items: center; justify-content: center; flex: none; transition: background 200ms;">
+                      <span style="font-family: 'Material Symbols Outlined'; font-feature-settings: 'liga'; font-size: {{ tbl.iconSz }}px; color: {{ t.stColor }};">{{ t.icon }}</span>
+                    </div>
+                    <div style="display: flex; flex-direction: column; gap: 1px; min-width: 0;">
+                      <span style="font-size: {{ tbl.nameFs }}px; font-weight: {{ tbl.nameWt }}; color: {{ pal.on }}; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;">{{ t.name }}</span>
+                      <sc-if value="{{ tbl.sub }}" hint-placeholder-val="{{ true }}">
+                        <span style="font-size: 12px; color: {{ t.stColor }};">{{ t.status }}</span>
+                      </sc-if>
+                    </div>
+                  </div>
+                  <div style="width: 90px; flex: none; display: flex; align-items: center; justify-content: flex-end; padding: 0 12px; box-sizing: border-box; font-size: 12.5px; font-family: 'Roboto Mono', monospace; color: {{ pal.onv }};">{{ t.size }}</div>
+                  <div style="width: {{ tbl.progW }}px; flex: none; display: flex; align-items: center; gap: 10px; padding: 0 12px; box-sizing: border-box;">
+                    <div style="flex: 1; height: {{ tbl.barH }}px; border-radius: {{ tbl.barH }}px; background: {{ pal.sc2 }}; overflow: hidden;">
+                      <div style="width: {{ t.pct }}%; height: 100%; border-radius: {{ tbl.barH }}px; background: {{ t.barColor }}; transition: width 400ms;"></div>
+                    </div>
+                    <span style="font-family: 'Roboto Mono', monospace; font-size: 12px; color: {{ pal.on }}; width: 42px; text-align: right; flex: none;">{{ t.pctLabel }}</span>
+                  </div>
+                  <sc-if value="{{ tbl.status }}" hint-placeholder-val="{{ false }}">
+                    <div style="width: 110px; flex: none; display: flex; align-items: center; padding: 0 12px; box-sizing: border-box; font-size: 12.5px; color: {{ t.stColor }}; white-space: nowrap; overflow: hidden;">{{ t.status }}</div>
+                  </sc-if>
+                  <div style="width: 100px; flex: none; display: flex; align-items: center; justify-content: flex-end; gap: 4px; padding: 0 12px; box-sizing: border-box;">
+                    <span style="font-family: 'Roboto Mono', monospace; font-size: 12.5px; color: {{ t.dlColor }};">{{ t.dl }}</span>
+                  </div>
+                  <div style="width: 100px; flex: none; display: flex; align-items: center; justify-content: flex-end; padding: 0 12px; box-sizing: border-box;">
+                    <span style="font-family: 'Roboto Mono', monospace; font-size: 12.5px; color: {{ t.ulColor }};">{{ t.ul }}</span>
+                  </div>
+                  <div style="width: 92px; flex: none; display: flex; align-items: center; justify-content: flex-end; padding: 0 12px; box-sizing: border-box; font-size: 12.5px; font-family: 'Roboto Mono', monospace; color: {{ pal.onv }};">{{ t.eta }}</div>
+                  <sc-if value="{{ tbl.ratio }}" hint-placeholder-val="{{ false }}">
+                    <div style="width: 64px; flex: none; display: flex; align-items: center; justify-content: flex-end; padding: 0 12px; box-sizing: border-box; font-size: 12.5px; font-family: 'Roboto Mono', monospace; color: {{ pal.onv }};">{{ t.ratio }}</div>
+                  </sc-if>
+                  <div style="width: 116px; flex: none; display: flex; align-items: center; padding: 0 12px; box-sizing: border-box;">
+                    <sc-if value="{{ t.hasCat }}" hint-placeholder-val="{{ true }}">
+                      <span style="font-size: 12px; padding: 3px 10px; border-radius: 12px; background: {{ pal.sc }}; color: {{ pal.onv }}; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;">{{ t.cat }}</span>
+                    </sc-if>
+                  </div>
+                </div>
+              </sc-for>
+              <sc-if value="{{ emptyOn }}" hint-placeholder-val="{{ false }}">
+                <div style="padding: 48px; display: flex; flex-direction: column; align-items: center; gap: 8px;">
+                  <span style="font-family: 'Material Symbols Outlined'; font-feature-settings: 'liga'; font-size: 40px; color: {{ pal.ol }};">search_off</span>
+                  <span style="font-size: 13px; color: {{ pal.onv }};">No torrents match the current filter</span>
+                </div>
+              </sc-if>
+            </div>
+          </sc-if>
+
+          <!-- C: card flow -->
+          <sc-if value="{{ cardsOn }}" hint-placeholder-val="{{ false }}">
+            <div style="flex: 1; min-height: 0; overflow-y: auto; display: flex; flex-direction: column; gap: 10px; padding: 2px 2px 2px 4px;">
+              <sc-for list="{{ cards }}" as="t" hint-placeholder-count="6">
+                <div onClick="{{ t.click }}" style="background: {{ pal.surf }}; border: {{ t.cardBorder }}; border-radius: 20px; padding: 14px 18px; cursor: pointer; animation: rowIn 280ms cubic-bezier(0.2,0,0,1) both; animation-delay: {{ t.delay }}ms; transition: box-shadow 200ms, transform 200ms, border 200ms, background 300ms;" style-hover="box-shadow: 0 4px 16px {{ pal.shadow }}; transform: translateY(-1px);">
+                  <div style="display: flex; align-items: center; gap: 14px;">
+                    <div style="width: 44px; height: 44px; border-radius: 14px; background: {{ t.iconBg }}; display: flex; align-items: center; justify-content: center; flex: none;">
+                      <span style="font-family: 'Material Symbols Outlined'; font-feature-settings: 'liga'; font-size: 22px; color: {{ t.stColor }};">{{ t.icon }}</span>
+                    </div>
+                    <div style="flex: 1; min-width: 0; display: flex; flex-direction: column; gap: 5px;">
+                      <span style="font-size: 15px; font-weight: 500; color: {{ pal.on }}; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;">{{ t.name }}</span>
+                      <div style="display: flex; gap: 6px; align-items: center;">
+                        <span style="font-size: 11.5px; font-weight: 600; padding: 2px 9px; border-radius: 10px; background: {{ t.stChipBg }}; color: {{ t.stColor }};">{{ t.status }}</span>
+                        <sc-if value="{{ t.hasCat }}" hint-placeholder-val="{{ true }}"><span style="font-size: 11.5px; padding: 2px 9px; border-radius: 10px; background: {{ pal.sc }}; color: {{ pal.onv }};">{{ t.cat }}</span></sc-if>
+                        <span style="font-size: 11.5px; font-family: 'Roboto Mono', monospace; color: {{ pal.onv }};">{{ t.size }}</span>
+                      </div>
+                    </div>
+                    <div style="display: flex; flex-direction: column; align-items: flex-end; gap: 3px; flex: none;">
+                      <span style="font-family: 'Roboto Mono', monospace; font-size: 12.5px; color: {{ t.dlColor }};">↓ {{ t.dl }}</span>
+                      <span style="font-family: 'Roboto Mono', monospace; font-size: 12.5px; color: {{ t.ulColor }};">↑ {{ t.ul }}</span>
+                    </div>
+                    <span style="font-family: 'Roboto Mono', monospace; font-size: 18px; font-weight: 600; color: {{ pal.on }}; width: 72px; text-align: right; flex: none;">{{ t.pctLabel }}</span>
+                  </div>
+                  <div style="margin-top: 12px; height: 6px; border-radius: 3px; background: {{ pal.sc2 }}; overflow: hidden;">
+                    <div style="width: {{ t.pct }}%; height: 100%; border-radius: 3px; background: {{ t.barColor }}; transition: width 400ms;"></div>
+                  </div>
+                </div>
+              </sc-for>
+              <sc-if value="{{ emptyOn }}" hint-placeholder-val="{{ false }}">
+                <div style="padding: 48px; display: flex; flex-direction: column; align-items: center; gap: 8px;">
+                  <span style="font-family: 'Material Symbols Outlined'; font-feature-settings: 'liga'; font-size: 40px; color: {{ pal.ol }};">search_off</span>
+                  <span style="font-size: 13px; color: {{ pal.onv }};">No torrents match the current filter</span>
+                </div>
+              </sc-if>
+            </div>
+          </sc-if>
+
+          <!-- ═══ SEARCH TAB ═══ -->
+          <sc-if value="{{ searchTabOn }}" hint-placeholder-val="{{ false }}">
+            <div style="flex: 1; min-height: 0; display: flex; flex-direction: column; gap: 12px;">
+              <div style="display: flex; gap: 10px; align-items: center;">
+                <div style="flex: 1; max-width: 620px; height: 44px; background: {{ pal.sc }}; border-radius: 22px; display: flex; align-items: center; padding: 0 6px 0 16px; gap: 8px; border: 1px solid {{ sqBorder }}; transition: border 200ms;">
+                  <span style="font-family: 'Material Symbols Outlined'; font-feature-settings: 'liga'; font-size: 20px; color: {{ pal.onv }};">travel_explore</span>
+                  <input value="{{ searchQuery }}" onInput="{{ onSearchQuery }}" onKeyDown="{{ onSearchKey }}" placeholder="Search for releases across plugins — Enter to run" style="flex: 1; border: none; outline: none; background: transparent; font-family: 'Roboto', sans-serif; font-size: 14px; color: {{ pal.on }}; min-width: 0;"></input>
+                  <div onClick="{{ toggleSearchRegex }}" title="Regex matching" style="height: 28px; padding: 0 10px; border-radius: 14px; display: flex; align-items: center; cursor: pointer; font-family: 'Roboto Mono', monospace; font-size: 12px; font-weight: 700; background: {{ srxBg }}; color: {{ srxColor }}; transition: background 200ms;">.*</div>
+                  <div onClick="{{ openRegex }}" title="Open Regex Builder" style="width: 32px; height: 32px; border-radius: 16px; display: flex; align-items: center; justify-content: center; cursor: pointer;" style-hover="background: {{ hov8 }};"><span style="font-family: 'Material Symbols Outlined'; font-feature-settings: 'liga'; font-size: 18px; color: {{ pal.onv }};">data_object</span></div>
+                </div>
+                <div onClick="{{ doSearch }}" style="height: 44px; display: flex; align-items: center; gap: 6px; padding: 0 22px; border-radius: 22px; background: {{ searchBtnBg }}; color: {{ searchBtnTc }}; font-size: 14px; font-weight: 600; cursor: pointer; transition: transform 150ms, box-shadow 200ms, background 250ms;" style-hover="box-shadow: 0 4px 14px {{ pal.shadow }};" style-active="transform: scale(0.96);">
+                  <span style="font-family: 'Material Symbols Outlined'; font-feature-settings: 'liga'; font-size: 18px; color: inherit;">{{ searchBtnIcon }}</span>{{ searchBtnLabel }}
+                </div>
+                <div style="flex: 1;"></div>
+                <div onClick="{{ openPlugins }}" style="height: 40px; display: flex; align-items: center; gap: 6px; padding: 0 16px; border-radius: 20px; cursor: pointer; color: {{ pal.pr }}; font-size: 13px; font-weight: 600; border: 1px solid {{ pal.ol }};" style-hover="background: {{ hov6 }};">
+                  <span style="font-family: 'Material Symbols Outlined'; font-feature-settings: 'liga'; font-size: 17px; color: inherit;">extension</span>Search plugins… <span style="font-family: 'Roboto Mono', monospace; font-size: 11px; opacity: 0.7;">{{ pluginCount }}</span>
+                </div>
+              </div>
+              <div style="display: flex; align-items: center; gap: 8px; flex-wrap: wrap;">
+                <span style="font-size: 11px; font-weight: 700; letter-spacing: 0.8px; text-transform: uppercase; color: {{ pal.onv }};">Category</span>
+                <sc-for list="{{ searchCats }}" as="c" hint-placeholder-count="5">
+                  <div onClick="{{ c.click }}" style="height: 30px; display: flex; align-items: center; padding: 0 13px; border-radius: 15px; cursor: pointer; font-size: 12.5px; font-weight: 600; background: {{ c.bg }}; color: {{ c.tc }}; border: 1px solid {{ c.border }}; transition: background 200ms;">{{ c.label }}</div>
+                </sc-for>
+                <span style="width: 1px; height: 18px; background: {{ pal.olv }}; margin: 0 4px;"></span>
+                <span style="font-size: 11px; font-weight: 700; letter-spacing: 0.8px; text-transform: uppercase; color: {{ pal.onv }};">Plugins</span>
+                <sc-for list="{{ searchScopes }}" as="c" hint-placeholder-count="3">
+                  <div onClick="{{ c.click }}" style="height: 30px; display: flex; align-items: center; padding: 0 13px; border-radius: 15px; cursor: pointer; font-size: 12.5px; font-weight: 600; background: {{ c.bg }}; color: {{ c.tc }}; border: 1px solid {{ c.border }}; transition: background 200ms;">{{ c.label }}</div>
+                </sc-for>
+                <div style="flex: 1;"></div>
+                <sc-if value="{{ historyOn }}" hint-placeholder-val="{{ false }}">
+                  <span style="font-size: 11px; font-weight: 700; letter-spacing: 0.8px; text-transform: uppercase; color: {{ pal.onv }};">Recent</span>
+                  <sc-for list="{{ historyChips }}" as="hc" hint-placeholder-count="3">
+                    <div onClick="{{ hc.click }}" style="height: 28px; display: flex; align-items: center; padding: 0 11px; border-radius: 14px; cursor: pointer; font-size: 12px; color: {{ pal.onv }}; border: 1px dashed {{ pal.ol }};" style-hover="background: {{ hov6 }};">{{ hc.label }}</div>
+                  </sc-for>
+                </sc-if>
+              </div>
+              <sc-if value="{{ sTabsOn }}" hint-placeholder-val="{{ false }}">
+                <div style="display: flex; gap: 6px; flex-wrap: wrap;">
+                  <sc-for list="{{ sTabs }}" as="stab" hint-placeholder-count="2">
+                    <div onClick="{{ stab.click }}" style="height: 34px; display: flex; align-items: center; gap: 7px; padding: 0 6px 0 13px; border-radius: 17px; cursor: pointer; background: {{ stab.bg }}; color: {{ stab.tc }}; border: 1px solid {{ stab.border }}; transition: background 200ms;">
+                      <span style="font-family: 'Material Symbols Outlined'; font-feature-settings: 'liga'; font-size: 16px; color: {{ stab.icColor }}; animation: {{ stab.icAnim }};">{{ stab.icon }}</span>
+                      <span style="font-size: 12.5px; font-weight: 600;">{{ stab.label }}</span>
+                      <span style="font-family: 'Roboto Mono', monospace; font-size: 11px; opacity: 0.7;">{{ stab.count }}</span>
+                      <span onClick="{{ stab.close }}" style="font-family: 'Material Symbols Outlined'; font-feature-settings: 'liga'; font-size: 15px; color: inherit; width: 22px; height: 22px; border-radius: 11px; display: flex; align-items: center; justify-content: center;" style-hover="background: {{ hov8 }};">close</span>
+                    </div>
+                  </sc-for>
+                </div>
+              </sc-if>
+              <div style="flex: 1; min-height: 0; background: {{ pal.surf }}; border: 1px solid {{ pal.olv }}; border-radius: 16px; overflow: auto; transition: background 300ms;">
+                <sc-if value="{{ sResultsOn }}" hint-placeholder-val="{{ false }}">
+                  <div style="display: flex; height: 38px; background: {{ pal.sc }}; border-bottom: 1px solid {{ pal.olv }}; position: sticky; top: 0; z-index: 2;">
+                    <sc-for list="{{ sHeaders }}" as="h" hint-placeholder-count="5">
+                      <div onClick="{{ h.click }}" style="width: {{ h.w }}px; flex: {{ h.flex }}; min-width: {{ h.minW }}px; display: flex; align-items: center; gap: 4px; padding: 0 14px; font-size: 12px; font-weight: 600; letter-spacing: 0.4px; color: {{ pal.onv }}; cursor: pointer; justify-content: {{ h.just }}; box-sizing: border-box;" style-hover="color: {{ pal.on }};">
+                        <span>{{ h.title }}</span>
+                        <sc-if value="{{ h.sorted }}" hint-placeholder-val="{{ false }}"><span style="font-family: 'Material Symbols Outlined'; font-feature-settings: 'liga'; font-size: 14px; color: {{ pal.pr }};">{{ h.sortIcon }}</span></sc-if>
+                      </div>
+                    </sc-for>
+                  </div>
+                  <sc-for list="{{ sRows }}" as="r" hint-placeholder-count="6">
+                    <div onClick="{{ r.click }}" style="display: flex; height: 44px; background: {{ r.bg }}; border-bottom: 1px solid {{ pal.olv }}; cursor: pointer; animation: rowIn 260ms cubic-bezier(0.2,0,0,1) both; animation-delay: {{ r.delay }}ms; transition: background 150ms;" style-hover="background: {{ hov6 }};">
+                      <div style="flex: 1; min-width: 280px; display: flex; align-items: center; gap: 10px; padding: 0 14px; box-sizing: border-box; overflow: hidden;">
+                        <span style="font-family: 'Material Symbols Outlined'; font-feature-settings: 'liga'; font-size: 18px; color: {{ pal.onv }}; flex: none;">description</span>
+                        <span style="font-size: 13.5px; color: {{ pal.on }}; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;">{{ r.name }}</span>
+                      </div>
+                      <div style="width: 96px; flex: none; display: flex; align-items: center; justify-content: flex-end; padding: 0 14px; box-sizing: border-box; font-family: 'Roboto Mono', monospace; font-size: 12.5px; color: {{ pal.onv }};">{{ r.size }}</div>
+                      <div style="width: 90px; flex: none; display: flex; align-items: center; justify-content: flex-end; padding: 0 14px; box-sizing: border-box; font-family: 'Roboto Mono', monospace; font-size: 12.5px; color: {{ st.succ }};">{{ r.seeds }}</div>
+                      <div style="width: 90px; flex: none; display: flex; align-items: center; justify-content: flex-end; padding: 0 14px; box-sizing: border-box; font-family: 'Roboto Mono', monospace; font-size: 12.5px; color: {{ pal.onv }};">{{ r.leech }}</div>
+                      <div style="width: 150px; flex: none; display: flex; align-items: center; padding: 0 14px; box-sizing: border-box; font-size: 12.5px; color: {{ pal.onv }};">{{ r.engine }}</div>
+                      <div style="width: 96px; flex: none; display: flex; align-items: center; justify-content: flex-end; gap: 2px; padding: 0 8px; box-sizing: border-box;">
+                        <div onClick="{{ r.download }}" title="Download" style="width: 32px; height: 32px; border-radius: 16px; display: flex; align-items: center; justify-content: center; cursor: pointer;" style-hover="background: {{ hov8 }};"><span style="font-family: 'Material Symbols Outlined'; font-feature-settings: 'liga'; font-size: 18px; color: {{ pal.pr }};">download</span></div>
+                        <div onClick="{{ r.open }}" title="Open description page" style="width: 32px; height: 32px; border-radius: 16px; display: flex; align-items: center; justify-content: center; cursor: pointer;" style-hover="background: {{ hov8 }};"><span style="font-family: 'Material Symbols Outlined'; font-feature-settings: 'liga'; font-size: 17px; color: {{ pal.onv }};">open_in_new</span></div>
+                      </div>
+                    </div>
+                  </sc-for>
+                </sc-if>
+                <sc-if value="{{ sSearchingOn }}" hint-placeholder-val="{{ false }}">
+                  <div style="padding: 20px; display: flex; flex-direction: column; gap: 12px;">
+                    <div style="display: flex; align-items: center; gap: 10px;">
+                      <span style="font-family: 'Material Symbols Outlined'; font-feature-settings: 'liga'; font-size: 20px; color: {{ pal.pr }}; animation: spin 1s linear infinite;">progress_activity</span>
+                      <span style="font-size: 13px; color: {{ pal.onv }};">Querying {{ enabledPluginCount }} plugins…</span>
+                    </div>
+                    <div style="height: 14px; border-radius: 7px; background: {{ pal.sc }}; width: 70%; animation: shimmer 1.4s ease-in-out infinite;"></div>
+                    <div style="height: 14px; border-radius: 7px; background: {{ pal.sc }}; width: 55%; animation: shimmer 1.4s ease-in-out infinite; animation-delay: 150ms;"></div>
+                    <div style="height: 14px; border-radius: 7px; background: {{ pal.sc }}; width: 62%; animation: shimmer 1.4s ease-in-out infinite; animation-delay: 300ms;"></div>
+                  </div>
+                </sc-if>
+                <sc-if value="{{ sEmptyOn }}" hint-placeholder-val="{{ false }}">
+                  <div style="height: 100%; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 10px; padding: 48px;">
+                    <span style="font-family: 'Material Symbols Outlined'; font-feature-settings: 'liga'; font-size: 44px; color: {{ pal.ol }};">{{ sEmptyIcon }}</span>
+                    <span style="font-size: 14px; font-weight: 600; color: {{ pal.on }};">{{ sEmptyTitle }}</span>
+                    <span style="font-size: 12.5px; color: {{ pal.onv }};">{{ sEmptyBody }}</span>
+                  </div>
+                </sc-if>
+              </div>
+            </div>
+          </sc-if>
+
+          <!-- ═══ RSS TAB ═══ -->
+          <sc-if value="{{ rssTabOn }}" hint-placeholder-val="{{ false }}">
+            <div style="flex: 1; min-height: 0; display: flex; flex-direction: column; gap: 12px;">
+              <div style="display: flex; align-items: center; gap: 8px;">
+                <div onClick="{{ openAddFeed }}" style="height: 40px; display: flex; align-items: center; gap: 6px; padding: 0 16px; border-radius: 20px; background: {{ pal.pc }}; color: {{ pal.onPc }}; font-size: 13px; font-weight: 600; cursor: pointer; transition: transform 150ms;" style-active="transform: scale(0.96);">
+                  <span style="font-family: 'Material Symbols Outlined'; font-feature-settings: 'liga'; font-size: 18px; color: inherit;">add</span>New subscription
+                </div>
+                <div onClick="{{ openRules }}" style="height: 40px; display: flex; align-items: center; gap: 6px; padding: 0 16px; border-radius: 20px; cursor: pointer; color: {{ pal.pr }}; font-size: 13px; font-weight: 600; border: 1px solid {{ pal.ol }};" style-hover="background: {{ hov6 }};">
+                  <span style="font-family: 'Material Symbols Outlined'; font-feature-settings: 'liga'; font-size: 17px; color: inherit;">rule</span>Download rules <span style="font-family: 'Roboto Mono', monospace; font-size: 11px; opacity: 0.7;">{{ ruleCount }}</span>
+                </div>
+                <div onClick="{{ markAllArtsRead }}" title="Mark all as read" style="width: 40px; height: 40px; border-radius: 20px; display: flex; align-items: center; justify-content: center; cursor: pointer;" style-hover="background: {{ hov8 }};"><span style="font-family: 'Material Symbols Outlined'; font-feature-settings: 'liga'; font-size: 20px; color: {{ pal.onv }};">done_all</span></div>
+                <div onClick="{{ refreshAll }}" title="Update all feeds" style="width: 40px; height: 40px; border-radius: 20px; display: flex; align-items: center; justify-content: center; cursor: pointer;" style-hover="background: {{ hov8 }};"><span style="font-family: 'Material Symbols Outlined'; font-feature-settings: 'liga'; font-size: 20px; color: {{ refreshColor }}; animation: {{ refreshAnim }};">refresh</span></div>
+                <div style="flex: 1;"></div>
+                <div style="width: 300px; height: 40px; background: {{ pal.sc }}; border-radius: 20px; display: flex; align-items: center; padding: 0 6px 0 14px; gap: 8px; border: 1px solid {{ arxBorder }};">
+                  <span style="font-family: 'Material Symbols Outlined'; font-feature-settings: 'liga'; font-size: 18px; color: {{ pal.onv }};">search</span>
+                  <input value="{{ artFilter }}" onInput="{{ onArtFilter }}" placeholder="Filter articles" style="flex: 1; border: none; outline: none; background: transparent; font-family: 'Roboto', sans-serif; font-size: 13px; color: {{ pal.on }}; min-width: 0;"></input>
+                  <div onClick="{{ toggleArtRegex }}" title="Regex filter" style="height: 26px; padding: 0 9px; border-radius: 13px; display: flex; align-items: center; cursor: pointer; font-family: 'Roboto Mono', monospace; font-size: 11px; font-weight: 700; background: {{ arxBg }}; color: {{ arxColor }};">.*</div>
+                </div>
+              </div>
+              <div style="flex: 1; min-height: 0; display: flex; gap: 12px;">
+                <div style="width: 232px; flex: none; background: {{ pal.surf }}; border: 1px solid {{ pal.olv }}; border-radius: 16px; overflow-y: auto; padding: 8px; display: flex; flex-direction: column; gap: 2px; transition: background 300ms;">
+                  <sc-for list="{{ feedRows }}" as="f" hint-placeholder-count="7">
+                    <div onClick="{{ f.click }}" style="height: 34px; display: flex; align-items: center; gap: 8px; padding: 0 10px 0 {{ f.indent }}px; border-radius: 10px; cursor: pointer; background: {{ f.bg }}; transition: background 150ms;" style-hover="background: {{ hov6 }};">
+                      <span style="font-family: 'Material Symbols Outlined'; font-feature-settings: 'liga'; font-size: 17px; color: {{ f.ic }};">{{ f.icon }}</span>
+                      <span style="flex: 1; font-size: 13px; font-weight: {{ f.wt }}; color: {{ f.tc }}; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;">{{ f.label }}</span>
+                      <sc-if value="{{ f.badgeOn }}" hint-placeholder-val="{{ false }}">
+                        <span style="min-width: 18px; height: 18px; border-radius: 9px; background: {{ f.badgeBg }}; color: {{ f.badgeTc }}; font-size: 10.5px; font-weight: 700; display: flex; align-items: center; justify-content: center; padding: 0 5px; box-sizing: border-box;">{{ f.count }}</span>
+                      </sc-if>
+                    </div>
+                  </sc-for>
+                </div>
+                <div style="width: 320px; flex: none; background: {{ pal.surf }}; border: 1px solid {{ pal.olv }}; border-radius: 16px; overflow-y: auto; padding: 6px; display: flex; flex-direction: column; gap: 2px; transition: background 300ms;">
+                  <sc-for list="{{ artRows }}" as="a" hint-placeholder-count="6">
+                    <div onClick="{{ a.click }}" style="display: flex; gap: 10px; padding: 10px 12px; border-radius: 12px; cursor: pointer; background: {{ a.bg }}; transition: background 150ms;" style-hover="background: {{ hov6 }};">
+                      <span style="width: 8px; height: 8px; border-radius: 4px; background: {{ a.dot }}; flex: none; margin-top: 6px;"></span>
+                      <div style="flex: 1; min-width: 0; display: flex; flex-direction: column; gap: 2px;">
+                        <span style="font-size: 13px; font-weight: {{ a.wt }}; color: {{ a.tc }}; line-height: 1.35; overflow: hidden; display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical;">{{ a.title }}</span>
+                        <span style="font-size: 11.5px; color: {{ pal.onv }};">{{ a.meta }}</span>
+                      </div>
+                    </div>
+                  </sc-for>
+                  <sc-if value="{{ artEmpty }}" hint-placeholder-val="{{ false }}">
+                    <div style="padding: 40px 20px; display: flex; flex-direction: column; align-items: center; gap: 8px;">
+                      <span style="font-family: 'Material Symbols Outlined'; font-feature-settings: 'liga'; font-size: 36px; color: {{ pal.ol }};">inbox</span>
+                      <span style="font-size: 12.5px; color: {{ pal.onv }};">No articles match</span>
+                    </div>
+                  </sc-if>
+                </div>
+                <div style="flex: 1; min-width: 0; background: {{ pal.surf }}; border: 1px solid {{ pal.olv }}; border-radius: 16px; overflow-y: auto; padding: 20px 22px; transition: background 300ms;">
+                  <sc-if value="{{ artSelOn }}" hint-placeholder-val="{{ false }}">
+                    <div style="display: flex; flex-direction: column; gap: 12px;">
+                      <span style="font-size: 17px; font-weight: 600; color: {{ pal.on }}; line-height: 1.35;">{{ selArtTitle }}</span>
+                      <div style="display: flex; align-items: center; gap: 8px;">
+                        <span style="font-size: 12px; font-weight: 600; padding: 3px 10px; border-radius: 12px; background: {{ pal.sc }}; color: {{ pal.onv }};">{{ selArtFeed }}</span>
+                        <span style="font-size: 12px; color: {{ pal.onv }};">{{ selArtTime }}</span>
+                        <span style="font-size: 12px; font-family: 'Roboto Mono', monospace; color: {{ pal.onv }};">{{ selArtSize }}</span>
+                      </div>
+                      <span style="font-size: 13.5px; color: {{ pal.onv }}; line-height: 1.6;">{{ selArtDesc }}</span>
+                      <div style="display: flex; gap: 8px; margin-top: 4px;">
+                        <div onClick="{{ dlArticle }}" style="height: 40px; display: flex; align-items: center; gap: 6px; padding: 0 18px; border-radius: 20px; background: {{ pal.pr }}; color: {{ pal.onPr }}; font-size: 13.5px; font-weight: 600; cursor: pointer; transition: transform 150ms, box-shadow 200ms;" style-hover="box-shadow: 0 4px 14px {{ pal.shadow }};" style-active="transform: scale(0.96);">
+                          <span style="font-family: 'Material Symbols Outlined'; font-feature-settings: 'liga'; font-size: 18px; color: inherit;">download</span>Download torrent
+                        </div>
+                        <div onClick="{{ openArticle }}" style="height: 40px; display: flex; align-items: center; gap: 6px; padding: 0 16px; border-radius: 20px; background: {{ pal.pc }}; color: {{ pal.onPc }}; font-size: 13px; font-weight: 600; cursor: pointer;" style-active="transform: scale(0.96);">
+                          <span style="font-family: 'Material Symbols Outlined'; font-feature-settings: 'liga'; font-size: 17px; color: inherit;">open_in_new</span>Open link
+                        </div>
+                      </div>
+                    </div>
+                  </sc-if>
+                  <sc-if value="{{ artSelOff }}" hint-placeholder-val="{{ true }}">
+                    <div style="height: 100%; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 10px;">
+                      <span style="font-family: 'Material Symbols Outlined'; font-feature-settings: 'liga'; font-size: 44px; color: {{ pal.ol }};">rss_feed</span>
+                      <span style="font-size: 13px; color: {{ pal.onv }};">Select an article to preview it</span>
+                    </div>
+                  </sc-if>
+                </div>
+              </div>
+            </div>
+          </sc-if>
+
+          <!-- ═══ LOG TAB ═══ -->
+          <sc-if value="{{ logTabOn }}" hint-placeholder-val="{{ false }}">
+            <div style="flex: 1; min-height: 0; background: {{ pal.surf }}; border: 1px solid {{ pal.olv }}; border-radius: 16px; overflow-y: auto; padding: 14px 16px; display: flex; flex-direction: column; gap: 5px; transition: background 300ms;">
+              <sc-for list="{{ logLines }}" as="l" hint-placeholder-count="10">
+                <div style="display: flex; gap: 10px; align-items: baseline;">
+                  <span style="font-family: 'Roboto Mono', monospace; font-size: 11.5px; color: {{ pal.onv }}; width: 64px; flex: none;">{{ l.time }}</span>
+                  <span style="font-family: 'Roboto Mono', monospace; font-size: 11px; font-weight: 700; color: {{ l.lvlColor }}; width: 14px; flex: none;">{{ l.lvl }}</span>
+                  <span style="font-family: 'Roboto Mono', monospace; font-size: 12px; color: {{ l.msgColor }}; word-break: break-all;">{{ l.msg }}</span>
+                </div>
+              </sc-for>
+            </div>
+          </sc-if>
+
+          <!-- B: properties dock -->
+          <sc-if value="{{ dockOn }}" hint-placeholder-val="{{ false }}">
+            <div style="flex: none; margin-top: 12px; background: {{ pal.surf }}; border: 1px solid {{ pal.olv }}; border-radius: 12px; overflow: hidden; transition: background 300ms;">
+              <div style="display: flex; border-bottom: 1px solid {{ pal.olv }};">
+                <sc-for list="{{ dockTabs }}" as="dt" hint-placeholder-count="5">
+                  <div onClick="{{ dt.click }}" style="display: flex; align-items: center; gap: 6px; padding: 10px 16px; cursor: pointer; position: relative; color: {{ dt.color }}; transition: color 200ms;" style-hover="background: {{ hov6 }};">
+                    <span style="font-family: 'Material Symbols Outlined'; font-feature-settings: 'liga'; font-size: 16px; color: inherit;">{{ dt.icon }}</span>
+                    <span style="font-size: 13px; font-weight: 600;">{{ dt.label }}</span>
+                    <div style="position: absolute; left: 12px; right: 12px; bottom: 0; height: 3px; border-radius: 3px 3px 0 0; background: {{ pal.pr }}; opacity: {{ dt.ind }}; transition: opacity 200ms;"></div>
+                  </div>
+                </sc-for>
+              </div>
+              <div style="height: 168px; overflow-y: auto; padding: 14px 18px;">
+                <sc-if value="{{ dockIsGeneral }}" hint-placeholder-val="{{ true }}">
+                  <div style="display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 8px 28px;">
+                    <sc-for list="{{ detailFields }}" as="f" hint-placeholder-count="12">
+                      <div style="display: flex; gap: 8px; min-width: 0; justify-content: space-between;">
+                        <span style="font-size: 12.5px; color: {{ pal.onv }}; flex: none;">{{ f.l }}</span>
+                        <span style="font-size: 12.5px; font-family: 'Roboto Mono', monospace; color: {{ pal.on }}; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;">{{ f.v }}</span>
+                      </div>
+                    </sc-for>
+                  </div>
+                </sc-if>
+                <sc-if value="{{ dockIsOther }}" hint-placeholder-val="{{ false }}">
+                  <div style="height: 100%; display: flex; align-items: center; justify-content: center; gap: 8px;">
+                    <span style="font-family: 'Material Symbols Outlined'; font-feature-settings: 'liga'; font-size: 28px; color: {{ pal.ol }};">{{ dockIcon }}</span>
+                    <span style="font-size: 13px; color: {{ pal.onv }};">{{ dockEmpty }}</span>
+                  </div>
+                </sc-if>
+              </div>
+            </div>
+          </sc-if>
+        </div>
+
+        <!-- C: persistent detail panel -->
+        <sc-if value="{{ cDetailOn }}" hint-placeholder-val="{{ false }}">
+          <div style="width: 340px; flex: none; border-left: 1px solid {{ pal.olv }}; padding: 16px 18px; overflow-y: auto; display: flex; flex-direction: column; gap: 14px;">
+            <div style="display: flex; align-items: center; gap: 12px;">
+              <div style="width: 44px; height: 44px; border-radius: 14px; background: {{ selIconBg }}; display: flex; align-items: center; justify-content: center; flex: none;">
+                <span style="font-family: 'Material Symbols Outlined'; font-feature-settings: 'liga'; font-size: 22px; color: {{ selStColor }};">{{ selIcon }}</span>
+              </div>
+              <div style="min-width: 0;">
+                <div style="font-size: 14px; font-weight: 600; color: {{ pal.on }}; word-break: break-all;">{{ selName }}</div>
+                <div style="font-size: 12px; color: {{ selStColor }}; font-weight: 600; margin-top: 2px;">{{ selStatus }}</div>
+              </div>
+            </div>
+            <div>
+              <div style="display: flex; align-items: baseline; justify-content: space-between; margin-bottom: 6px;">
+                <span style="font-family: 'Roboto Mono', monospace; font-size: 34px; font-weight: 600; color: {{ pal.on }};">{{ selPct }}</span>
+                <span style="font-size: 12px; color: {{ pal.onv }};">of {{ selSize }}</span>
+              </div>
+              <div style="height: 8px; border-radius: 4px; background: {{ pal.sc2 }}; overflow: hidden;">
+                <div style="width: {{ selPctN }}%; height: 100%; border-radius: 4px; background: {{ selBarColor }}; transition: width 400ms;"></div>
+              </div>
+            </div>
+            <div style="display: flex; gap: 6px;">
+              <div onClick="{{ actStart }}" title="Start" style="flex: 1; height: 38px; border-radius: 12px; background: {{ pal.pc }}; display: flex; align-items: center; justify-content: center; cursor: pointer;" style-active="transform: scale(0.96);"><span style="font-family: 'Material Symbols Outlined'; font-feature-settings: 'liga'; font-size: 20px; color: {{ pal.onPc }};">play_arrow</span></div>
+              <div onClick="{{ actStop }}" title="Stop" style="flex: 1; height: 38px; border-radius: 12px; background: {{ pal.sc }}; display: flex; align-items: center; justify-content: center; cursor: pointer;" style-hover="background: {{ pal.sc2 }};"><span style="font-family: 'Material Symbols Outlined'; font-feature-settings: 'liga'; font-size: 20px; color: {{ pal.on }};">pause</span></div>
+              <div onClick="{{ actRecheck }}" title="Force recheck" style="flex: 1; height: 38px; border-radius: 12px; background: {{ pal.sc }}; display: flex; align-items: center; justify-content: center; cursor: pointer;" style-hover="background: {{ pal.sc2 }};"><span style="font-family: 'Material Symbols Outlined'; font-feature-settings: 'liga'; font-size: 20px; color: {{ pal.on }};">fact_check</span></div>
+              <div onClick="{{ askDelete }}" title="Remove" style="flex: 1; height: 38px; border-radius: 12px; background: {{ pal.sc }}; display: flex; align-items: center; justify-content: center; cursor: pointer;" style-hover="background: {{ errCont }};"><span style="font-family: 'Material Symbols Outlined'; font-feature-settings: 'liga'; font-size: 20px; color: {{ st.err }};">delete</span></div>
+            </div>
+            <div style="display: flex; flex-direction: column; gap: 7px; padding-top: 4px;">
+              <sc-for list="{{ detailFields }}" as="f" hint-placeholder-count="10">
+                <div style="display: flex; justify-content: space-between; gap: 12px;">
+                  <span style="font-size: 12.5px; color: {{ pal.onv }};">{{ f.l }}</span>
+                  <span style="font-size: 12.5px; font-family: 'Roboto Mono', monospace; color: {{ pal.on }}; text-align: right; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;">{{ f.v }}</span>
+                </div>
+              </sc-for>
+            </div>
+          </div>
+        </sc-if>
+      </div>
+
+      <!-- B: status bar -->
+      <sc-if value="{{ isB }}" hint-placeholder-val="{{ false }}">
+        <div style="height: 30px; display: flex; align-items: center; gap: 10px; padding: 0 16px; border-top: 1px solid {{ pal.olv }}; flex: none; font-size: 12px; color: {{ pal.onv }};">
+          <span>Free space: 412 GiB</span>
+          <span style="width: 1px; height: 12px; background: {{ pal.olv }};"></span>
+          <span>DHT: 387 nodes</span>
+          <span style="width: 1px; height: 12px; background: {{ pal.olv }};"></span>
+          <span style="font-family: 'Material Symbols Outlined'; font-feature-settings: 'liga'; font-size: 15px; color: {{ st.succ }};">cloud_done</span>
+          <div style="flex: 1;"></div>
+          <span style="font-family: 'Roboto Mono', monospace;">↓ 5.8 MiB/s · ↑ 1.7 MiB/s</span>
+        </div>
+      </sc-if>
+
+      <!-- A: floating selection bar -->
+      <sc-if value="{{ aBarOn }}" hint-placeholder-val="{{ false }}">
+        <div style="position: absolute; left: 50%; transform: translateX(-50%); bottom: 20px; height: 52px; display: flex; align-items: center; gap: 4px; padding: 0 8px 0 18px; background: {{ pal.sc2 }}; border: 1px solid {{ pal.olv }}; border-radius: 26px; box-shadow: 0 8px 24px {{ pal.shadow }}; animation: popIn 250ms cubic-bezier(0.2,0,0,1) both; z-index: 5;">
+          <span style="font-size: 13px; font-weight: 500; color: {{ pal.on }}; max-width: 280px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; margin-right: 8px;">{{ selName }}</span>
+          <div onClick="{{ actStart }}" title="Start" style="width: 38px; height: 38px; border-radius: 19px; display: flex; align-items: center; justify-content: center; cursor: pointer;" style-hover="background: {{ hov8 }};"><span style="font-family: 'Material Symbols Outlined'; font-feature-settings: 'liga'; font-size: 20px; color: {{ pal.on }};">play_arrow</span></div>
+          <div onClick="{{ actStop }}" title="Stop" style="width: 38px; height: 38px; border-radius: 19px; display: flex; align-items: center; justify-content: center; cursor: pointer;" style-hover="background: {{ hov8 }};"><span style="font-family: 'Material Symbols Outlined'; font-feature-settings: 'liga'; font-size: 20px; color: {{ pal.on }};">pause</span></div>
+          <div onClick="{{ actRecheck }}" title="Force recheck" style="width: 38px; height: 38px; border-radius: 19px; display: flex; align-items: center; justify-content: center; cursor: pointer;" style-hover="background: {{ hov8 }};"><span style="font-family: 'Material Symbols Outlined'; font-feature-settings: 'liga'; font-size: 20px; color: {{ pal.on }};">fact_check</span></div>
+          <div onClick="{{ actFolder }}" title="Open folder" style="width: 38px; height: 38px; border-radius: 19px; display: flex; align-items: center; justify-content: center; cursor: pointer;" style-hover="background: {{ hov8 }};"><span style="font-family: 'Material Symbols Outlined'; font-feature-settings: 'liga'; font-size: 20px; color: {{ pal.on }};">folder_open</span></div>
+          <div onClick="{{ askDelete }}" title="Remove" style="width: 38px; height: 38px; border-radius: 19px; display: flex; align-items: center; justify-content: center; cursor: pointer;" style-hover="background: {{ errCont }};"><span style="font-family: 'Material Symbols Outlined'; font-feature-settings: 'liga'; font-size: 20px; color: {{ st.err }};">delete</span></div>
+        </div>
+      </sc-if>
+
+      <!-- ═══════ RIGHT SHEETS (non-blocking, in-app) ═══════ -->
+
+      <!-- Notification center -->
+      <sc-if value="{{ notifOn }}" hint-placeholder-val="{{ false }}">
+        <div style="position: absolute; right: 16px; top: 78px; bottom: 16px; width: 396px; background: {{ pal.surf }}; border: 1px solid {{ pal.olv }}; border-radius: 24px; box-shadow: 0 12px 40px {{ pal.shadow }}; display: flex; flex-direction: column; overflow: hidden; animation: panelIn 240ms cubic-bezier(0.2,0,0,1) both; z-index: 10;">
+          <div style="display: flex; align-items: center; gap: 8px; padding: 16px 16px 10px 20px;">
+            <span style="font-size: 16px; font-weight: 600; color: {{ pal.on }};">Notifications</span>
+            <sc-if value="{{ hasUnread }}" hint-placeholder-val="{{ true }}"><span style="font-size: 11px; font-weight: 700; padding: 2px 8px; border-radius: 10px; background: {{ pal.pc }}; color: {{ pal.onPc }};">{{ unreadCount }} new</span></sc-if>
+            <div style="flex: 1;"></div>
+            <div onClick="{{ markAllRead }}" title="Mark all read" style="width: 34px; height: 34px; border-radius: 17px; display: flex; align-items: center; justify-content: center; cursor: pointer;" style-hover="background: {{ hov8 }};"><span style="font-family: 'Material Symbols Outlined'; font-feature-settings: 'liga'; font-size: 19px; color: {{ pal.onv }};">done_all</span></div>
+            <div onClick="{{ clearNotifs }}" title="Clear all" style="width: 34px; height: 34px; border-radius: 17px; display: flex; align-items: center; justify-content: center; cursor: pointer;" style-hover="background: {{ hov8 }};"><span style="font-family: 'Material Symbols Outlined'; font-feature-settings: 'liga'; font-size: 19px; color: {{ pal.onv }};">delete_sweep</span></div>
+            <div onClick="{{ closePanel }}" title="Close" style="width: 34px; height: 34px; border-radius: 17px; display: flex; align-items: center; justify-content: center; cursor: pointer;" style-hover="background: {{ hov8 }};"><span style="font-family: 'Material Symbols Outlined'; font-feature-settings: 'liga'; font-size: 19px; color: {{ pal.onv }};">close</span></div>
+          </div>
+          <div style="display: flex; align-items: center; gap: 8px; margin: 0 16px 10px 16px; height: 38px; background: {{ pal.sc }}; border-radius: 19px; padding: 0 6px 0 14px; border: 1px solid {{ notifSearchBorder }};">
+            <span style="font-family: 'Material Symbols Outlined'; font-feature-settings: 'liga'; font-size: 17px; color: {{ pal.onv }};">search</span>
+            <input value="{{ notifSearch }}" onInput="{{ onNotifSearch }}" placeholder="Filter notifications" style="flex: 1; border: none; outline: none; background: transparent; font-family: 'Roboto', sans-serif; font-size: 13px; color: {{ pal.on }}; min-width: 0;"></input>
+            <div onClick="{{ toggleNotifRegex }}" title="Regex filter" style="height: 24px; padding: 0 8px; border-radius: 12px; display: flex; align-items: center; cursor: pointer; font-family: 'Roboto Mono', monospace; font-size: 11px; font-weight: 700; background: {{ nrxBg }}; color: {{ nrxColor }};">.*</div>
+          </div>
+          <div style="flex: 1; overflow-y: auto; padding: 0 12px 12px 12px; display: flex; flex-direction: column; gap: 6px;">
+            <sc-for list="{{ notifItems }}" as="n" hint-placeholder-count="4">
+              <div style="display: flex; gap: 12px; padding: 12px 12px 12px 14px; border-radius: 16px; background: {{ n.bg }}; transition: background 200ms;" style-hover="background: {{ hov6 }};">
+                <div style="width: 36px; height: 36px; border-radius: 12px; background: {{ n.iconBg }}; display: flex; align-items: center; justify-content: center; flex: none;">
+                  <span style="font-family: 'Material Symbols Outlined'; font-feature-settings: 'liga'; font-size: 19px; color: {{ n.iconColor }};">{{ n.icon }}</span>
+                </div>
+                <div style="flex: 1; min-width: 0; display: flex; flex-direction: column; gap: 3px;">
+                  <div style="display: flex; align-items: center; gap: 6px;">
+                    <span style="flex: 1; font-size: 13.5px; font-weight: 600; color: {{ pal.on }};">{{ n.title }}</span>
+                    <span style="font-size: 11px; color: {{ pal.onv }}; flex: none;">{{ n.time }}</span>
+                    <sc-if value="{{ n.unread }}" hint-placeholder-val="{{ false }}"><span style="width: 8px; height: 8px; border-radius: 4px; background: {{ pal.pr }}; flex: none;"></span></sc-if>
+                  </div>
+                  <span style="font-size: 12.5px; color: {{ pal.onv }}; line-height: 1.4;">{{ n.body }}</span>
+                  <div style="display: flex; gap: 6px; margin-top: 6px; flex-wrap: wrap;">
+                    <sc-for list="{{ n.actions }}" as="na" hint-placeholder-count="2">
+                      <div onClick="{{ na.click }}" style="height: 28px; display: flex; align-items: center; padding: 0 12px; border-radius: 14px; background: {{ pal.pc }}; color: {{ pal.onPc }}; font-size: 12px; font-weight: 600; cursor: pointer; transition: transform 150ms;" style-active="transform: scale(0.95);">{{ na.label }}</div>
+                    </sc-for>
+                    <div onClick="{{ n.dismiss }}" style="height: 28px; display: flex; align-items: center; padding: 0 12px; border-radius: 14px; color: {{ pal.onv }}; font-size: 12px; font-weight: 600; cursor: pointer;" style-hover="background: {{ hov8 }};">Dismiss</div>
+                  </div>
+                </div>
+              </div>
+            </sc-for>
+            <sc-if value="{{ notifEmpty }}" hint-placeholder-val="{{ false }}">
+              <div style="padding: 48px 24px; display: flex; flex-direction: column; align-items: center; gap: 8px;">
+                <span style="font-family: 'Material Symbols Outlined'; font-feature-settings: 'liga'; font-size: 40px; color: {{ pal.ol }};">notifications_off</span>
+                <span style="font-size: 13px; color: {{ pal.onv }};">All caught up</span>
+              </div>
+            </sc-if>
+          </div>
+          <div onClick="{{ openActionLog }}" style="padding: 12px 20px; border-top: 1px solid {{ pal.olv }}; display: flex; align-items: center; gap: 8px; cursor: pointer; color: {{ pal.pr }}; font-size: 13px; font-weight: 600;" style-hover="background: {{ hov6 }};">
+            <span style="font-family: 'Material Symbols Outlined'; font-feature-settings: 'liga'; font-size: 17px; color: inherit;">history</span>
+            <span>Every action is committed — open the action log</span>
+          </div>
+        </div>
+      </sc-if>
+
+      <!-- History manager -->
+      <sc-if value="{{ histOn }}" hint-placeholder-val="{{ false }}">
+        <div style="position: absolute; right: 16px; top: 78px; bottom: 16px; width: 460px; background: {{ pal.surf }}; border: 1px solid {{ pal.olv }}; border-radius: 24px; box-shadow: 0 12px 40px {{ pal.shadow }}; display: flex; flex-direction: column; overflow: hidden; animation: panelIn 240ms cubic-bezier(0.2,0,0,1) both; z-index: 10;">
+          <div style="display: flex; align-items: center; gap: 10px; padding: 16px 16px 10px 20px;">
+            <span style="font-size: 16px; font-weight: 600; color: {{ pal.on }};">History</span>
+            <span style="display: flex; align-items: center; gap: 5px; font-size: 11.5px; font-weight: 600; padding: 3px 10px; border-radius: 12px; background: {{ pal.sc }}; color: {{ pal.onv }}; font-family: 'Roboto Mono', monospace;">
+              <span style="font-family: 'Material Symbols Outlined'; font-feature-settings: 'liga'; font-size: 14px; color: inherit;">account_tree</span>main
+            </span>
+            <div style="flex: 1;"></div>
+            <div onClick="{{ exportRepo }}" title="Export repo as JSON" style="width: 34px; height: 34px; border-radius: 17px; display: flex; align-items: center; justify-content: center; cursor: pointer;" style-hover="background: {{ hov8 }};"><span style="font-family: 'Material Symbols Outlined'; font-feature-settings: 'liga'; font-size: 19px; color: {{ pal.onv }};">save_alt</span></div>
+            <div onClick="{{ closePanel }}" title="Close" style="width: 34px; height: 34px; border-radius: 17px; display: flex; align-items: center; justify-content: center; cursor: pointer;" style-hover="background: {{ hov8 }};"><span style="font-family: 'Material Symbols Outlined'; font-feature-settings: 'liga'; font-size: 19px; color: {{ pal.onv }};">close</span></div>
+          </div>
+          <div style="display: flex; gap: 6px; padding: 0 16px 10px 16px;">
+            <sc-for list="{{ histTabs }}" as="ht" hint-placeholder-count="2">
+              <div onClick="{{ ht.click }}" style="height: 34px; display: flex; align-items: center; gap: 6px; padding: 0 14px; border-radius: 17px; cursor: pointer; font-size: 13px; font-weight: 600; background: {{ ht.bg }}; color: {{ ht.tc }}; border: 1px solid {{ ht.border }}; transition: background 200ms;">
+                <span style="font-family: 'Material Symbols Outlined'; font-feature-settings: 'liga'; font-size: 16px; color: inherit;">{{ ht.icon }}</span>
+                <span>{{ ht.label }}</span>
+                <span style="font-family: 'Roboto Mono', monospace; font-size: 11px; opacity: 0.7;">{{ ht.count }}</span>
+              </div>
+            </sc-for>
+            <div style="flex: 1;"></div>
+            <div style="display: flex; align-items: center; gap: 6px;">
+              <span style="font-size: 11.5px; color: {{ pal.onv }};">auto-commit</span>
+              <div onClick="{{ toggleAutoCommit }}" style="width: 34px; height: 20px; border-radius: 10px; background: {{ acBg }}; position: relative; cursor: pointer; transition: background 200ms;">
+                <span style="position: absolute; top: 3px; left: {{ acLeft }}px; width: 14px; height: 14px; border-radius: 7px; background: {{ acThumb }}; transition: left 200ms cubic-bezier(0.2,0,0,1);"></span>
+              </div>
+            </div>
+          </div>
+          <div style="display: flex; align-items: center; gap: 8px; margin: 0 16px 10px 16px; height: 38px; background: {{ pal.sc }}; border-radius: 19px; padding: 0 6px 0 14px; border: 1px solid {{ histSearchBorder }};">
+            <span style="font-family: 'Material Symbols Outlined'; font-feature-settings: 'liga'; font-size: 17px; color: {{ pal.onv }};">search</span>
+            <input value="{{ histSearch }}" onInput="{{ onHistSearch }}" placeholder="Search commits (message, sha, key)" style="flex: 1; border: none; outline: none; background: transparent; font-family: 'Roboto', sans-serif; font-size: 13px; color: {{ pal.on }}; min-width: 0;"></input>
+            <div onClick="{{ toggleHistRegex }}" title="Regex filter" style="height: 24px; padding: 0 8px; border-radius: 12px; display: flex; align-items: center; cursor: pointer; font-family: 'Roboto Mono', monospace; font-size: 11px; font-weight: 700; background: {{ hrxBg }}; color: {{ hrxColor }};">.*</div>
+          </div>
+          <div style="flex: 1; overflow-y: auto; padding: 4px 16px 16px 16px;">
+            <sc-for list="{{ histGroups }}" as="g" hint-placeholder-count="2">
+              <div>
+                <div style="font-size: 11px; font-weight: 700; letter-spacing: 1px; text-transform: uppercase; color: {{ pal.onv }}; padding: 10px 0 6px 30px;">{{ g.label }}</div>
+                <sc-for list="{{ g.commits }}" as="c" hint-placeholder-count="4">
+                  <div style="display: flex; gap: 12px;">
+                    <div style="width: 18px; flex: none; display: flex; flex-direction: column; align-items: center;">
+                      <span style="width: 10px; height: 10px; border-radius: 5px; background: {{ c.dot }}; border: 2px solid {{ pal.surf }}; box-shadow: 0 0 0 1.5px {{ c.dot }}; margin-top: 8px; flex: none;"></span>
+                      <span style="width: 2px; flex: 1; background: {{ pal.olv }};"></span>
+                    </div>
+                    <div style="flex: 1; min-width: 0; padding-bottom: 10px;">
+                      <div onClick="{{ c.toggle }}" style="display: flex; align-items: center; gap: 8px; padding: 6px 10px; border-radius: 12px; cursor: pointer; transition: background 150ms;" style-hover="background: {{ hov6 }};">
+                        <span style="font-family: 'Roboto Mono', monospace; font-size: 11px; font-weight: 700; padding: 2px 7px; border-radius: 8px; background: {{ pal.sc }}; color: {{ pal.pr }}; flex: none;">{{ c.sha }}</span>
+                        <span style="flex: 1; font-size: 13px; color: {{ pal.on }}; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;">{{ c.msg }}</span>
+                        <span style="font-size: 11px; color: {{ pal.onv }}; flex: none;">{{ c.time }}</span>
+                        <span style="font-family: 'Material Symbols Outlined'; font-feature-settings: 'liga'; font-size: 17px; color: {{ pal.onv }}; transform: rotate({{ c.rot }}deg); transition: transform 200ms;">expand_more</span>
+                      </div>
+                      <sc-if value="{{ c.open }}" hint-placeholder-val="{{ false }}">
+                        <div style="margin: 4px 0 6px 6px; padding: 10px 12px; border-radius: 12px; background: {{ pal.sc }}; display: flex; flex-direction: column; gap: 4px; animation: popIn 200ms cubic-bezier(0.2,0,0,1) both;">
+                          <sc-for list="{{ c.diff }}" as="d" hint-placeholder-count="2">
+                            <div style="font-family: 'Roboto Mono', monospace; font-size: 11.5px; display: flex; gap: 8px;">
+                              <span style="color: {{ st.err }}; flex: none;">−</span><span style="color: {{ st.err }};">{{ d.from }}</span>
+                            </div>
+                            <div style="font-family: 'Roboto Mono', monospace; font-size: 11.5px; display: flex; gap: 8px;">
+                              <span style="color: {{ st.succ }}; flex: none;">+</span><span style="color: {{ st.succ }};">{{ d.to }}</span>
+                            </div>
+                          </sc-for>
+                          <div style="display: flex; gap: 8px; margin-top: 6px;">
+                            <sc-if value="{{ c.canRestore }}" hint-placeholder-val="{{ false }}">
+                              <div onClick="{{ c.restore }}" style="height: 28px; display: flex; align-items: center; gap: 5px; padding: 0 12px; border-radius: 14px; background: {{ pal.pc }}; color: {{ pal.onPc }}; font-size: 12px; font-weight: 600; cursor: pointer;" style-active="transform: scale(0.95);">
+                                <span style="font-family: 'Material Symbols Outlined'; font-feature-settings: 'liga'; font-size: 15px; color: inherit;">settings_backup_restore</span>Restore
+                              </div>
+                            </sc-if>
+                            <div onClick="{{ c.copy }}" style="height: 28px; display: flex; align-items: center; gap: 5px; padding: 0 12px; border-radius: 14px; color: {{ pal.onv }}; font-size: 12px; font-weight: 600; cursor: pointer;" style-hover="background: {{ hov8 }};">
+                              <span style="font-family: 'Material Symbols Outlined'; font-feature-settings: 'liga'; font-size: 15px; color: inherit;">content_copy</span>Copy sha
+                            </div>
+                          </div>
+                        </div>
+                      </sc-if>
+                    </div>
+                  </div>
+                </sc-for>
+              </div>
+            </sc-for>
+          </div>
+        </div>
+      </sc-if>
+
+      <!-- Settings -->
+      <sc-if value="{{ setOn }}" hint-placeholder-val="{{ false }}">
+        <div style="position: absolute; right: 16px; top: 78px; bottom: 16px; width: 430px; background: {{ pal.surf }}; border: 1px solid {{ pal.olv }}; border-radius: 24px; box-shadow: 0 12px 40px {{ pal.shadow }}; display: flex; flex-direction: column; overflow: hidden; animation: panelIn 240ms cubic-bezier(0.2,0,0,1) both; z-index: 10;">
+          <div style="display: flex; align-items: center; gap: 8px; padding: 16px 16px 6px 20px;">
+            <span style="font-size: 16px; font-weight: 600; color: {{ pal.on }};">Settings</span>
+            <span style="font-size: 11.5px; color: {{ pal.onv }};">every change becomes a commit</span>
+            <div style="flex: 1;"></div>
+            <div onClick="{{ closePanel }}" title="Close" style="width: 34px; height: 34px; border-radius: 17px; display: flex; align-items: center; justify-content: center; cursor: pointer;" style-hover="background: {{ hov8 }};"><span style="font-family: 'Material Symbols Outlined'; font-feature-settings: 'liga'; font-size: 19px; color: {{ pal.onv }};">close</span></div>
+          </div>
+          <div style="flex: 1; overflow-y: auto; padding: 8px 20px 20px 20px; display: flex; flex-direction: column; gap: 18px;">
+            <!-- Appearance -->
+            <div style="display: flex; flex-direction: column; gap: 10px;">
+              <span style="font-size: 12px; font-weight: 700; letter-spacing: 1px; text-transform: uppercase; color: {{ pal.pr }};">Appearance</span>
+              <div style="display: flex; align-items: center; justify-content: space-between;">
+                <span style="font-size: 13.5px; color: {{ pal.on }};">Theme</span>
+                <div style="display: flex; background: {{ pal.sc }}; border-radius: 18px; padding: 3px;">
+                  <div onClick="{{ setLight }}" style="height: 30px; padding: 0 16px; border-radius: 15px; display: flex; align-items: center; gap: 5px; cursor: pointer; font-size: 12.5px; font-weight: 600; background: {{ segLightBg }}; color: {{ segLightTc }}; transition: background 200ms;">
+                    <span style="font-family: 'Material Symbols Outlined'; font-feature-settings: 'liga'; font-size: 15px; color: inherit;">light_mode</span>Light
+                  </div>
+                  <div onClick="{{ setDark }}" style="height: 30px; padding: 0 16px; border-radius: 15px; display: flex; align-items: center; gap: 5px; cursor: pointer; font-size: 12.5px; font-weight: 600; background: {{ segDarkBg }}; color: {{ segDarkTc }}; transition: background 200ms;">
+                    <span style="font-family: 'Material Symbols Outlined'; font-feature-settings: 'liga'; font-size: 15px; color: inherit;">dark_mode</span>Dark
+                  </div>
+                </div>
+              </div>
+              <span style="font-size: 13.5px; color: {{ pal.on }}; margin-top: 2px;">UI style</span>
+              <sc-for list="{{ styleCards }}" as="sc" hint-placeholder-count="3">
+                <div onClick="{{ sc.click }}" style="display: flex; align-items: center; gap: 14px; padding: 12px 14px; border-radius: 16px; border: {{ sc.border }}; cursor: pointer; background: {{ sc.bg }}; transition: border 200ms, background 200ms;" style-hover="background: {{ hov6 }};">
+                  <div style="width: 64px; height: 44px; border-radius: 10px; background: {{ sc.thumbBg }}; border: 1px solid {{ pal.olv }}; display: flex; gap: 3px; padding: 5px; box-sizing: border-box; flex: none;">
+                    <div style="width: {{ sc.tRail }}px; border-radius: 3px; background: {{ sc.accent }}; flex: none;"></div>
+                    <div style="flex: 1; display: flex; flex-direction: column; gap: 3px;">
+                      <div style="height: 5px; border-radius: 2px; background: {{ sc.accent }}; opacity: 0.5; width: 70%;"></div>
+                      <div style="flex: 1; border-radius: 3px; background: {{ sc.accent }}; opacity: 0.22;"></div>
+                      <sc-if value="{{ sc.twoRows }}" hint-placeholder-val="{{ false }}"><div style="height: 8px; border-radius: 3px; background: {{ sc.accent }}; opacity: 0.22;"></div></sc-if>
+                    </div>
+                  </div>
+                  <div style="flex: 1; min-width: 0;">
+                    <div style="font-size: 14px; font-weight: 600; color: {{ pal.on }};">{{ sc.name }}</div>
+                    <div style="font-size: 12px; color: {{ pal.onv }}; margin-top: 2px;">{{ sc.desc }}</div>
+                  </div>
+                  <span style="font-family: 'Material Symbols Outlined'; font-feature-settings: 'liga'; font-size: 20px; color: {{ sc.radioColor }};">{{ sc.radio }}</span>
+                </div>
+              </sc-for>
+            </div>
+            <!-- Behavior -->
+            <div style="display: flex; flex-direction: column; gap: 4px;">
+              <span style="font-size: 12px; font-weight: 700; letter-spacing: 1px; text-transform: uppercase; color: {{ pal.pr }}; margin-bottom: 6px;">Behavior</span>
+              <sc-for list="{{ switchRows }}" as="sw" hint-placeholder-count="4">
+                <div style="display: flex; align-items: center; gap: 12px; padding: 8px 2px;">
+                  <div style="flex: 1;">
+                    <div style="font-size: 13.5px; color: {{ pal.on }};">{{ sw.label }}</div>
+                    <div style="font-size: 11.5px; color: {{ pal.onv }}; margin-top: 1px;">{{ sw.desc }}</div>
+                  </div>
+                  <div onClick="{{ sw.click }}" style="width: 44px; height: 26px; border-radius: 13px; background: {{ sw.trackBg }}; border: 1px solid {{ sw.trackBorder }}; position: relative; cursor: pointer; transition: background 200ms; flex: none;">
+                    <span style="position: absolute; top: 50%; margin-top: -8px; left: {{ sw.thumbLeft }}px; width: 16px; height: 16px; border-radius: 8px; background: {{ sw.thumbBg }}; transition: left 200ms cubic-bezier(0.2,0,0,1), background 200ms;"></span>
+                  </div>
+                </div>
+              </sc-for>
+            </div>
+            <!-- History -->
+            <div style="display: flex; flex-direction: column; gap: 8px;">
+              <span style="font-size: 12px; font-weight: 700; letter-spacing: 1px; text-transform: uppercase; color: {{ pal.pr }};">History</span>
+              <div style="display: flex; align-items: center; justify-content: space-between;">
+                <span style="font-size: 13.5px; color: {{ pal.on }};">Retention</span>
+                <div style="display: flex; gap: 6px;">
+                  <sc-for list="{{ retChips }}" as="rc" hint-placeholder-count="3">
+                    <div onClick="{{ rc.click }}" style="height: 30px; padding: 0 13px; border-radius: 15px; display: flex; align-items: center; cursor: pointer; font-size: 12.5px; font-weight: 600; background: {{ rc.bg }}; color: {{ rc.tc }}; border: 1px solid {{ rc.border }}; transition: background 200ms;">{{ rc.label }}</div>
+                  </sc-for>
+                </div>
+              </div>
+              <div onClick="{{ openHistFromSet }}" style="display: flex; align-items: center; gap: 8px; padding: 10px 12px; border-radius: 12px; background: {{ pal.sc }}; cursor: pointer; color: {{ pal.pr }}; font-size: 13px; font-weight: 600;" style-hover="background: {{ pal.sc2 }};">
+                <span style="font-family: 'Material Symbols Outlined'; font-feature-settings: 'liga'; font-size: 17px; color: inherit;">history</span>
+                <span>Open history manager</span>
+                <div style="flex: 1;"></div>
+                <span style="font-family: 'Roboto Mono', monospace; font-size: 11px; color: {{ pal.onv }};">{{ settingsCommitCount }} commits</span>
+              </div>
+            </div>
+          </div>
+        </div>
+      </sc-if>
+
+      <!-- Regex builder -->
+      <sc-if value="{{ regexOn2 }}" hint-placeholder-val="{{ false }}">
+        <div style="position: absolute; right: 16px; top: 78px; bottom: 16px; width: 560px; background: {{ pal.surf }}; border: 1px solid {{ pal.olv }}; border-radius: 24px; box-shadow: 0 12px 40px {{ pal.shadow }}; display: flex; flex-direction: column; overflow: hidden; animation: panelIn 240ms cubic-bezier(0.2,0,0,1) both; z-index: 10;">
+          <div style="display: flex; align-items: center; gap: 8px; padding: 16px 16px 8px 20px;">
+            <span style="font-family: 'Material Symbols Outlined'; font-feature-settings: 'liga'; font-size: 20px; color: {{ pal.pr }};">data_object</span>
+            <span style="font-size: 16px; font-weight: 600; color: {{ pal.on }};">Regex Builder</span>
+            <div style="flex: 1;"></div>
+            <div onClick="{{ toggleImport }}" style="height: 32px; display: flex; align-items: center; gap: 5px; padding: 0 12px; border-radius: 16px; cursor: pointer; font-size: 12.5px; font-weight: 600; color: {{ pal.pr }}; border: 1px solid {{ pal.ol }};" style-hover="background: {{ hov6 }};">
+              <span style="font-family: 'Material Symbols Outlined'; font-feature-settings: 'liga'; font-size: 16px; color: inherit;">swap_vert</span>Import / Export
+            </div>
+            <div onClick="{{ closePanel }}" title="Close" style="width: 34px; height: 34px; border-radius: 17px; display: flex; align-items: center; justify-content: center; cursor: pointer;" style-hover="background: {{ hov8 }};"><span style="font-family: 'Material Symbols Outlined'; font-feature-settings: 'liga'; font-size: 19px; color: {{ pal.onv }};">close</span></div>
+          </div>
+          <div style="flex: 1; overflow-y: auto; padding: 8px 20px 20px 20px; display: flex; flex-direction: column; gap: 14px;">
+            <!-- pattern + flags -->
+            <div style="display: flex; gap: 8px; align-items: center;">
+              <div style="flex: 1; height: 44px; display: flex; align-items: center; gap: 10px; background: {{ pal.sc }}; border: 1px solid {{ patBorder }}; border-radius: 12px; padding: 0 14px; transition: border 200ms;">
+                <span style="width: 8px; height: 8px; border-radius: 4px; background: {{ patDot }}; flex: none; transition: background 200ms;"></span>
+                <span style="font-family: 'Roboto Mono', monospace; font-size: 14px; color: {{ pal.onv }}; flex: none;">/</span>
+                <input value="{{ builderPat }}" onInput="{{ onBuilderPat }}" placeholder="pattern" style="flex: 1; border: none; outline: none; background: transparent; font-family: 'Roboto Mono', monospace; font-size: 14px; color: {{ pal.on }}; min-width: 0;"></input>
+                <span style="font-family: 'Roboto Mono', monospace; font-size: 14px; color: {{ pal.onv }}; flex: none;">/{{ flagStr }}</span>
+              </div>
+              <sc-for list="{{ flagChips }}" as="fc" hint-placeholder-count="3">
+                <div onClick="{{ fc.click }}" title="{{ fc.tip }}" style="width: 34px; height: 34px; border-radius: 10px; display: flex; align-items: center; justify-content: center; cursor: pointer; font-family: 'Roboto Mono', monospace; font-size: 13px; font-weight: 700; background: {{ fc.bg }}; color: {{ fc.tc }}; border: 1px solid {{ fc.border }}; transition: background 200ms;">{{ fc.label }}</div>
+              </sc-for>
+            </div>
+            <sc-if value="{{ importOpen }}" hint-placeholder-val="{{ false }}">
+              <div style="display: flex; flex-direction: column; gap: 8px; padding: 12px; border-radius: 14px; background: {{ pal.sc }}; animation: popIn 200ms both;">
+                <span style="font-size: 12px; font-weight: 600; color: {{ pal.onv }};">Paste JSON to import, or copy the export below</span>
+                <textarea value="{{ importText }}" onInput="{{ onImportText }}" rows="4" style="width: 100%; box-sizing: border-box; border: 1px solid {{ pal.ol }}; border-radius: 10px; background: {{ pal.surf }}; color: {{ pal.on }}; font-family: 'Roboto Mono', monospace; font-size: 11.5px; padding: 10px; outline: none; resize: vertical;"></textarea>
+                <div style="display: flex; gap: 8px;">
+                  <div onClick="{{ doImport }}" style="height: 32px; display: flex; align-items: center; padding: 0 16px; border-radius: 16px; background: {{ pal.pr }}; color: {{ pal.onPr }}; font-size: 12.5px; font-weight: 600; cursor: pointer;" style-active="transform: scale(0.96);">Import</div>
+                  <div onClick="{{ doExport }}" style="height: 32px; display: flex; align-items: center; padding: 0 16px; border-radius: 16px; border: 1px solid {{ pal.ol }}; color: {{ pal.pr }}; font-size: 12.5px; font-weight: 600; cursor: pointer;" style-hover="background: {{ hov6 }};">Fill with export</div>
+                </div>
+              </div>
+            </sc-if>
+            <!-- token chips -->
+            <div style="display: flex; flex-direction: column; gap: 8px;">
+              <sc-for list="{{ tokenGroups }}" as="tg" hint-placeholder-count="4">
+                <div style="display: flex; align-items: center; gap: 8px; flex-wrap: wrap;">
+                  <span style="font-size: 11px; font-weight: 700; letter-spacing: 0.8px; text-transform: uppercase; color: {{ pal.onv }}; width: 84px; flex: none;">{{ tg.label }}</span>
+                  <sc-for list="{{ tg.tokens }}" as="tk" hint-placeholder-count="5">
+                    <div onClick="{{ tk.click }}" title="{{ tk.tip }}" style="height: 28px; display: flex; align-items: center; padding: 0 10px; border-radius: 8px; background: {{ pal.sc }}; color: {{ pal.on }}; font-family: 'Roboto Mono', monospace; font-size: 12px; cursor: pointer; border: 1px solid {{ pal.olv }}; transition: background 150ms, transform 100ms;" style-hover="background: {{ pal.sc2 }};" style-active="transform: scale(0.92);">{{ tk.label }}</div>
+                  </sc-for>
+                </div>
+              </sc-for>
+              <div style="display: flex; align-items: center; gap: 8px; flex-wrap: wrap;">
+                <span style="font-size: 11px; font-weight: 700; letter-spacing: 0.8px; text-transform: uppercase; color: {{ pal.onv }}; width: 84px; flex: none;">Presets</span>
+                <sc-for list="{{ presets }}" as="pr" hint-placeholder-count="5">
+                  <div onClick="{{ pr.click }}" style="height: 28px; display: flex; align-items: center; gap: 5px; padding: 0 11px; border-radius: 14px; background: {{ pal.pc }}; color: {{ pal.onPc }}; font-size: 12px; font-weight: 600; cursor: pointer; transition: transform 100ms;" style-active="transform: scale(0.94);">{{ pr.label }}</div>
+                </sc-for>
+              </div>
+            </div>
+            <!-- live test -->
+            <div style="border-radius: 14px; background: {{ pal.sc }}; padding: 12px 14px; display: flex; flex-direction: column; gap: 8px;">
+              <div style="display: flex; align-items: center; gap: 8px;">
+                <span style="font-size: 12px; font-weight: 700; letter-spacing: 0.8px; text-transform: uppercase; color: {{ pal.onv }};">Live test</span>
+                <span style="font-size: 12px; font-weight: 600; color: {{ matchColor }};">{{ matchSummary }}</span>
+              </div>
+              <sc-for list="{{ testRows }}" as="tr" hint-placeholder-count="5">
+                <div style="display: flex; align-items: center; gap: 8px;">
+                  <span style="font-family: 'Material Symbols Outlined'; font-feature-settings: 'liga'; font-size: 15px; color: {{ tr.mark }}; flex: none;">{{ tr.markIcon }}</span>
+                  <span style="font-family: 'Roboto Mono', monospace; font-size: 11.5px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;">
+                    <sc-for list="{{ tr.segs }}" as="sg" hint-placeholder-count="1">
+                      <span style="color: {{ sg.color }}; background: {{ sg.bg }}; border-radius: 3px; padding: {{ sg.pad }};">{{ sg.text }}</span>
+                    </sc-for>
+                  </span>
+                </div>
+              </sc-for>
+            </div>
+            <!-- library -->
+            <div style="display: flex; flex-direction: column; gap: 8px;">
+              <span style="font-size: 11px; font-weight: 700; letter-spacing: 0.8px; text-transform: uppercase; color: {{ pal.onv }};">Library</span>
+              <div style="display: flex; gap: 6px; flex-wrap: wrap; align-items: center;">
+                <sc-for list="{{ libChips }}" as="lc" hint-placeholder-count="3">
+                  <div style="height: 30px; display: flex; align-items: center; gap: 6px; padding: 0 4px 0 12px; border-radius: 15px; border: 1px solid {{ pal.ol }}; color: {{ pal.on }}; font-size: 12px; cursor: pointer;" style-hover="background: {{ hov6 }};">
+                    <span onClick="{{ lc.load }}" style="font-weight: 600;">{{ lc.name }}</span>
+                    <span onClick="{{ lc.remove }}" style="font-family: 'Material Symbols Outlined'; font-feature-settings: 'liga'; font-size: 14px; color: {{ pal.onv }}; width: 22px; height: 22px; border-radius: 11px; display: flex; align-items: center; justify-content: center;" style-hover="background: {{ hov8 }};">close</span>
+                  </div>
+                </sc-for>
+                <input value="{{ libName }}" onInput="{{ onLibName }}" placeholder="name this pattern" style="height: 30px; width: 130px; border: 1px solid {{ pal.olv }}; border-radius: 15px; background: transparent; color: {{ pal.on }}; font-family: 'Roboto', sans-serif; font-size: 12px; padding: 0 12px; outline: none;"></input>
+                <div onClick="{{ saveLib }}" style="height: 30px; display: flex; align-items: center; padding: 0 13px; border-radius: 15px; border: 1px solid {{ pal.ol }}; color: {{ pal.pr }}; font-size: 12px; font-weight: 600; cursor: pointer;" style-hover="background: {{ hov6 }};">Save</div>
+              </div>
+            </div>
+          </div>
+          <div style="padding: 14px 20px; border-top: 1px solid {{ pal.olv }}; display: flex; gap: 10px; align-items: center;">
+            <span style="font-size: 11.5px; color: {{ pal.onv }}; flex: 1;">Works in every search field — transfers, notifications, history</span>
+            <div onClick="{{ applyRegex }}" style="height: 40px; display: flex; align-items: center; gap: 6px; padding: 0 20px; border-radius: 20px; background: {{ pal.pr }}; color: {{ pal.onPr }}; font-size: 13.5px; font-weight: 600; cursor: pointer; transition: transform 150ms, box-shadow 200ms;" style-hover="box-shadow: 0 4px 14px {{ pal.shadow }};" style-active="transform: scale(0.96);">
+              <span style="font-family: 'Material Symbols Outlined'; font-feature-settings: 'liga'; font-size: 18px; color: inherit;">check</span>Apply to search
+            </div>
+          </div>
+        </div>
+      </sc-if>
+
+      <!-- Add torrent sheet -->
+      <sc-if value="{{ addOn }}" hint-placeholder-val="{{ false }}">
+        <div style="position: absolute; right: 16px; top: 78px; bottom: 16px; width: 420px; background: {{ pal.surf }}; border: 1px solid {{ pal.olv }}; border-radius: 24px; box-shadow: 0 12px 40px {{ pal.shadow }}; display: flex; flex-direction: column; overflow: hidden; animation: panelIn 240ms cubic-bezier(0.2,0,0,1) both; z-index: 10;">
+          <div style="display: flex; align-items: center; gap: 8px; padding: 16px 16px 8px 20px;">
+            <span style="font-size: 16px; font-weight: 600; color: {{ pal.on }};">Add torrent</span>
+            <span style="font-size: 11.5px; color: {{ pal.onv }};">in-app · doesn't block the window</span>
+            <div style="flex: 1;"></div>
+            <div onClick="{{ closePanel }}" title="Close" style="width: 34px; height: 34px; border-radius: 17px; display: flex; align-items: center; justify-content: center; cursor: pointer;" style-hover="background: {{ hov8 }};"><span style="font-family: 'Material Symbols Outlined'; font-feature-settings: 'liga'; font-size: 19px; color: {{ pal.onv }};">close</span></div>
+          </div>
+          <div style="flex: 1; overflow-y: auto; padding: 8px 20px 20px 20px; display: flex; flex-direction: column; gap: 14px;">
+            <div style="border: 2px dashed {{ pal.ol }}; border-radius: 16px; padding: 22px; display: flex; flex-direction: column; align-items: center; gap: 6px; cursor: pointer; transition: border 200ms, background 200ms;" style-hover="border: 2px dashed {{ pal.pr }}; background: {{ hov6 }};">
+              <span style="font-family: 'Material Symbols Outlined'; font-feature-settings: 'liga'; font-size: 30px; color: {{ pal.pr }};">upload_file</span>
+              <span style="font-size: 13.5px; font-weight: 600; color: {{ pal.on }};">Drop .torrent files here</span>
+              <span style="font-size: 12px; color: {{ pal.onv }};">or click to browse</span>
+            </div>
+            <div style="display: flex; flex-direction: column; gap: 6px;">
+              <span style="font-size: 12px; font-weight: 600; color: {{ pal.onv }};">Magnet link or URL</span>
+              <input value="{{ addUrl }}" onInput="{{ onAddUrl }}" placeholder="magnet:?xt=urn:btih:…" style="height: 40px; border: 1px solid {{ pal.ol }}; border-radius: 12px; background: transparent; color: {{ pal.on }}; font-family: 'Roboto Mono', monospace; font-size: 12.5px; padding: 0 14px; outline: none;" style-focus="border: 1px solid {{ pal.pr }};"></input>
+            </div>
+            <div style="display: flex; flex-direction: column; gap: 6px;">
+              <span style="font-size: 12px; font-weight: 600; color: {{ pal.onv }};">Category</span>
+              <div style="display: flex; gap: 6px; flex-wrap: wrap;">
+                <sc-for list="{{ addCats }}" as="ac" hint-placeholder-count="4">
+                  <div onClick="{{ ac.click }}" style="height: 30px; display: flex; align-items: center; padding: 0 13px; border-radius: 15px; cursor: pointer; font-size: 12.5px; font-weight: 600; background: {{ ac.bg }}; color: {{ ac.tc }}; border: 1px solid {{ ac.border }}; transition: background 200ms;">{{ ac.label }}</div>
+                </sc-for>
+              </div>
+            </div>
+            <div style="display: flex; flex-direction: column; gap: 6px;">
+              <span style="font-size: 12px; font-weight: 600; color: {{ pal.onv }};">Save to</span>
+              <div style="height: 40px; border: 1px solid {{ pal.olv }}; border-radius: 12px; display: flex; align-items: center; gap: 8px; padding: 0 14px;">
+                <span style="font-family: 'Material Symbols Outlined'; font-feature-settings: 'liga'; font-size: 17px; color: {{ pal.onv }};">folder</span>
+                <span style="font-family: 'Roboto Mono', monospace; font-size: 12px; color: {{ pal.on }};">C:/Users/sam/Downloads/ISOs</span>
+              </div>
+            </div>
+            <div style="display: flex; align-items: center; gap: 12px; padding: 4px 2px;">
+              <div style="flex: 1;">
+                <div style="font-size: 13.5px; color: {{ pal.on }};">Start paused</div>
+              </div>
+              <div onClick="{{ toggleAddPaused }}" style="width: 44px; height: 26px; border-radius: 13px; background: {{ apBg }}; border: 1px solid {{ apBorder }}; position: relative; cursor: pointer; transition: background 200ms; flex: none;">
+                <span style="position: absolute; top: 50%; margin-top: -8px; left: {{ apLeft }}px; width: 16px; height: 16px; border-radius: 8px; background: {{ apThumb }}; transition: left 200ms cubic-bezier(0.2,0,0,1);"></span>
+              </div>
+            </div>
+          </div>
+          <div style="padding: 14px 20px; border-top: 1px solid {{ pal.olv }}; display: flex; gap: 10px; justify-content: flex-end;">
+            <div onClick="{{ closePanel }}" style="height: 40px; display: flex; align-items: center; padding: 0 18px; border-radius: 20px; color: {{ pal.pr }}; font-size: 13.5px; font-weight: 600; cursor: pointer;" style-hover="background: {{ hov6 }};">Cancel</div>
+            <div onClick="{{ doAdd }}" style="height: 40px; display: flex; align-items: center; gap: 6px; padding: 0 20px; border-radius: 20px; background: {{ pal.pr }}; color: {{ pal.onPr }}; font-size: 13.5px; font-weight: 600; cursor: pointer; transition: transform 150ms, box-shadow 200ms;" style-hover="box-shadow: 0 4px 14px {{ pal.shadow }};" style-active="transform: scale(0.96);">
+              <span style="font-family: 'Material Symbols Outlined'; font-feature-settings: 'liga'; font-size: 18px; color: inherit;">add</span>Add torrent
+            </div>
+          </div>
+        </div>
+      </sc-if>
+
+      <!-- Search plugins sheet -->
+      <sc-if value="{{ pluginsOn }}" hint-placeholder-val="{{ false }}">
+        <div style="position: absolute; right: 16px; top: 78px; bottom: 16px; width: 420px; background: {{ pal.surf }}; border: 1px solid {{ pal.olv }}; border-radius: 24px; box-shadow: 0 12px 40px {{ pal.shadow }}; display: flex; flex-direction: column; overflow: hidden; animation: panelIn 240ms cubic-bezier(0.2,0,0,1) both; z-index: 10;">
+          <div style="display: flex; align-items: center; gap: 8px; padding: 16px 16px 8px 20px;">
+            <span style="font-family: 'Material Symbols Outlined'; font-feature-settings: 'liga'; font-size: 20px; color: {{ pal.pr }};">extension</span>
+            <span style="font-size: 16px; font-weight: 600; color: {{ pal.on }};">Search plugins</span>
+            <div style="flex: 1;"></div>
+            <div onClick="{{ checkPluginUpdates }}" style="height: 32px; display: flex; align-items: center; gap: 5px; padding: 0 12px; border-radius: 16px; cursor: pointer; font-size: 12.5px; font-weight: 600; color: {{ pal.pr }}; border: 1px solid {{ pal.ol }};" style-hover="background: {{ hov6 }};">
+              <span style="font-family: 'Material Symbols Outlined'; font-feature-settings: 'liga'; font-size: 15px; color: inherit;">system_update</span>Check updates
+            </div>
+            <div onClick="{{ closePanel }}" title="Close" style="width: 34px; height: 34px; border-radius: 17px; display: flex; align-items: center; justify-content: center; cursor: pointer;" style-hover="background: {{ hov8 }};"><span style="font-family: 'Material Symbols Outlined'; font-feature-settings: 'liga'; font-size: 19px; color: {{ pal.onv }};">close</span></div>
+          </div>
+          <div style="flex: 1; overflow-y: auto; padding: 8px 16px 16px 16px; display: flex; flex-direction: column; gap: 8px;">
+            <sc-for list="{{ plugRows }}" as="p" hint-placeholder-count="4">
+              <div style="display: flex; align-items: center; gap: 12px; padding: 12px 14px; border-radius: 16px; border: 1px solid {{ pal.olv }};">
+                <div style="width: 38px; height: 38px; border-radius: 12px; background: {{ p.iconBg }}; display: flex; align-items: center; justify-content: center; flex: none;">
+                  <span style="font-family: 'Material Symbols Outlined'; font-feature-settings: 'liga'; font-size: 19px; color: {{ p.iconColor }};">extension</span>
+                </div>
+                <div style="flex: 1; min-width: 0;">
+                  <div style="font-size: 13.5px; font-weight: 600; color: {{ pal.on }};">{{ p.name }} <span style="font-family: 'Roboto Mono', monospace; font-size: 11px; font-weight: 400; color: {{ pal.onv }};">v{{ p.ver }}</span></div>
+                  <div style="font-size: 11.5px; color: {{ pal.onv }}; margin-top: 1px;">{{ p.url }}</div>
+                </div>
+                <div onClick="{{ p.toggle }}" style="width: 44px; height: 26px; border-radius: 13px; background: {{ p.trackBg }}; border: 1px solid {{ p.trackBorder }}; position: relative; cursor: pointer; transition: background 200ms; flex: none;">
+                  <span style="position: absolute; top: 50%; margin-top: -8px; left: {{ p.thumbLeft }}px; width: 16px; height: 16px; border-radius: 8px; background: {{ p.thumbBg }}; transition: left 200ms cubic-bezier(0.2,0,0,1);"></span>
+                </div>
+              </div>
+            </sc-for>
+          </div>
+          <div style="padding: 14px 16px; border-top: 1px solid {{ pal.olv }}; display: flex; gap: 8px;">
+            <input value="{{ plugUrl }}" onInput="{{ onPlugUrl }}" placeholder="https://plugin-source.example/engine.py" style="flex: 1; height: 40px; border: 1px solid {{ pal.ol }}; border-radius: 12px; background: transparent; color: {{ pal.on }}; font-family: 'Roboto Mono', monospace; font-size: 12px; padding: 0 14px; outline: none; min-width: 0;"></input>
+            <div onClick="{{ installPlugin }}" style="height: 40px; display: flex; align-items: center; gap: 5px; padding: 0 16px; border-radius: 20px; background: {{ pal.pr }}; color: {{ pal.onPr }}; font-size: 13px; font-weight: 600; cursor: pointer;" style-active="transform: scale(0.96);">Install</div>
+          </div>
+        </div>
+      </sc-if>
+
+      <!-- RSS rules sheet -->
+      <sc-if value="{{ rulesOn }}" hint-placeholder-val="{{ false }}">
+        <div style="position: absolute; right: 16px; top: 78px; bottom: 16px; width: 460px; background: {{ pal.surf }}; border: 1px solid {{ pal.olv }}; border-radius: 24px; box-shadow: 0 12px 40px {{ pal.shadow }}; display: flex; flex-direction: column; overflow: hidden; animation: panelIn 240ms cubic-bezier(0.2,0,0,1) both; z-index: 10;">
+          <div style="display: flex; align-items: center; gap: 8px; padding: 16px 16px 8px 20px;">
+            <span style="font-family: 'Material Symbols Outlined'; font-feature-settings: 'liga'; font-size: 20px; color: {{ pal.pr }};">rule</span>
+            <span style="font-size: 16px; font-weight: 600; color: {{ pal.on }};">RSS download rules</span>
+            <span style="font-size: 11.5px; color: {{ pal.onv }};">patterns support regex</span>
+            <div style="flex: 1;"></div>
+            <div onClick="{{ closePanel }}" title="Close" style="width: 34px; height: 34px; border-radius: 17px; display: flex; align-items: center; justify-content: center; cursor: pointer;" style-hover="background: {{ hov8 }};"><span style="font-family: 'Material Symbols Outlined'; font-feature-settings: 'liga'; font-size: 19px; color: {{ pal.onv }};">close</span></div>
+          </div>
+          <div style="flex: 1; overflow-y: auto; padding: 8px 16px 16px 16px; display: flex; flex-direction: column; gap: 8px;">
+            <sc-for list="{{ ruleRows }}" as="r" hint-placeholder-count="3">
+              <div style="display: flex; align-items: flex-start; gap: 12px; padding: 12px 14px; border-radius: 16px; border: 1px solid {{ pal.olv }};">
+                <div onClick="{{ r.toggle }}" style="width: 44px; height: 26px; border-radius: 13px; background: {{ r.trackBg }}; border: 1px solid {{ r.trackBorder }}; position: relative; cursor: pointer; transition: background 200ms; flex: none; margin-top: 2px;">
+                  <span style="position: absolute; top: 50%; margin-top: -8px; left: {{ r.thumbLeft }}px; width: 16px; height: 16px; border-radius: 8px; background: {{ r.thumbBg }}; transition: left 200ms cubic-bezier(0.2,0,0,1);"></span>
+                </div>
+                <div style="flex: 1; min-width: 0; display: flex; flex-direction: column; gap: 5px;">
+                  <span style="font-size: 13.5px; font-weight: 600; color: {{ pal.on }};">{{ r.name }}</span>
+                  <span style="align-self: flex-start; font-family: 'Roboto Mono', monospace; font-size: 11.5px; padding: 3px 9px; border-radius: 8px; background: {{ pal.sc }}; color: {{ pal.pr }};">/{{ r.pat }}/i</span>
+                  <span style="font-size: 11.5px; color: {{ pal.onv }};">{{ r.meta }}</span>
+                </div>
+                <div onClick="{{ r.remove }}" title="Delete rule" style="width: 32px; height: 32px; border-radius: 16px; display: flex; align-items: center; justify-content: center; cursor: pointer; flex: none;" style-hover="background: {{ errCont }};"><span style="font-family: 'Material Symbols Outlined'; font-feature-settings: 'liga'; font-size: 17px; color: {{ st.err }};">delete</span></div>
+              </div>
+            </sc-for>
+          </div>
+          <div style="padding: 14px 16px; border-top: 1px solid {{ pal.olv }}; display: flex; flex-direction: column; gap: 8px;">
+            <div style="display: flex; gap: 8px;">
+              <input value="{{ ruleName }}" onInput="{{ onRuleName }}" placeholder="Rule name" style="width: 140px; height: 40px; border: 1px solid {{ pal.ol }}; border-radius: 12px; background: transparent; color: {{ pal.on }}; font-family: 'Roboto', sans-serif; font-size: 12.5px; padding: 0 12px; outline: none;"></input>
+              <input value="{{ rulePat }}" onInput="{{ onRulePat }}" placeholder="must contain (regex ok) e.g. ubuntu.*amd64" style="flex: 1; height: 40px; border: 1px solid {{ pal.ol }}; border-radius: 12px; background: transparent; color: {{ pal.on }}; font-family: 'Roboto Mono', monospace; font-size: 12px; padding: 0 12px; outline: none; min-width: 0;"></input>
+            </div>
+            <div style="display: flex; gap: 8px; align-items: center;">
+              <span style="font-size: 11.5px; color: {{ pal.onv }}; flex: 1;">{{ rulePreview }}</span>
+              <div onClick="{{ addRule }}" style="height: 36px; display: flex; align-items: center; gap: 5px; padding: 0 16px; border-radius: 18px; background: {{ pal.pr }}; color: {{ pal.onPr }}; font-size: 13px; font-weight: 600; cursor: pointer;" style-active="transform: scale(0.96);">
+                <span style="font-family: 'Material Symbols Outlined'; font-feature-settings: 'liga'; font-size: 16px; color: inherit;">add</span>Add rule
+              </div>
+            </div>
+          </div>
+        </div>
+      </sc-if>
+
+      <!-- New RSS subscription sheet -->
+      <sc-if value="{{ addFeedOn }}" hint-placeholder-val="{{ false }}">
+        <div style="position: absolute; right: 16px; top: 78px; width: 420px; background: {{ pal.surf }}; border: 1px solid {{ pal.olv }}; border-radius: 24px; box-shadow: 0 12px 40px {{ pal.shadow }}; display: flex; flex-direction: column; overflow: hidden; animation: panelIn 240ms cubic-bezier(0.2,0,0,1) both; z-index: 10;">
+          <div style="display: flex; align-items: center; gap: 8px; padding: 16px 16px 8px 20px;">
+            <span style="font-family: 'Material Symbols Outlined'; font-feature-settings: 'liga'; font-size: 20px; color: {{ pal.pr }};">rss_feed</span>
+            <span style="font-size: 16px; font-weight: 600; color: {{ pal.on }};">New subscription</span>
+            <div style="flex: 1;"></div>
+            <div onClick="{{ closePanel }}" title="Close" style="width: 34px; height: 34px; border-radius: 17px; display: flex; align-items: center; justify-content: center; cursor: pointer;" style-hover="background: {{ hov8 }};"><span style="font-family: 'Material Symbols Outlined'; font-feature-settings: 'liga'; font-size: 19px; color: {{ pal.onv }};">close</span></div>
+          </div>
+          <div style="padding: 8px 20px 20px 20px; display: flex; flex-direction: column; gap: 12px;">
+            <input value="{{ feedUrl }}" onInput="{{ onFeedUrl }}" placeholder="https://example.org/releases.rss" style="height: 42px; border: 1px solid {{ pal.ol }}; border-radius: 12px; background: transparent; color: {{ pal.on }}; font-family: 'Roboto Mono', monospace; font-size: 12.5px; padding: 0 14px; outline: none;" style-focus="border: 1px solid {{ pal.pr }};"></input>
+            <div style="display: flex; gap: 6px; align-items: center;">
+              <span style="font-size: 12px; font-weight: 600; color: {{ pal.onv }};">Folder</span>
+              <sc-for list="{{ feedFolderChips }}" as="fc" hint-placeholder-count="2">
+                <div onClick="{{ fc.click }}" style="height: 30px; display: flex; align-items: center; padding: 0 13px; border-radius: 15px; cursor: pointer; font-size: 12.5px; font-weight: 600; background: {{ fc.bg }}; color: {{ fc.tc }}; border: 1px solid {{ fc.border }};">{{ fc.label }}</div>
+              </sc-for>
+            </div>
+            <div style="display: flex; gap: 8px; justify-content: flex-end;">
+              <div onClick="{{ closePanel }}" style="height: 38px; display: flex; align-items: center; padding: 0 16px; border-radius: 19px; color: {{ pal.pr }}; font-size: 13px; font-weight: 600; cursor: pointer;" style-hover="background: {{ hov6 }};">Cancel</div>
+              <div onClick="{{ doAddFeed }}" style="height: 38px; display: flex; align-items: center; gap: 5px; padding: 0 18px; border-radius: 19px; background: {{ pal.pr }}; color: {{ pal.onPr }}; font-size: 13px; font-weight: 600; cursor: pointer;" style-active="transform: scale(0.96);">
+                <span style="font-family: 'Material Symbols Outlined'; font-feature-settings: 'liga'; font-size: 16px; color: inherit;">add</span>Subscribe
+              </div>
+            </div>
+          </div>
+        </div>
+      </sc-if>
+
+      <!-- Delete confirm (anchored, non-blocking) -->
+      <sc-if value="{{ delOn }}" hint-placeholder-val="{{ false }}">
+        <div style="position: absolute; left: 50%; transform: translateX(-50%); bottom: 88px; width: 400px; background: {{ pal.surf }}; border: 1px solid {{ pal.olv }}; border-radius: 20px; box-shadow: 0 12px 40px {{ pal.shadow }}; padding: 18px 20px; display: flex; flex-direction: column; gap: 12px; animation: popIn 220ms cubic-bezier(0.2,0,0,1) both; z-index: 20;">
+          <div style="display: flex; gap: 12px; align-items: flex-start;">
+            <div style="width: 38px; height: 38px; border-radius: 12px; background: {{ errCont }}; display: flex; align-items: center; justify-content: center; flex: none;">
+              <span style="font-family: 'Material Symbols Outlined'; font-feature-settings: 'liga'; font-size: 20px; color: {{ st.err }};">warning</span>
+            </div>
+            <div style="min-width: 0;">
+              <div style="font-size: 14.5px; font-weight: 600; color: {{ pal.on }};">Remove torrent?</div>
+              <div style="font-size: 12.5px; color: {{ pal.onv }}; margin-top: 3px; word-break: break-all;">{{ selName }}</div>
+            </div>
+          </div>
+          <div onClick="{{ toggleDelFiles }}" style="display: flex; align-items: center; gap: 10px; cursor: pointer; padding: 2px 0;">
+            <span style="font-family: 'Material Symbols Outlined'; font-feature-settings: 'liga'; font-size: 20px; color: {{ delChkColor }};">{{ delChk }}</span>
+            <span style="font-size: 13px; color: {{ pal.on }};">Also delete the files on disk</span>
+          </div>
+          <div style="display: flex; gap: 8px; justify-content: flex-end;">
+            <div onClick="{{ cancelDelete }}" style="height: 36px; display: flex; align-items: center; padding: 0 16px; border-radius: 18px; color: {{ pal.pr }}; font-size: 13px; font-weight: 600; cursor: pointer;" style-hover="background: {{ hov6 }};">Cancel</div>
+            <div onClick="{{ doDelete }}" style="height: 36px; display: flex; align-items: center; gap: 5px; padding: 0 16px; border-radius: 18px; background: {{ st.err }}; color: #ffffff; font-size: 13px; font-weight: 600; cursor: pointer;" style-active="transform: scale(0.96);">
+              <span style="font-family: 'Material Symbols Outlined'; font-feature-settings: 'liga'; font-size: 16px; color: inherit;">delete</span>Remove
+            </div>
+          </div>
+        </div>
+      </sc-if>
+
+      <!-- Snackbar -->
+      <sc-if value="{{ snackOn }}" hint-placeholder-val="{{ false }}">
+        <div style="position: absolute; left: 50%; transform: translateX(-50%); bottom: 24px; height: 48px; display: flex; align-items: center; gap: 14px; padding: 0 8px 0 18px; background: {{ invSurf }}; color: {{ invOn }}; border-radius: 12px; box-shadow: 0 6px 20px rgba(0,0,0,0.4); animation: snackIn 220ms cubic-bezier(0.2,0,0,1) both; z-index: 30; max-width: 640px;">
+          <span style="font-size: 13.5px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;">{{ snackMsg }}</span>
+          <sc-if value="{{ snackHasAction }}" hint-placeholder-val="{{ false }}">
+            <div onClick="{{ snackAct }}" style="height: 34px; display: flex; align-items: center; padding: 0 12px; border-radius: 17px; color: {{ invPr }}; font-size: 13px; font-weight: 700; cursor: pointer;" style-hover="background: rgba(128,128,140,0.2);">{{ snackActionLabel }}</div>
+          </sc-if>
+        </div>
+      </sc-if>
+    </div>
+  </div>
+</section>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props="{&quot;$preview&quot;: {&quot;width&quot;: 1560, &quot;height&quot;: 1120}}">
+class Component extends DCLogic {
+  state = {
+    theme: "dark", style: "A", panel: null,
+    selId: "t1", navTab: 0, fStatus: "all", fCat: "__all",
+    sortCol: "q", sortAsc: true,
+    searchText: "", regexOn: false,
+    notifSearch: "", notifRegex: false,
+    histTab: "settings", histSearch: "", histRegex: false, expanded: null,
+    builderPat: "(19|20)\\d{2}", flags: { i: true, g: true, m: false },
+    libName: "", library: [{ name: "Episode", pat: "S\\d{2}E\\d{2}" }, { name: "Resolution", pat: "(1080|2160)p" }],
+    importOpen: false, importText: "",
+    addUrl: "", addCat: "linux-iso", addPaused: false,
+    delOpen: false, delFiles: false,
+    snack: null,
+    dockTab: 0,
+    searchQuery: "", searchRegexOn: false, searchCat: "All", searchScope: "enabled",
+    searchTabs: null, curSearchTab: -1, searchHistory: null, srtCol: "seeds", srtAsc: false,
+    plugins: null, plugUrl: "",
+    feeds: null, curFeed: "unread", articles: null, curArt: null, artFilter: "", artRegex: false,
+    rules: null, ruleName: "", rulePat: "", feedUrl: "", feedFolder: "Distros", refreshing: false,
+    settings: { confirmDel: true, startPaused: false, inApp: true, regexDefault: false, autoCommit: true, retention: "Forever", alt: false },
+    notifs: null, torrents: null, repos: null, deleted: null
+  };
+
+  PAL = {
+    A: { light: { bg: "#fbfaff", surf: "#ffffff", sc: "#f1eff9", sc2: "#e6e2f1", on: "#1b1b21", onv: "#47464f", ol: "#c7c5d4", olv: "#e2e0ec", pr: "#5646d6", onPr: "#ffffff", pc: "#e3dfff", onPc: "#17106b", shadow: "rgba(27,27,33,0.16)" },
+         dark: { bg: "#131318", surf: "#1b1b21", sc: "#23222b", sc2: "#2b2a35", on: "#e5e1ec", onv: "#c7c5d4", ol: "#47464f", olv: "#31303a", pr: "#c4c0ff", onPr: "#2a2380", pc: "#433caf", onPc: "#e3dfff", shadow: "rgba(0,0,0,0.55)" } },
+    B: { light: { bg: "#f4f9f9", surf: "#ffffff", sc: "#e9efef", sc2: "#dee7e7", on: "#161d1d", onv: "#3f4948", ol: "#bec8c8", olv: "#dbe4e4", pr: "#00696d", onPr: "#ffffff", pc: "#9cf0f5", onPc: "#002021", shadow: "rgba(22,29,29,0.16)" },
+         dark: { bg: "#0e1414", surf: "#161d1d", sc: "#1e2626", sc2: "#263030", on: "#dde4e3", onv: "#bec8c8", ol: "#3f4948", olv: "#2c3636", pr: "#80d4d9", onPr: "#003739", pc: "#005054", onPc: "#9cf0f5", shadow: "rgba(0,0,0,0.55)" } },
+    C: { light: { bg: "#fff8f8", surf: "#ffffff", sc: "#f8eef0", sc2: "#f0e2e6", on: "#22191c", onv: "#514347", ol: "#d6c2c6", olv: "#ecdce0", pr: "#8c4a60", onPr: "#ffffff", pc: "#ffd9e2", onPc: "#3a071d", shadow: "rgba(34,25,28,0.16)" },
+         dark: { bg: "#171114", surf: "#211a1d", sc: "#2b2225", sc2: "#352b2e", on: "#efdfe2", onv: "#d6c2c6", ol: "#5d4f53", olv: "#3a3033", pr: "#ffb1c8", onPr: "#541d32", pc: "#713349", onPc: "#ffd9e2", shadow: "rgba(0,0,0,0.55)" } }
+  };
+  ST = {
+    light: { succ: "#1a7f37", err: "#cf222e", warn: "#9a6700", done: "#8250df", muted: "#6e7781", info: "#0969da" },
+    dark: { succ: "#3fb950", err: "#f85149", warn: "#d29922", done: "#a371f7", muted: "#8b949e", info: "#58a6ff" }
+  };
+  STYLE_NAMES = { A: "Tonal Rail", B: "Split Dock", C: "Card Flow" };
+
+  initTorrents() {
+    return [
+      { id: "t1", state: "dl", name: "ubuntu-24.04.2-desktop-amd64.iso", size: "6.14 GiB", pct: 62.4, status: "Downloading", dl: "3.1 MiB/s", ul: "212 KiB/s", eta: "28m", ratio: "0.42", cat: "linux-iso", q: "1" },
+      { id: "t2", state: "dl", name: "debian-13.1.0-amd64-DVD-1.iso", size: "3.91 GiB", pct: 18.7, status: "Downloading", dl: "1.8 MiB/s", ul: "96 KiB/s", eta: "2h 05m", ratio: "0.11", cat: "linux-iso", q: "2" },
+      { id: "t3", state: "stalled", name: "Fedora-Workstation-Live-x86_64-42-1.6.iso", size: "2.63 GiB", pct: 91.2, status: "Stalled", dl: "0 B/s", ul: "18 KiB/s", eta: "\u221e", ratio: "0.87", cat: "linux-iso", q: "3" },
+      { id: "t4", state: "seed", name: "archlinux-2026.07.01-x86_64.iso", size: "1.21 GiB", pct: 100, status: "Seeding", dl: "0 B/s", ul: "1.4 MiB/s", eta: "\u221e", ratio: "3.86", cat: "linux-iso", q: "\u2013" },
+      { id: "t5", state: "done", name: "linuxmint-22.1-cinnamon-64bit.iso", size: "2.88 GiB", pct: 100, status: "Completed", dl: "0 B/s", ul: "0 B/s", eta: "\u221e", ratio: "1.52", cat: "linux-iso", q: "\u2013" },
+      { id: "t6", state: "queued", name: "openSUSE-Tumbleweed-DVD-x86_64-Current.iso", size: "4.37 GiB", pct: 0, status: "Queued", dl: "0 B/s", ul: "0 B/s", eta: "\u221e", ratio: "0.00", cat: "linux-iso", q: "4" },
+      { id: "t7", state: "stopped", name: "raspios-bookworm-arm64-full.img.xz", size: "2.72 GiB", pct: 34.5, status: "Stopped", dl: "0 B/s", ul: "0 B/s", eta: "\u221e", ratio: "0.03", cat: "", q: "5" },
+      { id: "t8", state: "error", name: "nixos-25.05-graphical-x86_64.iso", size: "2.41 GiB", pct: 66, status: "Missing files", dl: "0 B/s", ul: "0 B/s", eta: "\u221e", ratio: "0.29", cat: "", q: "\u2013" },
+      { id: "t9", state: "checking", name: "kali-linux-2026.2-installer-amd64.iso", size: "4.02 GiB", pct: 76.8, status: "Checking", dl: "0 B/s", ul: "0 B/s", eta: "\u221e", ratio: "0.18", cat: "", q: "\u2013" },
+      { id: "t10", state: "dl", name: "FreeBSD-14.2-RELEASE-amd64-dvd1.iso", size: "4.51 GiB", pct: 44.1, status: "Downloading", dl: "924 KiB/s", ul: "44 KiB/s", eta: "1h 12m", ratio: "0.35", cat: "software", q: "6" }
+    ];
+  }
+  initNotifs() {
+    const m = Date.now() - 60000;
+    return [
+      { id: "n1", kind: "succ", icon: "check_circle", title: "Download finished", body: "linuxmint-22.1-cinnamon-64bit.iso completed in 24m.", ts: m - 2 * 60000, unread: true, actions: [{ label: "Open folder" }, { label: "Seed settings" }] },
+      { id: "n2", kind: "err", icon: "error", title: "Tracker error", body: "nixos-25.05: udp://tracker.example:6969 timed out after 3 retries.", ts: m - 14 * 60000, unread: true, actions: [{ label: "Reannounce" }, { label: "Force recheck" }] },
+      { id: "n3", kind: "info", icon: "system_update", title: "Update available", body: "qBittorrent 5.2 is ready to install. Release notes available.", ts: m - 55 * 60000, unread: true, actions: [{ label: "View notes" }, { label: "Skip version" }] },
+      { id: "n4", kind: "done", icon: "rss_feed", title: "RSS rule matched", body: "Rule \u201cUbuntu weekly\u201d matched 2 new articles.", ts: m - 3 * 3600000, unread: false, actions: [{ label: "Download both" }] },
+      { id: "n5", kind: "warn", icon: "speed", title: "Alt speed schedule", body: "Alternative limits active until 09:00 (2 MiB/s down).", ts: m - 26 * 3600000, unread: false, actions: [{ label: "Disable now" }] }
+    ];
+  }
+  initRepos() {
+    const h = 3600000, now = Date.now();
+    return {
+      settings: [
+        { sha: "f3a91c2", msg: "UI/Style: splitDock \u2192 tonalRail", ts: now - 2 * h, diff: [{ from: "UI/Style: splitDock", to: "UI/Style: tonalRail" }], keys: [["style", "B", "A"]] },
+        { sha: "b7e204d", msg: "Appearance/Theme: light \u2192 dark", ts: now - 5 * h, diff: [{ from: "Appearance/Theme: light", to: "Appearance/Theme: dark" }], keys: [["theme", "light", "dark"]] },
+        { sha: "9c11f0a", msg: "Speed/AltLimits: schedule 06:00\u201309:00", ts: now - 26 * h, diff: [{ from: "Speed/AltSchedule: off", to: "Speed/AltSchedule: 06:00\u201309:00" }], keys: [] },
+        { sha: "1d0adc9", msg: "init: preferences snapshot", ts: now - 27 * h, diff: [{ from: "(none)", to: "42 keys imported from legacy qBittorrent.ini" }], keys: [] }
+      ],
+      actions: [
+        { sha: "e51b7aa", msg: "notif: dismissed \u2018Update available 5.1.1\u2019", ts: now - 3 * h, diff: [{ from: "notification n0: visible", to: "notification n0: dismissed" }] },
+        { sha: "a90cc31", msg: "torrent: added ubuntu-24.04.2 (magnet)", ts: now - 25 * h, diff: [{ from: "transfers: 9", to: "transfers: 10 (+ubuntu-24.04.2)" }] },
+        { sha: "77d2e0b", msg: "torrent: removed old-fedora-41.iso", ts: now - 26 * h, diff: [{ from: "transfers: 10", to: "transfers: 9 (\u2212old-fedora-41.iso)" }] }
+      ]
+    };
+  }
+
+  initPlugins() {
+    return [
+      { id: "p1", name: "LinuxTracker", ver: "2.4", url: "linuxtracker.org", enabled: true },
+      { id: "p2", name: "FossTorrents", ver: "1.9", url: "fosstorrents.com", enabled: true },
+      { id: "p3", name: "Internet Archive", ver: "3.1", url: "archive.org", enabled: true },
+      { id: "p4", name: "Academic Torrents", ver: "1.2", url: "academictorrents.com", enabled: false }
+    ];
+  }
+  initFeeds() {
+    return [
+      { id: "f1", name: "Ubuntu Releases", folder: "Distros" },
+      { id: "f2", name: "Debian CD", folder: "Distros" },
+      { id: "f3", name: "Fedora Torrents", folder: "Distros" },
+      { id: "f4", name: "LinuxTracker", folder: "" }
+    ];
+  }
+  initArticles() {
+    const h = 3600000, now = Date.now();
+    return [
+      { id: "a1", feedId: "f1", title: "ubuntu-24.04.2-desktop-amd64.iso (LTS, HWE stack refresh)", ts: now - 2 * h, unread: true, size: "6.14 GiB", desc: "Point release of the Noble LTS desktop image with the refreshed hardware-enablement kernel, updated installer and errata fixes. SHA-256 checksums published alongside the image." },
+      { id: "a2", feedId: "f1", title: "ubuntu-24.04.2-live-server-amd64.iso", ts: now - 2 * h, unread: true, size: "2.68 GiB", desc: "Server companion to the 24.04.2 point release. Includes cloud-init 25.1 and curtin fixes for RAID-backed installs." },
+      { id: "a3", feedId: "f2", title: "debian-13.1.0-amd64-DVD-1.iso (trixie point release)", ts: now - 6 * h, unread: true, size: "3.91 GiB", desc: "First update to Debian 13 \u201ctrixie\u201d rolling in security fixes and corrected packages. Full DVD set; only DVD-1 needed for standard installs." },
+      { id: "a4", feedId: "f3", title: "Fedora-Workstation-Live-x86_64-42-1.6.iso", ts: now - 26 * h, unread: false, size: "2.63 GiB", desc: "Fedora Workstation 42 live image, GNOME 48 with the new installer flow enabled by default." },
+      { id: "a5", feedId: "f4", title: "archlinux-2026.07.01-x86_64.iso monthly snapshot", ts: now - 27 * h, unread: false, size: "1.21 GiB", desc: "Monthly Arch installation snapshot with linux 6.15 series kernel and archinstall 3.2." },
+      { id: "a6", feedId: "f2", title: "debian-13.1.0-arm64-netinst.iso", ts: now - 30 * h, unread: false, size: "702 MiB", desc: "Network installer for 64-bit ARM systems, trixie point release." },
+      { id: "a7", feedId: "f4", title: "linuxmint-22.1-cinnamon-64bit.iso", ts: now - 50 * h, unread: false, size: "2.88 GiB", desc: "Linux Mint 22.1 \u201cXia\u201d with Cinnamon 6.4 and the refreshed software manager." }
+    ];
+  }
+  initRules() {
+    return [
+      { id: "r1", name: "Ubuntu weekly", pat: "ubuntu.*(amd64)", enabled: true },
+      { id: "r2", name: "Debian DVDs", pat: "debian-.*-DVD", enabled: true },
+      { id: "r3", name: "Nightly kernels", pat: "linux-next-\\d{8}", enabled: false }
+    ];
+  }
+  genResults(pattern, useRegex) {
+    const pool = [
+      ["ubuntu-24.04.2-desktop-amd64.iso", "6.14 GiB", "LinuxTracker"],
+      ["ubuntu-24.04.2-live-server-amd64.iso", "2.68 GiB", "FossTorrents"],
+      ["ubuntu-24.10-desktop-amd64.iso", "5.71 GiB", "Internet Archive"],
+      ["debian-13.1.0-amd64-DVD-1.iso", "3.91 GiB", "FossTorrents"],
+      ["debian-12.9.0-amd64-netinst.iso", "631 MiB", "LinuxTracker"],
+      ["Fedora-Workstation-Live-x86_64-42-1.6.iso", "2.63 GiB", "FossTorrents"],
+      ["archlinux-2026.07.01-x86_64.iso", "1.21 GiB", "LinuxTracker"],
+      ["linuxmint-22.1-cinnamon-64bit.iso", "2.88 GiB", "Internet Archive"],
+      ["kali-linux-2026.2-installer-amd64.iso", "4.02 GiB", "LinuxTracker"],
+      ["openSUSE-Tumbleweed-DVD-x86_64-Current.iso", "4.37 GiB", "FossTorrents"],
+      ["FreeBSD-14.2-RELEASE-amd64-dvd1.iso", "4.51 GiB", "Internet Archive"],
+      ["tails-amd64-6.8.img", "1.34 GiB", "LinuxTracker"],
+      ["raspios-bookworm-arm64-full.img.xz", "2.72 GiB", "FossTorrents"],
+      ["LibreOffice_25.2.4_Linux_x86-64_rpm.tar.gz", "332 MiB", "Internet Archive"]
+    ];
+    const words = pattern.toLowerCase().split(/\s+/).filter(w => w);
+    let hits;
+    if (useRegex) {
+      const r = this.rx(pattern, "i");
+      hits = r ? pool.filter(([n]) => r.test(n)) : [];
+    } else {
+      hits = pool.filter(([n]) => words.every(w => n.toLowerCase().includes(w)));
+    }
+    if (hits.length === 0) {
+      hits = ["-24.04-amd64.iso", "-2026.07-x86_64.iso", "-latest-arm64.img.xz", ".source.tar.gz"].map((suf, i) =>
+        [pattern.replace(/\s+/g, "-").toLowerCase() + suf, (1 + i * 0.7).toFixed(2) + " GiB", ["LinuxTracker", "FossTorrents", "Internet Archive"][i % 3]]);
+    }
+    const seedOf = (n) => { let s = 0; for (let i = 0; i < n.length; i++) s = (s + n.charCodeAt(i) * 7) % 997; return s; };
+    return hits.map(([name, size, engine], i) => ({
+      id: "sr" + i + name.length, name, size, engine,
+      seeds: 40 + seedOf(name) % 800, leech: 5 + seedOf(name) % 120
+    }));
+  }
+
+  sha() { return Array.from({ length: 7 }, () => "0123456789abcdef"[Math.floor(Math.random() * 16)]).join(""); }
+  rel(ts) {
+    const d = Date.now() - ts;
+    if (d < 60000) return "just now";
+    if (d < 3600000) return Math.floor(d / 60000) + "m ago";
+    if (d < 24 * 3600000) return Math.floor(d / 3600000) + "h ago";
+    return Math.floor(d / (24 * 3600000)) + "d ago";
+  }
+  commit(repo, msg, diff, keys) {
+    const repos = this.state.repos || this.initRepos();
+    const entry = { sha: this.sha(), msg, ts: Date.now(), diff, keys: keys || [] };
+    const next = { ...repos, [repo]: [entry, ...repos[repo]] };
+    return next;
+  }
+  setSetting(key, from, to, label, extra) {
+    if (String(from) === String(to)) return;
+    const repos = this.state.settings.autoCommit
+      ? this.commit("settings", label + ": " + from + " \u2192 " + to, [{ from: label + ": " + from, to: label + ": " + to }], [[key, from, to]])
+      : (this.state.repos || this.initRepos());
+    this.setState({ repos, ...(extra || {}) });
+  }
+  snackbar(msg, actionLabel, onAction) {
+    clearTimeout(this._snackT);
+    this.setState({ snack: { msg, actionLabel, onAction } });
+    this._snackT = setTimeout(() => this.setState({ snack: null }), 4200);
+  }
+  logAction(msg, diff) {
+    return this.commit("actions", msg, diff);
+  }
+
+  rx(text, flagsStr) {
+    if (!text) return null;
+    try { return new RegExp(text, flagsStr); } catch (e) { return undefined; }
+  }
+
+  renderVals() {
+    const S = this.state;
+    const set = (p) => this.setState(p);
+    const torrents = S.torrents || this.initTorrents();
+    const notifs = S.notifs || this.initNotifs();
+    const repos = S.repos || this.initRepos();
+    const pal = this.PAL[S.style][S.theme];
+    const st = this.ST[S.theme];
+    const dark = S.theme === "dark";
+    const styleName = this.STYLE_NAMES[S.style];
+    const isA = S.style === "A", isB = S.style === "B", isC = S.style === "C";
+
+    const hov8 = dark ? "rgba(230,225,240,0.10)" : "rgba(27,27,33,0.08)";
+    const hov6 = dark ? "rgba(230,225,240,0.07)" : "rgba(27,27,33,0.06)";
+    const alpha = (hex, a) => {
+      const r = parseInt(hex.slice(1, 3), 16), g = parseInt(hex.slice(3, 5), 16), b = parseInt(hex.slice(5, 7), 16);
+      return "rgba(" + r + "," + g + "," + b + "," + a + ")";
+    };
+    const stColorOf = (t) => ({ dl: st.succ, stalled: st.succ, seed: pal.pr, done: st.done, queued: st.warn, stopped: st.muted, error: st.err, checking: st.succ }[t.state] || st.muted);
+    const stIconOf = (t) => ({ dl: "download", stalled: "hourglass_empty", seed: "upload", done: "check_circle", queued: "low_priority", stopped: "pause", error: "error", checking: "fact_check" }[t.state] || "insert_drive_file");
+
+    // ---- search matching (regex-aware) ----
+    const mainRx = S.regexOn ? this.rx(S.searchText, "i") : null;
+    const rxInvalid = S.regexOn && S.searchText && mainRx === undefined;
+    const matchName = (name) => {
+      if (!S.searchText) return true;
+      if (S.regexOn) { return mainRx ? mainRx.test(name) : !rxInvalid; }
+      return name.toLowerCase().includes(S.searchText.toLowerCase());
+    };
+    const statusMatch = (t) => S.fStatus === "all" ? true :
+      S.fStatus === "downloading" ? ["dl", "queued", "checking"].includes(t.state) :
+      S.fStatus === "seeding" ? ["seed"].includes(t.state) :
+      S.fStatus === "completed" ? ["done", "seed"].includes(t.state) :
+      S.fStatus === "stalled" ? ["stalled"].includes(t.state) :
+      S.fStatus === "stopped" ? ["stopped"].includes(t.state) :
+      S.fStatus === "errored" ? ["error"].includes(t.state) : true;
+    const catMatch = (t) => S.fCat === "__all" ? true : S.fCat === "__none" ? t.cat === "" : t.cat === S.fCat;
+
+    const speedNum = (s) => { const m = parseFloat(s); return s.includes("MiB") ? m * 1024 : (s.includes("KiB") ? m : 0); };
+    const sortVal = (t, col) => {
+      switch (col) {
+        case "q": return t.q === "\u2013" ? 999 : parseInt(t.q, 10);
+        case "name": return t.name.toLowerCase();
+        case "size": { const m = parseFloat(t.size); return t.size.includes("MiB") ? m / 1024 : m; }
+        case "pct": return t.pct;
+        case "status": return t.status;
+        case "dl": return speedNum(t.dl);
+        case "ul": return speedNum(t.ul);
+        case "eta": return t.eta === "\u221e" ? "zzz" : t.eta;
+        case "ratio": return parseFloat(t.ratio);
+        case "cat": return t.cat;
+        default: return 0;
+      }
+    };
+    const filtered = torrents.filter(t => statusMatch(t) && catMatch(t) && matchName(t.name))
+      .sort((a, b) => {
+        const va = sortVal(a, S.sortCol), vb = sortVal(b, S.sortCol);
+        const c = va < vb ? -1 : va > vb ? 1 : 0;
+        return S.sortAsc ? c : -c;
+      });
+    const sel = torrents.find(t => t.id === S.selId) || filtered[0] || torrents[0];
+
+    // ---- rows / cards ----
+    const mkRow = (t, i) => {
+      const c = stColorOf(t);
+      return {
+        ...t,
+        icon: stIconOf(t), stColor: c,
+        iconBg: alpha(c, dark ? 0.16 : 0.12),
+        stChipBg: alpha(c, dark ? 0.18 : 0.12),
+        bg: sel && t.id === sel.id ? alpha(pal.pr, dark ? 0.16 : 0.10) : "transparent",
+        cardBorder: sel && t.id === sel.id ? "2px solid " + pal.pr : "1px solid " + pal.olv,
+        barColor: ["error", "stopped"].includes(t.state) ? pal.ol : (t.state === "done" ? st.done : (t.state === "seed" ? pal.pr : st.succ)),
+        pctLabel: (t.pct === 100 ? "100" : t.pct.toFixed(1)) + "%",
+        dlColor: t.dl === "0 B/s" ? pal.onv : st.succ,
+        ulColor: t.ul === "0 B/s" ? pal.onv : pal.pr,
+        hasCat: t.cat !== "",
+        delay: Math.min(i * 24, 260),
+        click: () => set({ selId: t.id })
+      };
+    };
+    const rows = filtered.map(mkRow);
+
+    // ---- table config per style ----
+    const tbl = isB
+      ? { radius: 12, headH: 34, rowH: 34, q: true, sub: false, status: true, ratio: true, nameMin: 260, nameFs: 13, nameWt: 400, iconBox: 20, iconRad: 6, iconSz: 16, progW: 170, barH: 4 }
+      : { radius: 16, headH: 40, rowH: 56, q: false, sub: true, status: false, ratio: false, nameMin: 300, nameFs: 14, nameWt: 500, iconBox: 34, iconRad: 10, iconSz: 18, progW: 210, barH: 8 };
+    const headers = [
+      ...(tbl.q ? [{ col: "q", title: "#", w: 40, flex: "none", minW: 40, just: "flex-end" }] : []),
+      { col: "name", title: "Name", w: 0, flex: "1", minW: tbl.nameMin, just: "flex-start" },
+      { col: "size", title: "Size", w: 90, flex: "none", minW: 90, just: "flex-end" },
+      { col: "pct", title: "Progress", w: tbl.progW, flex: "none", minW: tbl.progW, just: "flex-start" },
+      ...(tbl.status ? [{ col: "status", title: "Status", w: 110, flex: "none", minW: 110, just: "flex-start" }] : []),
+      { col: "dl", title: "Down", w: 100, flex: "none", minW: 100, just: "flex-end" },
+      { col: "ul", title: "Up", w: 100, flex: "none", minW: 100, just: "flex-end" },
+      { col: "eta", title: "ETA", w: 92, flex: "none", minW: 92, just: "flex-end" },
+      ...(tbl.ratio ? [{ col: "ratio", title: "Ratio", w: 64, flex: "none", minW: 64, just: "flex-end" }] : []),
+      { col: "cat", title: "Category", w: 116, flex: "none", minW: 116, just: "flex-start" }
+    ].map(h => ({
+      ...h,
+      sorted: S.sortCol === h.col,
+      sortIcon: S.sortAsc ? "arrow_upward" : "arrow_downward",
+      click: () => set(S.sortCol === h.col ? { sortAsc: !S.sortAsc } : { sortCol: h.col, sortAsc: true })
+    }));
+
+    // ---- chips ----
+    const cnt = (k) => torrents.filter(t => { const old = S.fStatus; return true; }).length;
+    const statusCount = (k) => torrents.filter(t => k === "all" ? true :
+      k === "downloading" ? ["dl", "queued", "checking"].includes(t.state) :
+      k === "seeding" ? t.state === "seed" :
+      k === "completed" ? ["done", "seed"].includes(t.state) :
+      k === "stalled" ? t.state === "stalled" :
+      k === "stopped" ? t.state === "stopped" :
+      k === "errored" ? t.state === "error" : true).length;
+    const chipDefs = [["all", "All"], ["downloading", "Downloading"], ["seeding", "Seeding"], ["completed", "Completed"], ["stalled", "Stalled"], ["stopped", "Stopped"], ["errored", "Errored"]];
+    const chips = chipDefs.map(([k, l]) => {
+      const selc = S.fStatus === k;
+      return {
+        label: l, count: statusCount(k), sel: selc,
+        bg: selc ? pal.pc : "transparent", tc: selc ? pal.onPc : pal.onv,
+        border: selc ? pal.pc : pal.ol,
+        click: () => set({ fStatus: k })
+      };
+    });
+
+    // ---- B sidebar ----
+    const catCount = (c) => torrents.filter(t => c === "__none" ? t.cat === "" : t.cat === c).length;
+    const mkSide = (label, icon, selc, count, click) => ({
+      label, icon, count, click,
+      bg: selc ? alpha(pal.pr, dark ? 0.2 : 0.12) : "transparent",
+      ic: selc ? pal.pr : pal.onv, tc: selc ? pal.pr : pal.on
+    });
+    const sideSections = [
+      { title: "Status", icon: "filter_list", items: chipDefs.map(([k, l]) => mkSide(l, { all: "apps", downloading: "download", seeding: "upload", completed: "check_circle", stalled: "hourglass_empty", stopped: "pause", errored: "error" }[k], S.fStatus === k, statusCount(k), () => set({ fStatus: k }))) },
+      { title: "Categories", icon: "category", items: [
+        mkSide("All", "apps", S.fCat === "__all", torrents.length, () => set({ fCat: "__all" })),
+        mkSide("Uncategorized", "category", S.fCat === "__none", catCount("__none"), () => set({ fCat: "__none" })),
+        mkSide("linux-iso", "category", S.fCat === "linux-iso", catCount("linux-iso"), () => set({ fCat: "linux-iso" })),
+        mkSide("software", "category", S.fCat === "software", catCount("software"), () => set({ fCat: "software" }))
+      ] },
+      { title: "Trackers", icon: "dns", items: [
+        mkSide("All", "apps", true, torrents.length, () => {}),
+        mkSide("torrent.ubuntu.com", "dns", false, 1, () => {}),
+        mkSide("bttracker.debian.org", "dns", false, 1, () => {})
+      ] }
+    ];
+
+    // ---- nav ----
+    const articles = S.articles || this.initArticles();
+    const unreadArts = articles.filter(a => a.unread).length;
+    const nav0 = S.navTab === 0;
+    const navDefs = [["Transfers", "download"], ["Search", "travel_explore"], ["RSS", "rss_feed"], ["Log", "article"]];
+    const navItems = navDefs.map(([label, icon], i) => {
+      const on = S.navTab === i;
+      const badge = i === 2 ? unreadArts : 0;
+      return {
+        label, icon,
+        pill: on ? pal.pc : "transparent",
+        ic: on ? pal.onPc : pal.onv, lc: on ? pal.on : pal.onv,
+        fill: on ? "'FILL' 1" : "'FILL' 0",
+        badge, badgeOn: badge > 0 && !on,
+        click: () => set({ navTab: i, panel: null, delOpen: false })
+      };
+    });
+
+    // ---- selection / detail ----
+    const selColor = sel ? stColorOf(sel) : pal.onv;
+    const detailFields = sel ? [
+      { l: "Size", v: sel.size }, { l: "State", v: sel.status }, { l: "Ratio", v: sel.ratio },
+      { l: "ETA", v: sel.eta }, { l: "Down", v: sel.dl }, { l: "Up", v: sel.ul },
+      { l: "Seeds", v: "84 (312)" }, { l: "Peers", v: "31 (89)" }, { l: "Category", v: sel.cat || "\u2014" },
+      { l: "Tracker", v: "torrent.ubuntu.com" }, { l: "Added", v: "11/07/2026 08:03" }, { l: "Save path", v: "C:/\u2026/Downloads/ISOs" }
+    ] : [];
+
+    // ---- notifications ----
+    const unread = notifs.filter(n => n.unread).length;
+    const nrx = S.notifRegex ? this.rx(S.notifSearch, "i") : null;
+    const nMatch = (n) => {
+      if (!S.notifSearch) return true;
+      const hay = n.title + " " + n.body;
+      if (S.notifRegex) return nrx ? nrx.test(hay) : true;
+      return hay.toLowerCase().includes(S.notifSearch.toLowerCase());
+    };
+    const kindColor = { succ: st.succ, err: st.err, warn: st.warn, info: st.info, done: st.done };
+    const notifItems = notifs.filter(nMatch).map(n => ({
+      ...n,
+      time: this.rel(n.ts),
+      bg: n.unread ? alpha(pal.pr, dark ? 0.10 : 0.06) : "transparent",
+      iconBg: alpha(kindColor[n.kind] || st.info, dark ? 0.18 : 0.12),
+      iconColor: kindColor[n.kind] || st.info,
+      actions: n.actions.map(a => ({
+        label: a.label,
+        click: () => {
+          const repos2 = this.logAction("notif: " + a.label + " \u2014 " + n.title, [{ from: "notification " + n.id + ": pending", to: "notification " + n.id + ": " + a.label }]);
+          set({ repos: repos2, notifs: notifs.map(x => x.id === n.id ? { ...x, unread: false } : x) });
+          this.snackbar(a.label + " \u2014 done (committed to action log)");
+        }
+      })),
+      dismiss: () => {
+        const repos2 = this.logAction("notif: dismissed \u2018" + n.title + "\u2019", [{ from: "notification " + n.id + ": visible", to: "notification " + n.id + ": dismissed" }]);
+        set({ repos: repos2, notifs: notifs.filter(x => x.id !== n.id) });
+      }
+    }));
+
+    // ---- history ----
+    const hrx = S.histRegex ? this.rx(S.histSearch, "i") : null;
+    const hMatch = (c) => {
+      if (!S.histSearch) return true;
+      const hay = c.msg + " " + c.sha + " " + c.diff.map(d => d.from + " " + d.to).join(" ");
+      if (S.histRegex) return hrx ? hrx.test(hay) : true;
+      return hay.toLowerCase().includes(S.histSearch.toLowerCase());
+    };
+    const activeRepo = repos[S.histTab].filter(hMatch);
+    const day = 24 * 3600000;
+    const groups = [
+      { label: "Today", commits: activeRepo.filter(c => Date.now() - c.ts < day) },
+      { label: "Earlier", commits: activeRepo.filter(c => Date.now() - c.ts >= day) }
+    ].filter(g => g.commits.length > 0);
+    const histGroups = groups.map(g => ({
+      label: g.label,
+      commits: g.commits.map((c, i) => ({
+        sha: c.sha, msg: c.msg, time: this.rel(c.ts), diff: c.diff,
+        open: S.expanded === c.sha, rot: S.expanded === c.sha ? 180 : 0,
+        dot: i === 0 && g.label === "Today" && S.histTab === "settings" ? pal.pr : pal.ol,
+        canRestore: S.histTab === "settings" && (c.keys || []).length > 0,
+        toggle: () => set({ expanded: S.expanded === c.sha ? null : c.sha }),
+        copy: () => this.snackbar("sha " + c.sha + " copied"),
+        restore: () => {
+          const patch = {};
+          (c.keys || []).forEach(([k, from]) => {
+            if (k === "theme") patch.theme = from;
+            else if (k === "style") patch.style = from;
+            else patch.settings = { ...S.settings, [k]: from };
+          });
+          const repos2 = this.commit("settings", "revert: " + c.msg, c.diff.map(d => ({ from: d.to, to: d.from })), []);
+          set({ ...patch, repos: repos2 });
+          this.snackbar("Restored state from " + c.sha);
+        }
+      }))
+    }));
+    const histTabs = [
+      { key: "settings", label: "Settings repo", icon: "settings", count: repos.settings.length },
+      { key: "actions", label: "Action log", icon: "bolt", count: repos.actions.length }
+    ].map(t => ({
+      ...t,
+      bg: S.histTab === t.key ? pal.pc : "transparent",
+      tc: S.histTab === t.key ? pal.onPc : pal.onv,
+      border: S.histTab === t.key ? pal.pc : pal.ol,
+      click: () => set({ histTab: t.key, expanded: null })
+    }));
+
+    // ---- settings panel ----
+    const styleCards = [
+      { key: "A", name: "Tonal Rail", desc: "Nav rail + chips, comfortable rows", tRail: 8, twoRows: false },
+      { key: "B", name: "Split Dock", desc: "Classic sidebar, dense table, dock", tRail: 14, twoRows: true },
+      { key: "C", name: "Card Flow", desc: "Cards + persistent detail panel", tRail: 6, twoRows: true }
+    ].map(c => {
+      const on = S.style === c.key;
+      const accent = this.PAL[c.key][S.theme].pr;
+      return {
+        ...c, accent,
+        thumbBg: this.PAL[c.key][S.theme].bg,
+        bg: on ? alpha(pal.pr, dark ? 0.10 : 0.06) : "transparent",
+        border: on ? "2px solid " + pal.pr : "1px solid " + pal.olv,
+        radio: on ? "radio_button_checked" : "radio_button_unchecked",
+        radioColor: on ? pal.pr : pal.onv,
+        click: () => this.setSetting("style", this.STYLE_NAMES[S.style], this.STYLE_NAMES[c.key], "UI/Style", { style: c.key })
+      };
+    });
+    const mkSwitch = (key, label, desc) => {
+      const on = S.settings[key];
+      return {
+        label, desc,
+        trackBg: on ? pal.pr : pal.sc2, trackBorder: on ? pal.pr : pal.ol,
+        thumbLeft: on ? 24 : 4, thumbBg: on ? pal.onPr : pal.onv,
+        click: () => this.setSetting(key, on, !on, "Behavior/" + label, { settings: { ...S.settings, [key]: !on } })
+      };
+    };
+    const switchRows = [
+      mkSwitch("confirmDel", "Confirm deletion", "Ask before removing torrents"),
+      mkSwitch("startPaused", "Start torrents paused", "New torrents wait for you"),
+      mkSwitch("inApp", "In-app dialogs", "Sheets instead of blocking windows"),
+      mkSwitch("regexDefault", "Regex by default", "New search fields start in regex mode")
+    ];
+    const retChips = ["30 days", "1 year", "Forever"].map(r => {
+      const on = S.settings.retention === r;
+      return {
+        label: r, bg: on ? pal.pc : "transparent", tc: on ? pal.onPc : pal.onv, border: on ? pal.pc : pal.ol,
+        click: () => this.setSetting("retention", S.settings.retention, r, "History/Retention", { settings: { ...S.settings, retention: r } })
+      };
+    });
+
+    // ---- regex builder ----
+    const flagStr = (S.flags.i ? "i" : "") + (S.flags.g ? "g" : "") + (S.flags.m ? "m" : "");
+    const brx = this.rx(S.builderPat, flagStr || undefined);
+    const bValid = S.builderPat && brx !== undefined;
+    const appendTok = (tok) => set({ builderPat: S.builderPat + tok });
+    const tokenGroups = [
+      { label: "Anchors", tokens: [["^", "start"], ["$", "end"], ["\\b", "word boundary"]] },
+      { label: "Classes", tokens: [[".", "any char"], ["\\d", "digit"], ["\\w", "word char"], ["\\s", "whitespace"], ["[a-z]", "char range"], ["[^ ]", "negated set"]] },
+      { label: "Quantifiers", tokens: [["*", "0 or more"], ["+", "1 or more"], ["?", "optional"], ["{2,4}", "between 2 and 4"]] },
+      { label: "Groups", tokens: [["( )", "capture group"], ["(?: )", "non-capturing"], ["|", "alternation"], ["\\.", "literal dot"]] }
+    ].map(g => ({ label: g.label, tokens: g.tokens.map(([label, tip]) => ({ label, tip, click: () => appendTok(label.replace(/ /g, "")) })) }));
+    const presets = [
+      ["Episode", "S\\d{2}E\\d{2}"], ["Resolution", "(1080|2160)p"], ["Year", "(19|20)\\d{2}"], ["Arch", "(amd64|x86_64|arm64)"], ["ISO", "\\.iso$"]
+    ].map(([label, pat]) => ({ label, click: () => set({ builderPat: pat }) }));
+    const flagChips = [["i", "ignore case"], ["g", "global"], ["m", "multiline"]].map(([f, tip]) => ({
+      label: f, tip,
+      bg: S.flags[f] ? pal.pc : "transparent", tc: S.flags[f] ? pal.onPc : pal.onv,
+      border: S.flags[f] ? pal.pc : pal.ol,
+      click: () => set({ flags: { ...S.flags, [f]: !S.flags[f] } })
+    }));
+    const samples = torrents.slice(0, 5).map(t => t.name);
+    let matchCount = 0;
+    const testRows = samples.map(name => {
+      let segs = [{ text: name, hit: false }];
+      let hitAny = false;
+      if (bValid && brx) {
+        try {
+          const r = new RegExp(S.builderPat, (flagStr.includes("g") ? flagStr : flagStr + "g"));
+          const out = []; let last = 0; let m2;
+          while ((m2 = r.exec(name)) !== null) {
+            if (m2.index > last) out.push({ text: name.slice(last, m2.index), hit: false });
+            out.push({ text: m2[0] || "\u2205", hit: true });
+            last = m2.index + (m2[0].length || 1);
+            if (m2[0].length === 0) r.lastIndex++;
+            hitAny = true;
+            if (out.length > 40) break;
+          }
+          if (last < name.length) out.push({ text: name.slice(last), hit: false });
+          if (out.length) segs = out;
+        } catch (e) { /* keep plain */ }
+      }
+      if (hitAny) matchCount++;
+      return {
+        mark: hitAny ? st.succ : pal.ol,
+        markIcon: hitAny ? "check_circle" : "radio_button_unchecked",
+        segs: segs.map(sg => ({ text: sg.text, color: sg.hit ? pal.onPc : pal.onv, bg: sg.hit ? pal.pc : "transparent", pad: sg.hit ? "1px 2px" : "0" }))
+      };
+    });
+    const libChips = (S.library).map((l, i) => ({
+      name: l.name,
+      load: () => set({ builderPat: l.pat }),
+      remove: () => set({ library: S.library.filter((_, j) => j !== i) })
+    }));
+
+    // ---- add sheet ----
+    const addCats = ["linux-iso", "software", "media", "none"].map(c => {
+      const on = S.addCat === c;
+      return { label: c, bg: on ? pal.pc : "transparent", tc: on ? pal.onPc : pal.onv, border: on ? pal.pc : pal.ol, click: () => set({ addCat: c }) };
+    });
+
+    // ---- dock (B) ----
+    const dockDefs = [["General", "description"], ["Trackers", "dns"], ["Peers", "groups"], ["Content", "folder"], ["Speed", "show_chart"]];
+    const dockTabs = dockDefs.map(([label, icon], i) => ({
+      label, icon, color: S.dockTab === i ? pal.pr : pal.onv, ind: S.dockTab === i ? 1 : 0,
+      click: () => set({ dockTab: i })
+    }));
+
+    // ---- panel helpers ----
+    const openPanel = (p) => set({ panel: S.panel === p ? null : p });
+
+    // ═══════════ SEARCH TAB ═══════════
+    const plugins = S.plugins || this.initPlugins();
+    const sTabsArr = S.searchTabs || [];
+    const sHistory = S.searchHistory || [];
+    const curTab = sTabsArr.find(t => t.id === S.curSearchTab) || sTabsArr[sTabsArr.length - 1] || null;
+    const searching = !!(curTab && curTab.status === "run");
+    const showStop = searching && S.searchQuery.trim() === curTab.pattern;
+    const srxInvalid = S.searchRegexOn && S.searchQuery && this.rx(S.searchQuery, "i") === undefined;
+    const enabledPluginCount = plugins.filter(p => p.enabled).length;
+
+    const doSearch = () => {
+      const q = S.searchQuery.trim();
+      if (showStop) {
+        set({ searchTabs: sTabsArr.map(t => t.id === curTab.id ? { ...t, status: "stopped" } : t), repos: this.logAction("search: stopped \u2018" + curTab.pattern + "\u2019", [{ from: "search " + curTab.pattern + ": running", to: "search " + curTab.pattern + ": stopped" }]) });
+        return;
+      }
+      if (!q) { this.snackbar("Type a search pattern first"); return; }
+      if (srxInvalid) { this.snackbar("Invalid regex \u2014 fix the pattern first"); return; }
+      const id = Date.now();
+      const nt = { id, pattern: q, status: "run", regex: S.searchRegexOn, results: [] };
+      set({
+        searchTabs: [...sTabsArr, nt], curSearchTab: id,
+        searchHistory: [q, ...sHistory.filter(x => x !== q)].slice(0, 4),
+        repos: this.logAction("search: started \u2018" + q + "\u2019 (" + enabledPluginCount + " plugins)", [{ from: "search tabs: " + sTabsArr.length, to: "search tabs: " + (sTabsArr.length + 1) }])
+      });
+      setTimeout(() => {
+        const cur2 = this.state.searchTabs || [];
+        const still = cur2.find(t => t.id === id);
+        if (!still || still.status !== "run") return;
+        this.setState({ searchTabs: cur2.map(t => t.id === id ? { ...t, status: "done", results: this.genResults(q, nt.regex) } : t) });
+      }, 1700);
+    };
+
+    const searchCats = ["All", "Movies", "TV", "Music", "Software", "Books"].map(c => {
+      const on = S.searchCat === c;
+      return { label: c, bg: on ? pal.pc : "transparent", tc: on ? pal.onPc : pal.onv, border: on ? pal.pc : pal.ol, click: () => set({ searchCat: c }) };
+    });
+    const searchScopes = [["enabled", "Only enabled"], ["all", "All plugins"], ["multi", "Select\u2026"]].map(([v, label]) => {
+      const on = S.searchScope === v && v !== "multi";
+      return {
+        label, bg: on ? pal.pc : "transparent", tc: on ? pal.onPc : pal.onv, border: on ? pal.pc : pal.ol,
+        click: () => v === "multi" ? openPanel("plugins") : set({ searchScope: v })
+      };
+    });
+    const sTabs = sTabsArr.map(t => {
+      const on = curTab && t.id === curTab.id;
+      return {
+        label: t.pattern, count: t.status === "run" ? "\u2026" : t.results.length,
+        icon: t.status === "run" ? "progress_activity" : (t.status === "stopped" ? "stop_circle" : (t.results.length ? "check_circle" : "error")),
+        icColor: t.status === "run" ? pal.pr : (t.results.length || t.status === "run" ? st.succ : st.warn),
+        icAnim: t.status === "run" ? "spin 1s linear infinite" : "none",
+        bg: on ? pal.pc : "transparent", tc: on ? pal.onPc : pal.onv, border: on ? pal.pc : pal.ol,
+        click: () => set({ curSearchTab: t.id, searchQuery: t.pattern, searchRegexOn: !!t.regex }),
+        close: () => {
+          const rest = sTabsArr.filter(x => x.id !== t.id);
+          set({ searchTabs: rest, curSearchTab: rest.length ? rest[rest.length - 1].id : -1 });
+        }
+      };
+    });
+    const sizeNum = (s) => { const m = parseFloat(s); return s.includes("GiB") ? m * 1024 : (s.includes("MiB") ? m : m / 1024); };
+    const resList = (curTab && curTab.status !== "run") ? curTab.results.slice().sort((a, b) => {
+      const v = (r) => S.srtCol === "name" ? r.name.toLowerCase() : S.srtCol === "size" ? sizeNum(r.size) : S.srtCol === "seeds" ? r.seeds : S.srtCol === "leech" ? r.leech : r.engine;
+      const c = v(a) < v(b) ? -1 : v(a) > v(b) ? 1 : 0;
+      return S.srtAsc ? c : -c;
+    }) : [];
+    const addFromSearch = (r) => {
+      const nt = { id: "t" + Date.now(), state: "dl", name: r.name, size: r.size, pct: 0, status: "Downloading", dl: "1.6 MiB/s", ul: "0 B/s", eta: "38m", ratio: "0.00", cat: "", q: "7" };
+      set({ torrents: [nt, ...torrents], repos: this.logAction("search: downloading " + r.name + " (" + r.engine + ")", [{ from: "transfers: " + torrents.length, to: "transfers: " + (torrents.length + 1) }]) });
+      this.snackbar("Added " + r.name, "Go to Transfers", () => this.setState({ navTab: 0, selId: nt.id, snack: null }));
+    };
+    const sRows = resList.map((r, i) => ({
+      ...r, bg: "transparent", delay: Math.min(i * 22, 240),
+      click: () => {}, download: () => addFromSearch(r),
+      open: () => this.snackbar("Opened description page on " + r.engine)
+    }));
+    const sHeaders = [
+      { col: "name", title: "Name", w: 0, flex: "1", minW: 280, just: "flex-start" },
+      { col: "size", title: "Size", w: 96, flex: "none", minW: 96, just: "flex-end" },
+      { col: "seeds", title: "Seeders", w: 90, flex: "none", minW: 90, just: "flex-end" },
+      { col: "leech", title: "Leechers", w: 90, flex: "none", minW: 90, just: "flex-end" },
+      { col: "engine", title: "Engine", w: 150, flex: "none", minW: 150, just: "flex-start" },
+      { col: "_a", title: "", w: 96, flex: "none", minW: 96, just: "flex-end" }
+    ].map(h => ({
+      ...h, sorted: S.srtCol === h.col, sortIcon: S.srtAsc ? "arrow_upward" : "arrow_downward",
+      click: () => h.col === "_a" ? null : set(S.srtCol === h.col ? { srtAsc: !S.srtAsc } : { srtCol: h.col, srtAsc: h.col === "name" || h.col === "engine" })
+    }));
+    const sEmpty = !curTab ? { icon: "travel_explore", title: "Search across your plugins", body: enabledPluginCount + " plugins enabled \u2014 type a query and press Enter" }
+      : (curTab.status === "stopped" ? { icon: "stop_circle", title: "Search stopped", body: "Partial results were discarded" }
+      : (curTab.status === "done" && curTab.results.length === 0 ? { icon: "search_off", title: "No results for \u2018" + curTab.pattern + "\u2019", body: "Try fewer words or a broader regex" } : null));
+
+    // ═══════════ RSS TAB ═══════════
+    const feeds = S.feeds || this.initFeeds();
+    const rules = S.rules || this.initRules();
+    const arxInvalid = S.artRegex && S.artFilter && this.rx(S.artFilter, "i") === undefined;
+    const arx = S.artRegex ? this.rx(S.artFilter, "i") : null;
+    const artMatch = (a) => {
+      if (!S.artFilter) return true;
+      if (S.artRegex) return arx ? arx.test(a.title) : true;
+      return a.title.toLowerCase().includes(S.artFilter.toLowerCase());
+    };
+    const feedName = (fid) => (feeds.find(f => f.id === fid) || {}).name || "";
+    const unreadOf = (fid) => articles.filter(a => a.feedId === fid && a.unread).length;
+    const inFeed = (a) => S.curFeed === "all" ? true : S.curFeed === "unread" ? a.unread : a.feedId === S.curFeed;
+    const visArts = articles.filter(a => inFeed(a) && artMatch(a));
+    const mkFeedRow = (id, label, icon, count, indent, clickable) => {
+      const on = S.curFeed === id;
+      return {
+        label, icon, indent, count,
+        badgeOn: count > 0, badgeBg: on ? pal.pr : pal.pc, badgeTc: on ? pal.onPr : pal.onPc,
+        bg: on ? alpha(pal.pr, dark ? 0.2 : 0.12) : "transparent",
+        ic: on ? pal.pr : pal.onv, tc: on ? pal.pr : pal.on, wt: on ? 600 : 400,
+        click: clickable ? () => set({ curFeed: id, curArt: null }) : () => {}
+      };
+    };
+    const feedRows = [
+      mkFeedRow("all", "All articles", "apps", articles.length, 10, true),
+      mkFeedRow("unread", "Unread", "mark_email_unread", unreadArts, 10, true),
+      { label: "Distros", icon: "folder", indent: 10, count: 0, badgeOn: false, badgeBg: "transparent", badgeTc: "transparent", bg: "transparent", ic: pal.onv, tc: pal.onv, wt: 700, click: () => {} },
+      ...feeds.filter(f => f.folder === "Distros").map(f => mkFeedRow(f.id, f.name, "rss_feed", unreadOf(f.id), 26, true)),
+      ...feeds.filter(f => !f.folder).map(f => mkFeedRow(f.id, f.name, "rss_feed", unreadOf(f.id), 10, true))
+    ];
+    const selArt = articles.find(a => a.id === S.curArt) || null;
+    const artRows = visArts.map(a => {
+      const on = selArt && a.id === selArt.id;
+      return {
+        title: a.title, meta: feedName(a.feedId) + " \u00b7 " + this.rel(a.ts),
+        dot: a.unread ? pal.pr : "transparent",
+        wt: a.unread ? 600 : 400, tc: a.unread ? pal.on : pal.onv,
+        bg: on ? alpha(pal.pr, dark ? 0.16 : 0.10) : "transparent",
+        click: () => set({ curArt: a.id, notifs, articles: articles.map(x => x.id === a.id ? { ...x, unread: false } : x) })
+      };
+    });
+    const refreshAll = () => {
+      if (S.refreshing) return;
+      set({ refreshing: true });
+      setTimeout(() => {
+        const arts = this.state.articles || this.initArticles();
+        const fresh = [
+          { id: "a" + Date.now(), feedId: "f1", title: "ubuntu-24.10.1-desktop-amd64.iso (fresh point release)", ts: Date.now(), unread: true, size: "5.74 GiB", desc: "Oracular point release with kernel and installer fixes." },
+          { id: "a" + (Date.now() + 1), feedId: "f2", title: "debian-13.2.0-amd64-netinst.iso", ts: Date.now(), unread: true, size: "689 MiB", desc: "Trixie 13.2 network installer refresh." }
+        ];
+        this.setState({ articles: [...fresh, ...arts], refreshing: false, repos: this.commit("actions", "rss: refreshed all feeds (+2 articles)", [{ from: "articles: " + arts.length, to: "articles: " + (arts.length + 2) }]) });
+        this.snackbar("Feeds updated \u2014 2 new articles");
+      }, 1500);
+    };
+    const ruleMatches = (pat) => {
+      const r = this.rx(pat, "i");
+      return r ? articles.filter(a => r.test(a.title)).length : 0;
+    };
+    const ruleRows = rules.map(r => ({
+      name: r.name, pat: r.pat,
+      meta: "All feeds \u00b7 matches " + ruleMatches(r.pat) + " current articles",
+      trackBg: r.enabled ? pal.pr : pal.sc2, trackBorder: r.enabled ? pal.pr : pal.ol,
+      thumbLeft: r.enabled ? 24 : 4, thumbBg: r.enabled ? pal.onPr : pal.onv,
+      toggle: () => set({ rules: rules.map(x => x.id === r.id ? { ...x, enabled: !x.enabled } : x), repos: this.commit("settings", "RSS/Rule \u2018" + r.name + "\u2019: " + (r.enabled ? "enabled \u2192 disabled" : "disabled \u2192 enabled"), [{ from: "rule " + r.name + ": " + (r.enabled ? "enabled" : "disabled"), to: "rule " + r.name + ": " + (r.enabled ? "disabled" : "enabled") }], []) }),
+      remove: () => set({ rules: rules.filter(x => x.id !== r.id), repos: this.commit("settings", "RSS/Rule \u2018" + r.name + "\u2019 deleted", [{ from: "rules: " + rules.length, to: "rules: " + (rules.length - 1) }], []) })
+    }));
+    const rulePatValid = S.rulePat && this.rx(S.rulePat, "i") !== undefined;
+    const addRule = () => {
+      if (!S.rulePat) { this.snackbar("Type a pattern for the rule"); return; }
+      if (!rulePatValid) { this.snackbar("Invalid regex \u2014 fix the pattern"); return; }
+      const name = S.ruleName || "rule " + (rules.length + 1);
+      set({
+        rules: [...rules, { id: "r" + Date.now(), name, pat: S.rulePat, enabled: true }],
+        ruleName: "", rulePat: "",
+        repos: this.commit("settings", "RSS/Rule \u2018" + name + "\u2019 added: /" + S.rulePat + "/i", [{ from: "rules: " + rules.length, to: "rules: " + (rules.length + 1) + " (+" + name + ")" }], [])
+      });
+      this.snackbar("Rule \u2018" + name + "\u2019 added");
+    };
+    const plugRows = plugins.map(p => ({
+      ...p,
+      iconBg: alpha(p.enabled ? pal.pr : pal.onv, dark ? 0.18 : 0.12),
+      iconColor: p.enabled ? pal.pr : pal.onv,
+      trackBg: p.enabled ? pal.pr : pal.sc2, trackBorder: p.enabled ? pal.pr : pal.ol,
+      thumbLeft: p.enabled ? 24 : 4, thumbBg: p.enabled ? pal.onPr : pal.onv,
+      toggle: () => set({ plugins: plugins.map(x => x.id === p.id ? { ...x, enabled: !x.enabled } : x), repos: this.commit("settings", "Search/Plugin \u2018" + p.name + "\u2019: " + (p.enabled ? "enabled \u2192 disabled" : "disabled \u2192 enabled"), [{ from: "plugin " + p.name + ": " + (p.enabled ? "enabled" : "disabled"), to: "plugin " + p.name + ": " + (p.enabled ? "disabled" : "enabled") }], []) })
+    }));
+    const installPlugin = () => {
+      if (!S.plugUrl) { this.snackbar("Paste a plugin URL first"); return; }
+      let host = S.plugUrl.replace(/^https?:\/\//, "").split("/")[0] || "new-plugin";
+      const np = { id: "p" + Date.now(), name: host.split(".")[0], ver: "1.0", url: host, enabled: true };
+      set({ plugins: [...plugins, np], plugUrl: "", repos: this.commit("settings", "Search/Plugin \u2018" + np.name + "\u2019 installed", [{ from: "plugins: " + plugins.length, to: "plugins: " + (plugins.length + 1) + " (+" + np.name + ")" }], []) });
+      this.snackbar("Installed " + np.name);
+    };
+    const doAddFeed = () => {
+      if (!S.feedUrl) { this.snackbar("Paste a feed URL first"); return; }
+      let host = S.feedUrl.replace(/^https?:\/\//, "").split("/")[0] || "new-feed";
+      const nf = { id: "f" + Date.now(), name: host, folder: S.feedFolder === "Distros" ? "Distros" : "" };
+      set({ feeds: [...feeds, nf], feedUrl: "", panel: null, repos: this.commit("settings", "RSS/Feed \u2018" + host + "\u2019 subscribed", [{ from: "feeds: " + feeds.length, to: "feeds: " + (feeds.length + 1) + " (+" + host + ")" }], []) });
+      this.snackbar("Subscribed to " + host);
+    };
+
+    // ═══════════ LOG TAB ═══════════
+    const lvlColors = { I: st.info, N: pal.onv, W: st.warn, C: st.err };
+    const baseLog = [
+      { ts: Date.now() - 27 * 3600000, lvl: "N", msg: "qBittorrent (Material rebuild) session started" },
+      { ts: Date.now() - 27 * 3600000 + 900, lvl: "I", msg: "Listening on IPv4/IPv6 port 58312" },
+      { ts: Date.now() - 27 * 3600000 + 2100, lvl: "I", msg: "DHT bootstrapped: 387 nodes" },
+      { ts: Date.now() - 26 * 3600000, lvl: "N", msg: "External IP detected: 203.0.113.42" },
+      { ts: Date.now() - 14 * 60000, lvl: "W", msg: "Tracker udp://tracker.example:6969 timed out (nixos-25.05)" }
+    ];
+    const actLog = repos.actions.slice().reverse().map(c => ({ ts: c.ts, lvl: "I", msg: "[" + c.sha + "] " + c.msg }));
+    const logLines = [...baseLog, ...actLog].sort((a, b) => a.ts - b.ts).map(l => ({
+      time: this.rel(l.ts), lvl: l.lvl,
+      lvlColor: lvlColors[l.lvl] || pal.onv,
+      msgColor: l.lvl === "W" ? st.warn : (l.lvl === "C" ? st.err : pal.on),
+      msg: l.msg
+    }));
+
+    return {
+      // theme/style
+      pal, st, styleName, isA, isB, isC,
+      isTable: (isA || isB) && nav0,
+      chipsOn: (isA || isC) && nav0,
+      sideOn: isB && nav0,
+      cardsOn: isC && nav0,
+      cDetailOn: isC && nav0,
+      dockOn: isB && nav0,
+      searchVisible: nav0,
+      searchTabOn: S.navTab === 1,
+      rssTabOn: S.navTab === 2,
+      logTabOn: S.navTab === 3,
+      seedGrad: "linear-gradient(135deg, " + pal.pr + ", " + pal.pc + ")",
+      hov8, hov6,
+      errCont: alpha(st.err, dark ? 0.18 : 0.10),
+      themeIcon: dark ? "light_mode" : "dark_mode",
+      toggleTheme: () => this.setSetting("theme", S.theme, dark ? "light" : "dark", "Appearance/Theme", { theme: dark ? "light" : "dark" }),
+
+      // header search
+      searchText: S.searchText,
+      searchPlaceholder: S.regexOn ? "Search with /regex/" : "Search torrents",
+      onSearch: (e) => set({ searchText: e.target.value }),
+      toggleRegex: () => set({ regexOn: !S.regexOn }),
+      regexTip: S.regexOn ? "Regex ON \u2014 click for plain text" : "Enable regex matching",
+      rxBg: S.regexOn ? (rxInvalid ? alpha(st.err, 0.2) : pal.pc) : "transparent",
+      rxColor: S.regexOn ? (rxInvalid ? st.err : pal.onPc) : pal.onv,
+      searchBorder: rxInvalid ? st.err : "transparent",
+      openRegex: () => openPanel("regex"),
+
+      // alt speed
+      toggleAlt: () => this.setSetting("alt", S.settings.alt, !S.settings.alt, "Speed/AltLimits", { settings: { ...S.settings, alt: !S.settings.alt } }),
+      altBg: S.settings.alt ? pal.pc : "transparent",
+      altBorder: S.settings.alt ? pal.pc : pal.ol,
+      altColor: S.settings.alt ? pal.onPc : pal.onv,
+      altFill: S.settings.alt ? "'FILL' 1" : "'FILL' 0",
+
+      // header buttons
+      openNotif: () => openPanel("notif"),
+      openHist: () => openPanel("hist"),
+      openSettings: () => openPanel("set"),
+      openAdd: () => openPanel("add"),
+      closePanel: () => set({ panel: null }),
+      notifBtnBg: S.panel === "notif" ? pal.pc : "transparent",
+      histBtnBg: S.panel === "hist" ? pal.pc : "transparent",
+      setBtnBg: S.panel === "set" ? pal.pc : "transparent",
+      hasUnread: unread > 0, unreadCount: unread,
+
+      // nav / sidebar / chips
+      navItems, sideSections, chips,
+
+      // table / cards
+      tbl, headers, rows, cards: rows,
+      emptyOn: rows.length === 0,
+
+      // B dock
+      dockTabs,
+      dockIsGeneral: S.dockTab === 0,
+      dockIsOther: S.dockTab !== 0,
+      dockIcon: dockDefs[S.dockTab][1],
+      dockEmpty: dockDefs[S.dockTab][0] + " \u2014 " + (sel ? sel.name : "no selection"),
+
+      // ═══ search tab ═══
+      searchQuery: S.searchQuery,
+      onSearchQuery: (e) => set({ searchQuery: e.target.value }),
+      onSearchKey: (e) => { if (e.key === "Enter") doSearch(); },
+      toggleSearchRegex: () => set({ searchRegexOn: !S.searchRegexOn }),
+      srxBg: S.searchRegexOn ? (srxInvalid ? alpha(st.err, 0.2) : pal.pc) : "transparent",
+      srxColor: S.searchRegexOn ? (srxInvalid ? st.err : pal.onPc) : pal.onv,
+      sqBorder: srxInvalid ? st.err : "transparent",
+      doSearch,
+      searchBtnBg: showStop ? st.err : pal.pr,
+      searchBtnTc: showStop ? "#ffffff" : pal.onPr,
+      searchBtnIcon: showStop ? "stop" : "search",
+      searchBtnLabel: showStop ? "Stop" : "Search",
+      openPlugins: () => openPanel("plugins"),
+      pluginCount: enabledPluginCount + "/" + plugins.length,
+      searchCats, searchScopes,
+      historyOn: sHistory.length > 0,
+      historyChips: sHistory.map(q => ({ label: q, click: () => set({ searchQuery: q }) })),
+      sTabsOn: sTabs.length > 0, sTabs,
+      sResultsOn: !!curTab && curTab.status === "done" && curTab.results.length > 0,
+      sSearchingOn: searching,
+      enabledPluginCount,
+      sHeaders, sRows,
+      sEmptyOn: !!sEmpty,
+      sEmptyIcon: sEmpty ? sEmpty.icon : "search",
+      sEmptyTitle: sEmpty ? sEmpty.title : "",
+      sEmptyBody: sEmpty ? sEmpty.body : "",
+
+      // ═══ rss tab ═══
+      openAddFeed: () => openPanel("addfeed"),
+      openRules: () => openPanel("rules"),
+      ruleCount: rules.filter(r => r.enabled).length + "/" + rules.length,
+      markAllArtsRead: () => set({ articles: articles.map(a => ({ ...a, unread: false })), repos: this.logAction("rss: marked all read", [{ from: unreadArts + " unread", to: "0 unread" }]) }),
+      refreshAll,
+      refreshColor: S.refreshing ? pal.pr : pal.onv,
+      refreshAnim: S.refreshing ? "spin 1s linear infinite" : "none",
+      artFilter: S.artFilter,
+      onArtFilter: (e) => set({ artFilter: e.target.value }),
+      toggleArtRegex: () => set({ artRegex: !S.artRegex }),
+      arxBg: S.artRegex ? (arxInvalid ? alpha(st.err, 0.2) : pal.pc) : "transparent",
+      arxColor: S.artRegex ? (arxInvalid ? st.err : pal.onPc) : pal.onv,
+      arxBorder: arxInvalid ? st.err : "transparent",
+      feedRows, artRows,
+      artEmpty: artRows.length === 0,
+      artSelOn: !!selArt, artSelOff: !selArt,
+      selArtTitle: selArt ? selArt.title : "",
+      selArtFeed: selArt ? feedName(selArt.feedId) : "",
+      selArtTime: selArt ? this.rel(selArt.ts) : "",
+      selArtSize: selArt ? selArt.size : "",
+      selArtDesc: selArt ? selArt.desc : "",
+      dlArticle: () => {
+        if (!selArt) return;
+        const nm = selArt.title.split(" ")[0];
+        const nt = { id: "t" + Date.now(), state: "dl", name: nm, size: selArt.size, pct: 0, status: "Downloading", dl: "2.2 MiB/s", ul: "0 B/s", eta: "41m", ratio: "0.00", cat: "linux-iso", q: "7" };
+        set({ torrents: [nt, ...torrents], repos: this.logAction("rss: downloading " + nm, [{ from: "transfers: " + torrents.length, to: "transfers: " + (torrents.length + 1) }]) });
+        this.snackbar("Added " + nm, "Go to Transfers", () => this.setState({ navTab: 0, selId: nt.id, snack: null }));
+      },
+      openArticle: () => this.snackbar("Opened article link in browser"),
+
+      // ═══ log tab ═══
+      logLines,
+
+      // ═══ sheets: plugins / rules / addfeed ═══
+      pluginsOn: S.panel === "plugins",
+      plugRows,
+      plugUrl: S.plugUrl,
+      onPlugUrl: (e) => set({ plugUrl: e.target.value }),
+      installPlugin,
+      checkPluginUpdates: () => { set({ repos: this.logAction("search: checked for plugin updates", [{ from: "plugins checked", to: "all up to date" }]) }); this.snackbar("All plugins are up to date"); },
+      rulesOn: S.panel === "rules",
+      ruleRows,
+      ruleName: S.ruleName,
+      onRuleName: (e) => set({ ruleName: e.target.value }),
+      rulePat: S.rulePat,
+      onRulePat: (e) => set({ rulePat: e.target.value }),
+      rulePreview: !S.rulePat ? "type a pattern to preview matches" : (rulePatValid ? "matches " + ruleMatches(S.rulePat) + " of " + articles.length + " current articles" : "invalid regex"),
+      addRule,
+      addFeedOn: S.panel === "addfeed",
+      feedUrl: S.feedUrl,
+      onFeedUrl: (e) => set({ feedUrl: e.target.value }),
+      feedFolderChips: ["Distros", "Top level"].map(f => {
+        const on = S.feedFolder === f;
+        return { label: f, bg: on ? pal.pc : "transparent", tc: on ? pal.onPc : pal.onv, border: on ? pal.pc : pal.ol, click: () => set({ feedFolder: f }) };
+      }),
+      doAddFeed,
+
+      // selection
+      selName: sel ? sel.name : "\u2014",
+      selStatus: sel ? sel.status : "",
+      selIcon: sel ? stIconOf(sel) : "insert_drive_file",
+      selStColor: selColor,
+      selIconBg: alpha(selColor, dark ? 0.16 : 0.12),
+      selPct: sel ? (sel.pct === 100 ? "100%" : sel.pct.toFixed(1) + "%") : "\u2014",
+      selPctN: sel ? sel.pct : 0,
+      selSize: sel ? sel.size : "",
+      selBarColor: sel ? (["error", "stopped"].includes(sel.state) ? pal.ol : pal.pr) : pal.ol,
+      detailFields,
+      aBarOn: isA && nav0 && !!sel && S.panel === null && !S.delOpen,
+
+      // actions
+      actStart: () => { set({ repos: this.logAction("torrent: started " + (sel ? sel.name : ""), [{ from: sel.status, to: "Downloading" }]) }); this.snackbar("Started \u2014 committed to action log"); },
+      actStop: () => { set({ repos: this.logAction("torrent: stopped " + (sel ? sel.name : ""), [{ from: sel.status, to: "Stopped" }]) }); this.snackbar("Stopped \u2014 committed to action log"); },
+      actRecheck: () => { set({ repos: this.logAction("torrent: force recheck " + (sel ? sel.name : ""), [{ from: sel.status, to: "Checking" }]) }); this.snackbar("Rechecking \u2014 committed to action log"); },
+      actFolder: () => this.snackbar("Opened destination folder"),
+      askDelete: () => {
+        if (!S.settings.confirmDel) { this._reallyDelete(sel, torrents, false); return; }
+        set({ delOpen: true, delFiles: false });
+      },
+
+      // delete confirm
+      delOn: S.delOpen,
+      delChk: S.delFiles ? "check_box" : "check_box_outline_blank",
+      delChkColor: S.delFiles ? pal.pr : pal.onv,
+      toggleDelFiles: () => set({ delFiles: !S.delFiles }),
+      cancelDelete: () => set({ delOpen: false }),
+      doDelete: () => this._reallyDelete(sel, torrents, S.delFiles),
+
+      // notifications panel
+      notifOn: S.panel === "notif",
+      notifItems, notifEmpty: notifItems.length === 0,
+      notifSearch: S.notifSearch,
+      onNotifSearch: (e) => set({ notifSearch: e.target.value }),
+      toggleNotifRegex: () => set({ notifRegex: !S.notifRegex }),
+      nrxBg: S.notifRegex ? pal.pc : "transparent",
+      nrxColor: S.notifRegex ? pal.onPc : pal.onv,
+      notifSearchBorder: "transparent",
+      markAllRead: () => { set({ notifs: notifs.map(n => ({ ...n, unread: false })), repos: this.logAction("notif: marked all read", [{ from: unread + " unread", to: "0 unread" }]) }); },
+      clearNotifs: () => { set({ notifs: [], repos: this.logAction("notif: cleared all", [{ from: notifs.length + " notifications", to: "0 notifications" }]) }); this.snackbar("Notifications cleared"); },
+      openActionLog: () => set({ panel: "hist", histTab: "actions" }),
+
+      // history panel
+      histOn: S.panel === "hist",
+      histTabs, histGroups,
+      histSearch: S.histSearch,
+      onHistSearch: (e) => set({ histSearch: e.target.value }),
+      toggleHistRegex: () => set({ histRegex: !S.histRegex }),
+      hrxBg: S.histRegex ? pal.pc : "transparent",
+      hrxColor: S.histRegex ? pal.onPc : pal.onv,
+      histSearchBorder: "transparent",
+      toggleAutoCommit: () => this.setSetting("autoCommit", S.settings.autoCommit, !S.settings.autoCommit, "History/AutoCommit", { settings: { ...S.settings, autoCommit: !S.settings.autoCommit } }),
+      acBg: S.settings.autoCommit ? pal.pr : pal.sc2,
+      acThumb: S.settings.autoCommit ? pal.onPr : pal.onv,
+      acLeft: S.settings.autoCommit ? 17 : 3,
+      exportRepo: () => this.snackbar("Repo exported \u2014 " + (repos[S.histTab].length) + " commits copied as JSON"),
+      settingsCommitCount: repos.settings.length,
+      openHistFromSet: () => set({ panel: "hist", histTab: "settings" }),
+
+      // settings panel
+      setOn: S.panel === "set",
+      segLightBg: !dark ? pal.pr : "transparent", segLightTc: !dark ? pal.onPr : pal.onv,
+      segDarkBg: dark ? pal.pr : "transparent", segDarkTc: dark ? pal.onPr : pal.onv,
+      setLight: () => this.setSetting("theme", S.theme, "light", "Appearance/Theme", { theme: "light" }),
+      setDark: () => this.setSetting("theme", S.theme, "dark", "Appearance/Theme", { theme: "dark" }),
+      styleCards, switchRows, retChips,
+
+      // regex builder panel
+      regexOn2: S.panel === "regex",
+      builderPat: S.builderPat,
+      onBuilderPat: (e) => set({ builderPat: e.target.value }),
+      flagStr, flagChips,
+      patBorder: bValid || !S.builderPat ? pal.olv : st.err,
+      patDot: !S.builderPat ? pal.ol : (bValid ? st.succ : st.err),
+      tokenGroups, presets,
+      matchSummary: S.builderPat ? (bValid ? matchCount + " of " + samples.length + " sample names match" : "invalid pattern") : "type or compose a pattern",
+      matchColor: S.builderPat ? (bValid ? st.succ : st.err) : pal.onv,
+      testRows, libChips,
+      libName: S.libName,
+      onLibName: (e) => set({ libName: e.target.value }),
+      saveLib: () => {
+        if (!S.builderPat) return;
+        const name = S.libName || "pattern " + (S.library.length + 1);
+        set({ library: [...S.library, { name, pat: S.builderPat }], libName: "" });
+        this.snackbar("Saved \u2018" + name + "\u2019 to library");
+      },
+      importOpen: S.importOpen,
+      toggleImport: () => set({ importOpen: !S.importOpen }),
+      importText: S.importText,
+      onImportText: (e) => set({ importText: e.target.value }),
+      doExport: () => set({ importText: JSON.stringify({ pattern: S.builderPat, flags: flagStr, library: S.library }, null, 2) }),
+      doImport: () => {
+        try {
+          const j = JSON.parse(S.importText);
+          set({
+            builderPat: j.pattern || S.builderPat,
+            flags: { i: (j.flags || "").includes("i"), g: (j.flags || "").includes("g"), m: (j.flags || "").includes("m") },
+            library: Array.isArray(j.library) ? j.library : S.library
+          });
+          this.snackbar("Imported pattern" + (j.library ? " + library" : ""));
+        } catch (e) { this.snackbar("Import failed \u2014 invalid JSON"); }
+      },
+      applyRegex: () => {
+        const target = S.navTab === 1 ? "plugin search" : (S.navTab === 2 ? "article filter" : "transfer search");
+        const patch = S.navTab === 1 ? { searchQuery: S.builderPat, searchRegexOn: true }
+          : (S.navTab === 2 ? { artFilter: S.builderPat, artRegex: true }
+          : { searchText: S.builderPat, regexOn: true });
+        set({ ...patch, panel: null, repos: this.logAction("search: applied regex /" + S.builderPat + "/" + flagStr + " to " + target, [{ from: target + ": (none)", to: target + ": /" + S.builderPat + "/" + flagStr }]) });
+        this.snackbar("Regex applied to " + target);
+      },
+
+      // add sheet
+      addOn: S.panel === "add",
+      addUrl: S.addUrl,
+      onAddUrl: (e) => set({ addUrl: e.target.value }),
+      addCats,
+      toggleAddPaused: () => set({ addPaused: !S.addPaused }),
+      apBg: S.addPaused ? pal.pr : pal.sc2,
+      apBorder: S.addPaused ? pal.pr : pal.ol,
+      apThumb: S.addPaused ? pal.onPr : pal.onv,
+      apLeft: S.addPaused ? 24 : 4,
+      doAdd: () => {
+        const name = S.addUrl ? (S.addUrl.replace(/^magnet:\?xt=urn:btih:/, "").slice(0, 24) || "new-torrent") + ".iso" : "manjaro-25.0-kde-x86_64.iso";
+        const nt = { id: "t" + Date.now(), state: S.addPaused ? "stopped" : "dl", name, size: "3.12 GiB", pct: 0, status: S.addPaused ? "Stopped" : "Downloading", dl: S.addPaused ? "0 B/s" : "1.2 MiB/s", ul: "0 B/s", eta: S.addPaused ? "\u221e" : "44m", ratio: "0.00", cat: S.addCat === "none" ? "" : S.addCat, q: "7" };
+        set({ torrents: [nt, ...torrents], selId: nt.id, panel: null, addUrl: "", repos: this.logAction("torrent: added " + name, [{ from: "transfers: " + torrents.length, to: "transfers: " + (torrents.length + 1) + " (+" + name + ")" }]) });
+        this.snackbar("Added " + name);
+      },
+
+      // snackbar
+      snackOn: !!S.snack,
+      snackMsg: S.snack ? S.snack.msg : "",
+      snackHasAction: !!(S.snack && S.snack.actionLabel),
+      snackActionLabel: S.snack ? (S.snack.actionLabel || "") : "",
+      snackAct: () => { if (S.snack && S.snack.onAction) S.snack.onAction(); },
+      invSurf: dark ? "#e5e1ec" : "#313036",
+      invOn: dark ? "#1b1b21" : "#f3eff4",
+      invPr: dark ? "#5646d6" : pal.pc
+    };
+  }
+
+  _reallyDelete(sel, torrents, withFiles) {
+    if (!sel) return;
+    const remaining = torrents.filter(t => t.id !== sel.id);
+    const repos = this.commit("actions", "torrent: removed " + sel.name + (withFiles ? " (+files)" : ""), [{ from: "transfers: " + torrents.length, to: "transfers: " + remaining.length + " (\u2212" + sel.name + ")" }]);
+    this.setState({ torrents: remaining, delOpen: false, selId: remaining[0] ? remaining[0].id : null, repos, deleted: sel });
+    this.snackbar("Removed " + sel.name, "Undo", () => {
+      const cur = this.state.torrents || [];
+      const repos2 = this.commit("actions", "revert: restored " + sel.name, [{ from: "transfers: " + cur.length, to: "transfers: " + (cur.length + 1) + " (+" + sel.name + ")" }]);
+      this.setState({ torrents: [sel, ...cur], selId: sel.id, repos: repos2, snack: null });
+    });
+  }
+}
+</script>
+</body>
+</html>

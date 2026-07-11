@@ -490,12 +490,16 @@ namespace BitTorrent
         void torrentsUpdated(const QList<Torrent *> &torrents);
         void freeDiskSpaceChecked(qint64 result);
 
-        void torrentAboutToBeRemoved(Torrent *torrent);
+        void torrentAboutToBeRemoved(Torrent *torrent, TorrentRemoveOption removeOption);
         void torrentAdded(Torrent *torrent);
         void torrentCategoryChanged(Torrent *torrent, const QString &oldCategory);
+        // Any configuration mutation without a dedicated signal (limits, share limits,
+        // sequential/first-last-piece flags, super seeding, download path, priorities...).
+        void torrentConfigChanged(Torrent *torrent);
         void torrentFinished(Torrent *torrent);
         void torrentFinishedChecking(Torrent *torrent);
         void torrentMetadataReceived(Torrent *torrent);
+        void torrentNameChanged(Torrent *torrent, const QString &oldName);
         void torrentStopped(Torrent *torrent);
         void torrentStarted(Torrent *torrent);
         void torrentSavePathChanged(Torrent *torrent);
