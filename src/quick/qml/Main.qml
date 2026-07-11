@@ -749,6 +749,22 @@ ApplicationWindow {
         onOpenFullOptionsRequested: { root.closePanel(); root.showOptions() }
     }
 
+    NotificationsSheet {
+        id: notificationsSheet
+        parent: centralTabs
+        open: root.activePanel === "notifications"
+        onCloseRequested: root.closePanel()
+        onOpenHistoryRequested: root.activePanel = "history"
+    }
+
+    RegexBuilderSheet {
+        id: regexBuilderSheet
+        parent: centralTabs
+        open: root.activePanel === "regex"
+        filterProxy: centralTabs.proxy
+        onCloseRequested: root.closePanel()
+    }
+
     ConfirmDialog {
         id: restoreConfirmDialog
         parent: Overlay.overlay
@@ -1024,6 +1040,8 @@ ApplicationWindow {
             case "speed-limits": speedLimitDialog.open(); break
             case "history": root.activePanel = "history"; break
             case "settings-sheet": root.activePanel = "settings"; break
+            case "regex": root.activePanel = "regex"; break
+            case "notifications": root.activePanel = "notifications"; break
             default: break
             }
         }
