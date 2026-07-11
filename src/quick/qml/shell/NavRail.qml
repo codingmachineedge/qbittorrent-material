@@ -61,6 +61,7 @@ Item {
             model: root.navModel
 
             delegate: Item {
+                id: navItem
                 required property var modelData
                 readonly property bool active: root.currentTab === modelData.page
 
@@ -78,23 +79,23 @@ Item {
                         width: root.labeled ? 56 : 44
                         height: root.labeled ? 32 : 44
                         radius: root.labeled ? 16 : 22
-                        color: parent.parent.parent.active
+                        color: navItem.active
                             ? Theme.color("primaryContainer")
                             : (itemMouse.containsMouse ? Theme.color("hoverStrong") : "transparent")
                         Behavior on color { ColorAnimation { duration: 250 } }
 
                         MDIcon {
                             anchors.centerIn: parent
-                            name: modelData.icon
+                            name: navItem.modelData.icon
                             size: 22
-                            fill: parent.parent.parent.parent.active
-                            color: parent.parent.parent.parent.active
+                            fill: navItem.active
+                            color: navItem.active
                                 ? Theme.color("onPrimaryContainer")
                                 : Theme.color("onSurfaceVariant")
                         }
 
                         Rectangle {
-                            visible: (modelData.badge || 0) > 0 && !parent.parent.parent.parent.active
+                            visible: (navItem.modelData.badge || 0) > 0 && !navItem.active
                             anchors.top: parent.top
                             anchors.right: parent.right
                             anchors.topMargin: -3
@@ -106,7 +107,7 @@ Item {
                             Text {
                                 id: navBadge
                                 anchors.centerIn: parent
-                                text: String(modelData.badge || 0)
+                                text: String(navItem.modelData.badge || 0)
                                 color: Theme.color("onPrimary")
                                 font.pixelSize: 10
                                 font.weight: Font.Bold
@@ -117,12 +118,12 @@ Item {
                     Text {
                         visible: root.labeled
                         anchors.horizontalCenter: parent.horizontalCenter
-                        text: modelData.label
+                        text: navItem.modelData.label
                         font.family: Typography.family
                         font.pixelSize: 12
                         font.weight: Font.Medium
                         font.letterSpacing: 0.3
-                        color: parent.parent.parent.active
+                        color: navItem.active
                             ? Theme.color("onSurface") : Theme.color("onSurfaceVariant")
                     }
                 }

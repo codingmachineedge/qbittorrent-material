@@ -28,6 +28,7 @@ Flow {
         model: statusModel
 
         delegate: Rectangle {
+            id: chip
             required property string label
             required property int count
             required property int value
@@ -49,7 +50,7 @@ Flow {
                 spacing: 6
 
                 MDIcon {
-                    visible: parent.parent.selected
+                    visible: chip.selected
                     anchors.verticalCenter: parent.verticalCenter
                     name: "check"
                     size: 16
@@ -57,20 +58,20 @@ Flow {
                 }
                 Text {
                     anchors.verticalCenter: parent.verticalCenter
-                    text: label
+                    text: chip.label
                     font.family: Typography.family
                     font.pixelSize: 13
                     font.weight: Font.Medium
-                    color: parent.parent.selected
+                    color: chip.selected
                         ? Theme.color("onPrimaryContainer") : Theme.color("onSurfaceVariant")
                 }
                 Text {
                     anchors.verticalCenter: parent.verticalCenter
-                    text: String(count)
+                    text: String(chip.count)
                     font.family: Typography.monoFamily
                     font.pixelSize: 11
                     opacity: 0.75
-                    color: parent.parent.selected
+                    color: chip.selected
                         ? Theme.color("onPrimaryContainer") : Theme.color("onSurfaceVariant")
                 }
             }

@@ -1022,6 +1022,8 @@ ApplicationWindow {
             case "about": aboutDialog.open(); break
             case "statistics": statisticsDialog.open(); break
             case "speed-limits": speedLimitDialog.open(); break
+            case "history": root.activePanel = "history"; break
+            case "settings-sheet": root.activePanel = "settings"; break
             default: break
             }
         }
