@@ -2,6 +2,7 @@
   "use strict";
 
   var TICK = String.fromCharCode(96);
+  var LANDING_TITLE = "qBittorrent Material — Native. Modern. Yours.";
   var STORAGE = {
     theme: "qbt-material-theme-v1",
     imported: "qbt-material-imported-docs-v1",
@@ -68,6 +69,41 @@
       return false;
     }
   }
+  function normalizeFilter(rule) {
+    if (!rule || typeof rule !== "object") return null;
+    var allowedFields = FILTER_FIELDS.map(function (option) { return option[0]; });
+    var allowedOperators = FILTER_OPERATORS.map(function (option) { return option[0]; });
+    var field = allowedFields.indexOf(rule.field) >= 0 ? rule.field : "all";
+    var operator = allowedOperators.indexOf(rule.operator) >= 0 ? rule.operator : "contains";
+    return {
+      field: field,
+      operator: operator,
+      value: String(rule.value == null ? "" : rule.value).slice(0, 1000),
+      negate: Boolean(rule.negate)
+    };
+  }
+  function normalizeFilters(filters) {
+    return Array.isArray(filters) ? filters.map(normalizeFilter).filter(Boolean).slice(0, 40) : [];
+  }
+  function normalizeStoredImport(doc, index) {
+    if (!doc || typeof doc !== "object") return null;
+    var title = String(doc.title || "Imported document").slice(0, 180);
+    var path = String(doc.path || ("local/" + slugify(title) + ".md"))
+      .replace(/\\/g, "/").slice(0, 1000);
+    return {
+      slug: slugify(doc.slug || ("local-" + title + "-" + index)),
+      title: title,
+      path: path,
+      category: String(doc.category || "Imported").slice(0, 180),
+      format: doc.format === "json" ? "json" : "markdown",
+      content: String(doc.content == null ? "" : doc.content).slice(0, 1000000),
+      importedAt: typeof doc.importedAt === "string" ? doc.importedAt : null
+    };
+  }
+  function decodeRoutePart(value) {
+    try { return decodeURIComponent(value); }
+    catch (error) { return value; }
+  }
   function debounce(fn, delay) {
     var timer = 0;
     return function () {
@@ -103,7 +139,9 @@
   var corpus = window.QBT_DOCS && Array.isArray(window.QBT_DOCS.documents)
     ? window.QBT_DOCS.documents : [];
   var imported = loadStored(STORAGE.imported, []);
-  if (!Array.isArray(imported)) imported = [];
+  imported = Array.isArray(imported)
+    ? imported.slice(0, 500).map(normalizeStoredImport).filter(Boolean) : [];
+  try { localStorage.setItem(STORAGE.imported, JSON.stringify(imported)); } catch (error) {}
   var savedSearch = loadStored(STORAGE.search, {});
   var state = {
     docs: [],
@@ -115,13 +153,20 @@
     caseSensitive: Boolean(savedSearch.caseSensitive),
     wholeWord: Boolean(savedSearch.wholeWord),
     regexFlags: typeof savedSearch.regexFlags === "string" ? savedSearch.regexFlags : "gi",
-    filters: Array.isArray(savedSearch.filters) ? savedSearch.filters : [],
+    filters: normalizeFilters(savedSearch.filters),
     filterMode: savedSearch.filterMode === "any" ? "any" : "all",
-    imported: imported
+    imported: imported,
+    lastResultSlugs: []
   };
   var filterDraft = [];
+  var searchWorker = null;
+  var searchRequestId = 0;
+  var previewWorker = null;
+  var previewRequestId = 0;
+  var focusNextRoute = false;
 
   function normalizeDocument(doc, index, importedDoc) {
+    doc = doc && typeof doc === "object" ? doc : {};
     var path = String(doc.path || ((importedDoc ? "local/" : "docs/") + (doc.title || "Document") + ".md"))
       .replace(/\\/g, "/");
     return {
@@ -218,7 +263,7 @@
   function resolveImageUrl(url, doc) {
     var value = String(url || "").trim();
     var external = safeExternalUrl(value);
-    if (external) return external;
+    if (external) return doc.imported ? "" : external;
     if (/^(?:data:image\/(?:png|jpeg|gif|webp|svg\+xml);base64,)/i.test(value)) return value;
     value = value.replace(/^\.\//, "");
     if (doc.path.indexOf("docs/wiki/") === 0 && value.indexOf("images/") === 0) return value;
@@ -231,7 +276,15 @@
   function resolveDocumentLink(url, doc) {
     var value = String(url || "").trim();
     if (!value) return { href: "#", external: false };
-    if (value.charAt(0) === "#") return { href: value, external: false };
+    if (value.charAt(0) === "#") {
+      var localAnchor = value.substring(1);
+      return {
+        href: "#wiki/" + encodeURIComponent(doc.slug) + "/" + encodeURIComponent(localAnchor),
+        slug: doc.slug,
+        anchor: localAnchor,
+        external: false
+      };
+    }
     var external = safeExternalUrl(value);
     if (external) return { href: external, external: true };
     var parts = value.split("#");
@@ -266,7 +319,13 @@
       return reserve("<code>" + escapeHtml(code) + "</code>");
     });
     text = text.replace(/!\[([^\]]*)\]\(([^)\s]+)(?:\s+"[^"]*")?\)/g, function (_, alt, url) {
-      return reserve('<img src="' + escapeHtml(resolveImageUrl(url, doc)) + '" alt="' + escapeHtml(alt) + '" loading="lazy">');
+      var resolvedImage = resolveImageUrl(url, doc);
+      if (!resolvedImage) {
+        return reserve('<span class="blocked-image" role="note">Remote image blocked: '
+          + escapeHtml(alt || url) + "</span>");
+      }
+      return reserve('<img src="' + escapeHtml(resolvedImage) + '" alt="' + escapeHtml(alt)
+        + '" loading="lazy" referrerpolicy="no-referrer">');
     });
     text = text.replace(/\[([^\]]+)\]\(([^)\s]+)(?:\s+"[^"]*")?\)/g, function (_, label, url) {
       var link = resolveDocumentLink(url, doc);
@@ -345,10 +404,12 @@
       if (heading) {
         var level = heading[1].length;
         var plain = heading[2].replace(/[*_~]/g, "").replace(new RegExp(TICK, "g"), "");
-        var id = headingId(plain, usedIds);
+        var id = doc.slug + "--" + headingId(plain, usedIds);
         if (level <= 3) toc.push({ id: id, level: level, title: plain });
-        output.push("<h" + level + ' id="' + escapeHtml(id) + '"><a class="heading-anchor" href="#'
-          + escapeHtml(id) + '" aria-label="Link to this section">#</a>'
+        output.push("<h" + level + ' id="' + escapeHtml(id) + '"><a class="heading-anchor" data-doc-slug="'
+          + escapeHtml(doc.slug) + '" data-doc-anchor="' + escapeHtml(id) + '" href="#wiki/'
+          + encodeURIComponent(doc.slug) + "/" + encodeURIComponent(id)
+          + '" aria-label="Link to this section">#</a>'
           + inlineMarkdown(heading[2], doc) + "</h" + level + ">");
         i++;
         continue;
@@ -413,7 +474,7 @@
   function renderJson(content, doc) {
     var pretty = content;
     try { pretty = JSON.stringify(JSON.parse(content), null, 2); } catch (error) {}
-    var id = slugify(doc.title);
+    var id = doc.slug + "--" + slugify(doc.title);
     return {
       html: '<h1 id="' + id + '">' + escapeHtml(doc.title) + '</h1><div class="code-block"><button type="button" class="copy-code">Copy</button><pre><code class="language-json">'
         + escapeHtml(pretty) + "</code></pre></div>",
@@ -429,7 +490,9 @@
       return;
     }
     toc.innerHTML = items.map(function (item) {
-      return '<a href="#' + escapeHtml(item.id) + '" data-level="' + item.level + '">'
+      return '<a href="#wiki/' + encodeURIComponent(state.activeSlug) + "/" + encodeURIComponent(item.id)
+        + '" data-doc-slug="' + escapeHtml(state.activeSlug) + '" data-doc-anchor="'
+        + escapeHtml(item.id) + '" data-level="' + item.level + '">'
         + escapeHtml(item.title) + "</a>";
     }).join("");
   }
@@ -444,7 +507,10 @@
     var previous = index > 0 ? ordered[index - 1] : null;
     var next = index >= 0 && index < ordered.length - 1 ? ordered[index + 1] : null;
     var article = byId("doc-article");
+    var resultsPanel = byId("search-results");
+    if (resultsPanel) resultsPanel.hidden = true;
     if (article) {
+      article.hidden = false;
       article.innerHTML = '<nav class="breadcrumbs" id="doc-breadcrumbs" aria-label="Breadcrumb">'
         + '<a href="#wiki">Wiki</a><span>/</span><span>' + escapeHtml(doc.category)
         + '</span><span>/</span><span>' + escapeHtml(doc.title) + "</span></nav>"
@@ -464,10 +530,12 @@
     }
     renderNavigation();
     renderToc(rendered.toc);
-    document.title = doc.title + " | qBittorrent Material";
+    if (/^#wiki\//.test(location.hash)) document.title = doc.title + " | qBittorrent Material";
     if (anchor) {
       setTimeout(function () {
-        var target = document.getElementById(slugify(anchor)) || document.getElementById(anchor);
+        var target = document.getElementById(anchor)
+          || document.getElementById(doc.slug + "--" + slugify(anchor))
+          || document.getElementById(slugify(anchor));
         if (target) target.scrollIntoView({ behavior: "smooth", block: "start" });
       }, 0);
     }
@@ -475,33 +543,43 @@
 
   function navigateToDocument(slug, anchor) {
     var hash = "#wiki/" + encodeURIComponent(slug) + (anchor ? "/" + encodeURIComponent(anchor) : "");
-    if (location.hash === hash) activateDocument(slug, anchor, true);
-    else location.hash = hash;
+    focusNextRoute = true;
+    if (location.hash === hash) {
+      focusNextRoute = false;
+      activateDocument(slug, anchor, true);
+    } else location.hash = hash;
   }
 
   function handleRoute() {
     var match = /^#wiki\/([^/]+)(?:\/(.+))?$/.exec(location.hash);
     if (match) {
-      activateDocument(decodeURIComponent(match[1]), match[2] ? decodeURIComponent(match[2]) : "", false);
+      searchRequestId++;
+      stopSearchWorker();
+      var shouldFocus = focusNextRoute;
+      focusNextRoute = false;
+      activateDocument(decodeRoutePart(match[1]), match[2] ? decodeRoutePart(match[2]) : "", shouldFocus);
       var wiki = byId("wiki");
       if (wiki && location.hash.indexOf("#wiki/") === 0) wiki.scrollIntoView({ block: "start" });
-      return;
+      return true;
+    }
+    if (location.hash === "#wiki" && (state.query || state.filters.length)) {
+      document.title = LANDING_TITLE;
+      performSearch(false);
+      return true;
     }
     if (!state.activeSlug && state.docs.length) {
       var preferred = state.docBySlug.get("wiki-home") || state.docBySlug.get("overview") || state.docs[0];
       activateDocument(preferred.slug, "", false);
     }
-  }
-
-  function looksRiskyRegex(pattern) {
-    return pattern.length > 320 || /(\([^)]{0,120}[+*][^)]*\))[+*{]/.test(pattern);
+    document.title = LANDING_TITLE;
+    return false;
   }
 
   function compileSearch(query, options) {
     if (!query) return null;
     var source = options.regex ? query : escapeRegExp(query);
+    if (source.length > 320) throw new Error("Pattern exceeds 320 characters.");
     if (options.wholeWord) source = "\\b(?:" + source + ")\\b";
-    if (looksRiskyRegex(source)) throw new Error("Pattern is too complex for safe in-page search.");
     var flags = options.regex ? String(options.flags || "") : "";
     flags = flags.replace(/[^gimsu]/g, "");
     if (flags.indexOf("g") < 0) flags += "g";
@@ -509,6 +587,22 @@
     else if (flags.indexOf("i") < 0) flags += "i";
     flags = Array.from(new Set(flags.split(""))).join("");
     return new RegExp(source, flags);
+  }
+
+  function validateFilterRules(rules) {
+    (rules || []).forEach(function (rule, index) {
+      if (rule.operator !== "regex" && rule.operator !== "not-regex") return;
+      try {
+        compileSearch(rule.value, {
+          regex: true,
+          wholeWord: false,
+          caseSensitive: state.caseSensitive,
+          flags: state.regexFlags
+        });
+      } catch (error) {
+        throw new Error("Filter " + (index + 1) + ": " + error.message);
+      }
+    });
   }
 
   function cloneRegex(regex, global) {
@@ -589,7 +683,152 @@
       + escapeHtml(after) + (end < clean.length ? "…" : "");
   }
 
-  function performSearch() {
+  function cleanExcerptText(value) {
+    return String(value || "")
+      .replace(/<[^>]+>/g, " ")
+      .replace(/!\[([^\]]*)\]\([^)]+\)/g, "$1")
+      .replace(/\[([^\]]+)\]\([^)]+\)/g, "$1")
+      .replace(/^#{1,6}\s+/gm, "")
+      .replace(/[`*_>|]/g, " ")
+      .replace(/\s+/g, " ")
+      .trim();
+  }
+
+  function makeWorkerExcerpt(doc, matchInfo) {
+    var index = Math.max(0, Number(matchInfo && matchInfo.contentIndex) || 0);
+    var matchText = String(matchInfo && matchInfo.matchText || "");
+    var start = Math.max(0, index - 90);
+    var end = Math.min(doc.content.length, index + matchText.length + 170);
+    var before = cleanExcerptText(doc.content.slice(start, index));
+    var marked = cleanExcerptText(matchText);
+    var after = cleanExcerptText(doc.content.slice(index + matchText.length, end));
+    if (!matchText) {
+      before = cleanExcerptText(doc.content.slice(0, 260));
+      after = "";
+    }
+    return (start && matchText ? "…" : "") + escapeHtml(before)
+      + (matchText ? '<mark class="search-highlight">' + escapeHtml(marked || matchText) + "</mark>" : "")
+      + escapeHtml(after) + (end < doc.content.length ? "…" : "");
+  }
+
+  function renderSearchMatches(matches, matcher, workerInfo) {
+    var resultsPanel = byId("search-results");
+    var article = byId("doc-article");
+    var status = byId("search-status");
+    var list = byId("search-result-list");
+    state.lastResultSlugs = matches.map(function (doc) { return doc.slug; });
+    if (resultsPanel) resultsPanel.hidden = false;
+    if (article) article.hidden = true;
+    if (status) status.textContent = matches.length + " matching document" + (matches.length === 1 ? "" : "s");
+    if (!list) return;
+    list.innerHTML = matches.length ? matches.map(function (doc) {
+      var excerpt = workerInfo ? makeWorkerExcerpt(doc, workerInfo.get(doc.slug)) : makeExcerpt(doc, matcher);
+      return '<a class="search-result" href="#wiki/' + encodeURIComponent(doc.slug)
+        + '" data-doc-slug="' + escapeHtml(doc.slug) + '"><div class="search-result__meta"><span>'
+        + escapeHtml(doc.category) + "</span><span>" + escapeHtml(doc.format) + "</span></div><h3>"
+        + escapeHtml(doc.title) + "</h3><p>" + excerpt + "</p></a>";
+    }).join("") : '<div class="empty-state"><strong>No matching documents</strong><p>Try a broader query, remove a filter, or test the pattern in the regex builder.</p></div>';
+  }
+
+  function searchNeedsWorker(query) {
+    return Boolean(query && state.regex) || state.filters.some(function (rule) {
+      return rule.operator === "regex" || rule.operator === "not-regex";
+    });
+  }
+
+  function stopSearchWorker() {
+    if (searchWorker) searchWorker.terminate();
+    searchWorker = null;
+  }
+
+  function renderSearchError(title, message) {
+    var resultsPanel = byId("search-results");
+    var article = byId("doc-article");
+    var status = byId("search-status");
+    var list = byId("search-result-list");
+    state.lastResultSlugs = [];
+    if (resultsPanel) resultsPanel.hidden = false;
+    if (article) article.hidden = true;
+    if (status) status.textContent = message;
+    if (list) list.innerHTML = '<div class="empty-state"><strong>' + escapeHtml(title)
+      + "</strong><p>" + escapeHtml(message) + "</p></div>";
+  }
+
+  function runWorkerSearch(query) {
+    stopSearchWorker();
+    if (!("Worker" in window)) {
+      renderSearchError("Regex worker unavailable", "This browser cannot isolate regular-expression searches safely.");
+      return;
+    }
+    var requestId = ++searchRequestId;
+    var worker;
+    try { worker = new Worker("assets/search-worker.js"); }
+    catch (error) {
+      renderSearchError("Regex worker unavailable", "This browser blocked the isolated regular-expression worker.");
+      return;
+    }
+    searchWorker = worker;
+    var status = byId("search-status");
+    if (status) status.textContent = "Searching in an isolated worker…";
+    var timeout = setTimeout(function () {
+      if (requestId !== searchRequestId) return;
+      stopSearchWorker();
+      renderSearchError("Search timed out", "The expression exceeded the 1.2 second safety limit. Try a more specific pattern.");
+    }, 1200);
+    worker.addEventListener("message", function (event) {
+      var result = event.data || {};
+      if (requestId !== searchRequestId || result.requestId !== requestId) return;
+      clearTimeout(timeout);
+      stopSearchWorker();
+      if (result.error) {
+        renderSearchError("Invalid regular expression", result.error);
+        return;
+      }
+      var info = new Map();
+      (result.matches || []).forEach(function (item) { info.set(item.slug, item); });
+      var matches = (result.matches || []).map(function (item) {
+        return state.docBySlug.get(item.slug);
+      }).filter(Boolean);
+      renderSearchMatches(matches, null, info);
+    });
+    worker.addEventListener("error", function () {
+      if (requestId !== searchRequestId) return;
+      clearTimeout(timeout);
+      stopSearchWorker();
+      renderSearchError("Search worker failed", "The isolated regex worker could not complete the search.");
+    });
+    try {
+      worker.postMessage({
+        type: "search",
+        requestId: requestId,
+        query: query,
+        options: {
+          regex: state.regex,
+          wholeWord: state.wholeWord,
+          caseSensitive: state.caseSensitive,
+          flags: state.regexFlags
+        },
+        filters: state.filters,
+        filterMode: state.filterMode,
+        documents: state.docs.map(function (doc) {
+          return {
+            slug: doc.slug,
+            title: doc.title,
+            path: doc.path,
+            category: doc.category,
+            format: doc.format,
+            content: doc.content
+          };
+        })
+      });
+    } catch (error) {
+      clearTimeout(timeout);
+      stopSearchWorker();
+      renderSearchError("Search worker failed", "The isolated regex worker could not start the search.");
+    }
+  }
+
+  function performSearch(updateRoute) {
     var resultsPanel = byId("search-results");
     var article = byId("doc-article");
     var status = byId("search-status");
@@ -597,7 +836,11 @@
     var query = state.query.trim();
     var matcher = null;
     var error = "";
+    searchRequestId++;
+    stopSearchWorker();
+    persistSearch();
     try {
+      validateFilterRules(state.filters);
       matcher = compileSearch(query, {
         regex: state.regex,
         wholeWord: state.wholeWord,
@@ -607,37 +850,38 @@
     } catch (problem) { error = problem.message; }
 
     if (error) {
-      if (resultsPanel) resultsPanel.hidden = false;
-      if (article) article.hidden = true;
-      if (status) status.textContent = error;
-      if (list) list.innerHTML = '<div class="empty-state"><strong>Invalid regular expression</strong><p>'
-        + escapeHtml(error) + "</p></div>";
+      stopSearchWorker();
+      renderSearchError("Invalid regular expression", error);
       return;
     }
 
     if (!query && !state.filters.length) {
+      stopSearchWorker();
+      state.lastResultSlugs = [];
       if (resultsPanel) resultsPanel.hidden = true;
       if (article) article.hidden = false;
       if (status) status.textContent = "Type to search all documentation";
       return;
     }
 
+    if (updateRoute !== false && location.hash !== "#wiki") {
+      history.pushState(null, "", "#wiki");
+      document.title = LANDING_TITLE;
+    }
+
+    if (searchNeedsWorker(query)) {
+      if (resultsPanel) resultsPanel.hidden = false;
+      if (article) article.hidden = true;
+      if (list) list.innerHTML = '<div class="empty-state"><strong>Searching safely…</strong><p>The expression is running in an isolated, time-limited worker.</p></div>';
+      runWorkerSearch(query);
+      return;
+    }
+
     var matches = state.docs.filter(function (doc) {
       if (!passesFilters(doc)) return false;
-      return !matcher || regexTest(matcher, [doc.title, doc.path, doc.category, doc.content].join("\n"));
+      return !matcher || regexTest(matcher, [doc.title, doc.path, doc.category, doc.format, doc.content].join("\n"));
     }).slice(0, 150);
-    if (resultsPanel) resultsPanel.hidden = false;
-    if (article) article.hidden = true;
-    if (status) status.textContent = matches.length + " matching document" + (matches.length === 1 ? "" : "s");
-    if (list) {
-      list.innerHTML = matches.length ? matches.map(function (doc) {
-        return '<a class="search-result" href="#wiki/' + encodeURIComponent(doc.slug)
-          + '" data-doc-slug="' + escapeHtml(doc.slug) + '"><div class="search-result__meta"><span>'
-          + escapeHtml(doc.category) + "</span><span>" + escapeHtml(doc.format) + "</span></div><h3>"
-          + escapeHtml(doc.title) + "</h3><p>" + makeExcerpt(doc, matcher) + "</p></a>";
-      }).join("") : '<div class="empty-state"><strong>No matching documents</strong><p>Try a broader query, remove a filter, or test the pattern in the regex builder.</p></div>';
-    }
-    persistSearch();
+    renderSearchMatches(matches, matcher, null);
   }
 
   var debouncedSearch = debounce(performSearch, 110);
@@ -701,6 +945,39 @@
     }).filter(function (rule) { return rule.value; });
   }
 
+  function stopPreviewWorker() {
+    if (previewWorker) previewWorker.terminate();
+    previewWorker = null;
+  }
+
+  function renderRegexPreview(sample, result) {
+    var preview = byId("regex-preview");
+    if (!preview) return;
+    var sampleUsed = sample.slice(0, Number(result.sampleLength) || 0);
+    var matches = result.matches || [];
+    var cursor = 0;
+    var highlighted = "";
+    matches.forEach(function (item) {
+      highlighted += escapeHtml(sampleUsed.slice(cursor, item.index))
+        + "<mark>" + escapeHtml(item.text || "∅") + "</mark>";
+      cursor = item.index + item.text.length;
+    });
+    highlighted += escapeHtml(sampleUsed.slice(cursor));
+    var groups = [];
+    matches.forEach(function (item, matchIndex) {
+      (item.groups || []).forEach(function (group, groupIndex) {
+        groups.push("match " + (matchIndex + 1) + " · group " + (groupIndex + 1) + ": "
+          + (group == null ? "undefined" : group));
+      });
+    });
+    preview.classList.remove("is-error");
+    preview.innerHTML = "<span>" + matches.length + " match" + (matches.length === 1 ? "" : "es")
+      + (groups.length ? " · " + groups.length + " capture groups" : "")
+      + (result.truncated ? " · sample truncated safely" : "") + "</span><code>"
+      + (highlighted || "No matches in sample text") + "</code>"
+      + (groups.length ? "<small>" + escapeHtml(groups.slice(0, 12).join(" | ")) + "</small>" : "");
+  }
+
   function updateRegexPreview() {
     var patternInput = byId("regex-pattern");
     var flagsInput = byId("regex-flags");
@@ -708,49 +985,81 @@
     var preview = byId("regex-preview");
     if (!patternInput || !preview) return;
     var pattern = patternInput.value;
+    var flags = flagsInput ? flagsInput.value : "gi";
     var sample = sampleInput ? sampleInput.value : "";
+    var requestId = ++previewRequestId;
+    stopPreviewWorker();
     if (!pattern) {
       preview.classList.remove("is-error");
       preview.innerHTML = "<span>Pattern preview</span><code>No pattern entered</code>";
       return;
     }
     try {
-      var regex = compileSearch(pattern, {
+      compileSearch(pattern, {
         regex: true,
         wholeWord: false,
         caseSensitive: false,
-        flags: flagsInput ? flagsInput.value : "gi"
+        flags: flags
       });
-      var matches = [];
-      var match;
-      var guard = 0;
-      regex.lastIndex = 0;
-      while ((match = regex.exec(sample)) && guard++ < 100) {
-        matches.push({ index: match.index, text: match[0], groups: match.slice(1) });
-        if (match[0] === "") regex.lastIndex++;
-      }
-      var cursor = 0;
-      var highlighted = "";
-      matches.forEach(function (item) {
-        highlighted += escapeHtml(sample.slice(cursor, item.index))
-          + "<mark>" + escapeHtml(item.text || "∅") + "</mark>";
-        cursor = item.index + item.text.length;
-      });
-      highlighted += escapeHtml(sample.slice(cursor));
-      var groups = [];
-      matches.forEach(function (item, matchIndex) {
-        item.groups.forEach(function (group, groupIndex) {
-          groups.push("match " + (matchIndex + 1) + " · group " + (groupIndex + 1) + ": " + (group == null ? "undefined" : group));
-        });
-      });
-      preview.classList.remove("is-error");
-      preview.innerHTML = "<span>" + matches.length + " match" + (matches.length === 1 ? "" : "es")
-        + (groups.length ? " · " + groups.length + " capture groups" : "") + "</span><code>"
-        + (highlighted || "No matches in sample text") + "</code>"
-        + (groups.length ? "<small>" + escapeHtml(groups.slice(0, 12).join(" | ")) + "</small>" : "");
     } catch (error) {
       preview.classList.add("is-error");
       preview.innerHTML = "<span>Pattern error</span><code>" + escapeHtml(error.message) + "</code>";
+      return;
+    }
+    if (!("Worker" in window)) {
+      preview.classList.add("is-error");
+      preview.innerHTML = "<span>Preview unavailable</span><code>This browser cannot isolate regex evaluation safely.</code>";
+      return;
+    }
+    var worker;
+    try { worker = new Worker("assets/search-worker.js"); }
+    catch (error) {
+      preview.classList.add("is-error");
+      preview.innerHTML = "<span>Preview unavailable</span><code>This browser blocked the isolated regex worker.</code>";
+      return;
+    }
+    previewWorker = worker;
+    preview.classList.remove("is-error");
+    preview.innerHTML = "<span>Testing safely…</span><code>The pattern is running in an isolated worker.</code>";
+    var timeout = setTimeout(function () {
+      if (requestId !== previewRequestId) return;
+      stopPreviewWorker();
+      preview.classList.add("is-error");
+      preview.innerHTML = "<span>Pattern timed out</span><code>Preview exceeded the 600 ms safety limit.</code>";
+    }, 600);
+    worker.addEventListener("message", function (event) {
+      var result = event.data || {};
+      if (requestId !== previewRequestId || result.requestId !== requestId) return;
+      clearTimeout(timeout);
+      stopPreviewWorker();
+      if (result.error) {
+        preview.classList.add("is-error");
+        preview.innerHTML = "<span>Pattern error</span><code>" + escapeHtml(result.error) + "</code>";
+        return;
+      }
+      renderRegexPreview(sample, result);
+    });
+    worker.addEventListener("error", function () {
+      if (requestId !== previewRequestId) return;
+      clearTimeout(timeout);
+      stopPreviewWorker();
+      preview.classList.add("is-error");
+      preview.innerHTML = "<span>Preview worker failed</span><code>The isolated regex preview could not finish.</code>";
+    });
+    try {
+      worker.postMessage({
+        type: "preview",
+        requestId: requestId,
+        pattern: pattern,
+        flags: flags,
+        caseSensitive: flags.indexOf("i") < 0,
+        sample: sample
+      });
+    } catch (error) {
+      clearTimeout(timeout);
+      stopPreviewWorker();
+      preview.classList.add("is-error");
+      preview.innerHTML = "<span>Preview worker failed</span><code>The isolated regex preview could not start.</code>";
     }
   }
 
@@ -809,18 +1118,29 @@
       wholeWord: state.wholeWord,
       regexFlags: state.regexFlags,
       filterMode: state.filterMode,
-      filters: state.filters
+      filters: state.filters,
+      matchingDocumentSlugs: state.lastResultSlugs.slice()
     };
   }
 
   function applySearchProfile(profile) {
-    state.query = String(profile.query || "");
-    state.regex = Boolean(profile.regex);
+    if (!profile || typeof profile !== "object") throw new Error("Invalid search profile.");
+    var nextFilters = normalizeFilters(profile.filters);
+    var previousCase = state.caseSensitive;
+    var previousFlags = state.regexFlags;
     state.caseSensitive = Boolean(profile.caseSensitive);
-    state.wholeWord = Boolean(profile.wholeWord);
     state.regexFlags = String(profile.regexFlags || "gi").replace(/[^gimsu]/g, "") || "gi";
+    try { validateFilterRules(nextFilters); }
+    catch (error) {
+      state.caseSensitive = previousCase;
+      state.regexFlags = previousFlags;
+      throw error;
+    }
+    state.query = String(profile.query || "").slice(0, 1000);
+    state.regex = Boolean(profile.regex);
+    state.wholeWord = Boolean(profile.wholeWord);
     state.filterMode = profile.filterMode === "any" ? "any" : "all";
-    state.filters = Array.isArray(profile.filters) ? profile.filters.slice(0, 40) : [];
+    state.filters = nextFilters;
     syncSearchControls();
     renderFilterChips();
     performSearch();
@@ -836,6 +1156,7 @@
   }
 
   function addImportedDocument(doc) {
+    if (!doc || typeof doc !== "object") return false;
     var title = String(doc.title || "Imported document").slice(0, 180);
     var path = String(doc.path || ("local/" + slugify(title) + ".md")).replace(/\\/g, "/");
     if (state.docs.some(function (existing) { return !existing.imported && existing.path.toLowerCase() === path.toLowerCase(); })) return false;
@@ -845,7 +1166,7 @@
       path: path,
       category: String(doc.category || "Imported"),
       format: doc.format === "json" ? "json" : "markdown",
-      content: String(doc.content == null ? "" : doc.content),
+      content: String(doc.content == null ? "" : doc.content).slice(0, 1000000),
       importedAt: new Date().toISOString()
     });
     return true;
@@ -856,12 +1177,25 @@
     var added = 0;
     for (var i = 0; i < files.length; i++) {
       var file = files[i];
-      var text = await file.text();
+      if (file.size > 2097152) {
+        showSnackbar(file.name + " exceeds the 2 MB import limit.");
+        continue;
+      }
+      var text;
+      try { text = await file.text(); }
+      catch (error) {
+        showSnackbar("Could not read " + file.name + ".");
+        continue;
+      }
       if (/\.json$/i.test(file.name)) {
         var parsed = safeJsonParse(text, null);
         if (parsed && parsed.type === "qbt-material-search-profile") {
-          applySearchProfile(parsed);
-          showSnackbar("Imported search profile " + file.name);
+          try {
+            applySearchProfile(parsed);
+            showSnackbar("Imported search profile " + file.name);
+          } catch (error) {
+            showSnackbar("Could not import " + file.name + ": " + error.message);
+          }
           continue;
         }
         if (parsed && Array.isArray(parsed.documents)) {
@@ -890,12 +1224,16 @@
       })) added++;
     }
     if (added) {
-      saveStored(STORAGE.imported, state.imported);
+      var persisted = saveStored(STORAGE.imported, state.imported);
       rebuildCorpus();
       renderNavigation();
       renderImportList();
       performSearch();
-      showSnackbar("Imported " + added + " local page" + (added === 1 ? "" : "s") + ".");
+      if (persisted) {
+        showSnackbar("Imported " + added + " local page" + (added === 1 ? "" : "s") + ".");
+      } else {
+        showSnackbar("Imported pages are session-only because browser storage is full; export them before closing.");
+      }
     }
   }
 
@@ -942,6 +1280,8 @@
       var docButton = event.target.closest("[data-doc-slug]");
       if (docButton) {
         event.preventDefault();
+        searchRequestId++;
+        stopSearchWorker();
         navigateToDocument(docButton.getAttribute("data-doc-slug"), docButton.getAttribute("data-doc-anchor") || "");
         var panel = byId("search-results");
         var article = byId("doc-article");
@@ -1037,7 +1377,13 @@
     var applyFilters = byId("apply-filters");
     if (applyFilters) applyFilters.addEventListener("click", function (event) {
       event.preventDefault();
-      state.filters = readFilterRules();
+      var nextFilters = readFilterRules();
+      try { validateFilterRules(nextFilters); }
+      catch (error) {
+        showSnackbar(error.message);
+        return;
+      }
+      state.filters = nextFilters;
       var selectedMode = document.querySelector('input[name="filter-match"]:checked');
       state.filterMode = selectedMode && selectedMode.value === "any" ? "any" : "all";
       renderFilterChips();
@@ -1051,7 +1397,11 @@
       var pattern = byId("regex-pattern");
       var flags = byId("regex-flags");
       if (pattern) pattern.value = state.query;
-      if (flags) flags.value = state.regexFlags;
+      if (flags) {
+        var effectiveFlags = state.regexFlags.replace(/i/g, "");
+        if (!state.caseSensitive) effectiveFlags += "i";
+        flags.value = Array.from(new Set(effectiveFlags.split(""))).join("");
+      }
       updateRegexPreview();
       showDialog(regexDialog);
     });
@@ -1074,7 +1424,8 @@
         compileSearch(pattern, { regex: true, wholeWord: false, caseSensitive: false, flags: flags });
         state.query = pattern;
         state.regex = true;
-        state.regexFlags = flags;
+        state.regexFlags = flags.replace(/[^gimsu]/g, "");
+        state.caseSensitive = state.regexFlags.indexOf("i") < 0;
         syncSearchControls();
         performSearch();
         closeDialog(regexDialog);
@@ -1087,7 +1438,7 @@
         schemaVersion: 1,
         pattern: byId("regex-pattern") ? byId("regex-pattern").value : "",
         flags: byId("regex-flags") ? byId("regex-flags").value : "gi",
-        sample: byId("regex-sample") ? byId("regex-sample").value : ""
+        sample: byId("regex-sample") ? byId("regex-sample").value.slice(0, 200000) : ""
       });
     });
     var regexImport = byId("regex-import");
@@ -1097,11 +1448,17 @@
       input.accept = ".json,application/json";
       input.addEventListener("change", async function () {
         if (!input.files || !input.files[0]) return;
-        var value = safeJsonParse(await input.files[0].text(), null);
+        var file = input.files[0];
+        if (file.size > 2097152) return showSnackbar("Regex profiles are limited to 2 MB.");
+        var text;
+        try { text = await file.text(); }
+        catch (error) { return showSnackbar("Could not read the regex profile."); }
+        var value = safeJsonParse(text, null);
         if (!value || typeof value.pattern !== "string") return showSnackbar("That file is not a regex profile.");
+        if (value.pattern.length > 320) return showSnackbar("Regex patterns are limited to 320 characters.");
         if (byId("regex-pattern")) byId("regex-pattern").value = value.pattern;
-        if (byId("regex-flags")) byId("regex-flags").value = value.flags || "gi";
-        if (byId("regex-sample") && typeof value.sample === "string") byId("regex-sample").value = value.sample;
+        if (byId("regex-flags")) byId("regex-flags").value = String(value.flags || "gi").replace(/[^gimsu]/g, "");
+        if (byId("regex-sample") && typeof value.sample === "string") byId("regex-sample").value = value.sample.slice(0, 200000);
         updateRegexPreview();
       });
       input.click();
@@ -1114,8 +1471,14 @@
       showDialog(transferDialog);
     });
     var importInput = byId("import-files");
+    var chooseImport = byId("choose-import-files");
+    if (chooseImport && importInput) chooseImport.addEventListener("click", function () {
+      importInput.click();
+    });
     if (importInput) importInput.addEventListener("change", function () {
-      importFiles(importInput.files).finally(function () { importInput.value = ""; });
+      importFiles(importInput.files)
+        .catch(function (error) { showSnackbar("Import failed: " + error.message); })
+        .finally(function () { importInput.value = ""; });
     });
     var clearImports = byId("clear-imports");
     if (clearImports) clearImports.addEventListener("click", function () {
@@ -1183,8 +1546,8 @@
     renderFilterChips();
     renderImportList();
     bindEvents();
-    handleRoute();
-    if (state.query || state.filters.length) performSearch();
+    var explicitDocumentRoute = handleRoute();
+    if (!explicitDocumentRoute && (state.query || state.filters.length)) performSearch(false);
     registerServiceWorker();
   }
 

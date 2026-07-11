@@ -46,11 +46,13 @@ The search engine indexes title, path, category, format, headings, and full body
 
 The regex builder offers token insertion, sample-text testing, match highlighting, and capture-group inspection before applying a pattern.
 
+Regular expressions run in disposable Web Workers so a pathological expression cannot freeze the page. Searches have a 1.2-second deadline, previews have a 600-millisecond deadline, patterns are limited to 320 characters, and preview text is capped at 200,000 characters. A timed-out worker is terminated and the next search starts in a fresh worker.
+
 ## Imports and exports
 
-Markdown and text files can be imported as local wiki pages. A versioned wiki JSON bundle can contain multiple pages, while a search-profile JSON file stores the current query, options, and filter rules.
+Markdown and text files can be imported as local wiki pages. A versioned wiki JSON bundle can contain multiple pages, while a search-profile JSON file stores the current query, options, and filter rules. Each source file is limited to 2 MB, stored document bodies are capped at 1 MB, and bundles accept at most 500 pages.
 
-Imported documents are stored only in browser local storage. Rendering escapes raw HTML and rejects unsafe URL schemes. Export before clearing browser storage or moving the workspace to another browser.
+Imported documents are stored only in browser local storage. Rendering escapes raw HTML, rejects unsafe URL schemes, and blocks remote images from imported Markdown. GitHub project sites share the owner’s `github.io` browser origin, so other Pages applications under the same owner can technically access that origin storage; do not import secrets. Export before clearing browser storage or moving the workspace to another browser.
 
 ## GitHub Wiki synchronization
 
@@ -67,7 +69,7 @@ The exporter writes curated pages, complete references, JSON blueprints rendered
 
 GitHub Pages uses `master` and `/docs` as its source. This branch-based configuration is deliberate: it avoids the Pages upload artifact and keeps the existing installer workflow's no-artifact guarantee intact.
 
-The site includes `.nojekyll`, a web manifest, an offline service worker, `404.html` route recovery, robots metadata, and a sitemap. Pages refreshes automatically after `master` changes.
+The site includes `.nojekyll`, a web manifest, an offline service worker, project-root-aware `404.html`, and linked sitemap metadata. Pages refreshes automatically after `master` changes.
 
 ## Site screenshots
 

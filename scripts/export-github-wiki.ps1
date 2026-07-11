@@ -14,13 +14,30 @@ $wikiRoot = [System.IO.Path]::GetFullPath($WikiWorkingTree)
 $docsRoot = Join-Path $RepositoryRoot "docs"
 $canonicalWikiRoot = Join-Path $docsRoot "wiki"
 $utf8WithoutBom = [System.Text.UTF8Encoding]::new($false)
+$manifestPath = Join-Path $wikiRoot ".qbt-material-generated.json"
+$previousGeneratedPaths = @()
+$generatedPaths = [System.Collections.Generic.List[string]]::new()
 
 if (-not (Test-Path -LiteralPath (Join-Path $wikiRoot ".git"))) {
     throw "WikiWorkingTree must be a cloned Git repository: $wikiRoot"
 }
 
+if (Test-Path -LiteralPath $manifestPath) {
+    try {
+        $previousManifest = Get-Content -Raw -LiteralPath $manifestPath | ConvertFrom-Json
+        if ($previousManifest.files) {
+            $previousGeneratedPaths = @($previousManifest.files)
+        }
+    }
+    catch {
+        throw "Could not parse the existing Wiki export manifest: $manifestPath"
+    }
+}
+
 function Write-Utf8([string] $path, [string] $content) {
     [System.IO.File]::WriteAllText($path, $content.TrimEnd() + "`n", $utf8WithoutBom)
+    $relative = $path.Substring($wikiRoot.Length).TrimStart('\', '/').Replace('\', '/')
+    $generatedPaths.Add($relative)
 }
 
 function Convert-WikiLinks([string] $content) {
@@ -32,6 +49,7 @@ function Convert-WikiLinks([string] $content) {
         '../ENGINE_API.md' = 'Reference-Engine-API'
         '../FEATURE_SPEC.md' = 'Reference-Feature-Spec'
         '../PAGES.md' = 'Reference-Documentation-Site'
+        'PAGES.md' = 'Reference-Documentation-Site'
         '../REQUIREMENTS.md' = 'Reference-Requirements'
         '../SCREENSHOTS.md' = 'Reference-Visual-Tour'
         'SCREENSHOTS.md' = 'Reference-Visual-Tour'
@@ -144,13 +162,57 @@ New-Item -ItemType Directory -Force -Path $wikiAppImages | Out-Null
 New-Item -ItemType Directory -Force -Path $wikiSiteImages | Out-Null
 Copy-Item -LiteralPath (Join-Path $docsRoot "assets\logo-mark.svg") `
     -Destination (Join-Path $wikiImages "logo-mark.svg") -Force
+$generatedPaths.Add("images/logo-mark.svg")
 Get-ChildItem -LiteralPath (Join-Path $docsRoot "images\app") -File |
     ForEach-Object {
         Copy-Item -LiteralPath $_.FullName -Destination (Join-Path $wikiAppImages $_.Name) -Force
+        $generatedPaths.Add("images/app/$($_.Name)")
     }
 Get-ChildItem -LiteralPath (Join-Path $docsRoot "images\site") -File |
     ForEach-Object {
         Copy-Item -LiteralPath $_.FullName -Destination (Join-Path $wikiSiteImages $_.Name) -Force
+        $generatedPaths.Add("images/site/$($_.Name)")
     }
+
+$currentGeneratedPaths = @($generatedPaths | Sort-Object -Unique)
+$wikiPrefix = $wikiRoot.TrimEnd('\', '/') + [System.IO.Path]::DirectorySeparatorChar
+
+function Assert-NoReparsePointAncestor([string] $candidate, [string] $relativePath) {
+    $normalizedRelative = $candidate.Substring($wikiPrefix.Length)
+    $cursor = $wikiRoot
+    foreach ($segment in ($normalizedRelative -split '[\\/]')) {
+        if (-not $segment) {
+            continue
+        }
+        $cursor = Join-Path $cursor $segment
+        if (-not (Test-Path -LiteralPath $cursor)) {
+            continue
+        }
+        $item = Get-Item -Force -LiteralPath $cursor
+        if (($item.Attributes -band [System.IO.FileAttributes]::ReparsePoint) -ne 0) {
+            throw "Refusing to remove a generated path through a reparse point: $relativePath"
+        }
+    }
+}
+
+foreach ($relativePath in $previousGeneratedPaths) {
+    if ($currentGeneratedPaths -contains $relativePath) {
+        continue
+    }
+    $candidate = [System.IO.Path]::GetFullPath((Join-Path $wikiRoot $relativePath))
+    if (-not $candidate.StartsWith($wikiPrefix, [System.StringComparison]::OrdinalIgnoreCase)) {
+        throw "Refusing to remove a generated path outside the Wiki tree: $relativePath"
+    }
+    if (Test-Path -LiteralPath $candidate -PathType Leaf) {
+        Assert-NoReparsePointAncestor -candidate $candidate -relativePath $relativePath
+        Remove-Item -Force -LiteralPath $candidate
+    }
+}
+
+$manifest = [ordered]@{
+    schemaVersion = 1
+    files = $currentGeneratedPaths
+} | ConvertTo-Json -Depth 4
+[System.IO.File]::WriteAllText($manifestPath, $manifest.TrimEnd() + "`n", $utf8WithoutBom)
 
 Write-Host "Exported $($canonicalPages.Count) curated pages, $($referencePages.Count) references, JSON blueprints, and images to $wikiRoot."

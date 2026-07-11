@@ -1,10 +1,12 @@
-const CACHE_VERSION = "qbt-material-docs-v1";
+const CACHE_PREFIX = "qbt-material-docs-";
+const CACHE_VERSION = CACHE_PREFIX + "v2";
 const APP_SHELL = [
   "./",
   "./index.html",
   "./content.generated.js",
   "./assets/site.css",
   "./assets/site.js",
+  "./assets/search-worker.js",
   "./assets/logo-mark.svg",
   "./manifest.webmanifest",
   "./images/app/01-main-window.png",
@@ -33,7 +35,8 @@ self.addEventListener("activate", event => {
   event.waitUntil(
     caches.keys()
       .then(keys => Promise.all(
-        keys.filter(key => key !== CACHE_VERSION).map(key => caches.delete(key))
+        keys.filter(key => key.startsWith(CACHE_PREFIX) && key !== CACHE_VERSION)
+          .map(key => caches.delete(key))
       ))
       .then(() => self.clients.claim())
   );
@@ -43,10 +46,11 @@ self.addEventListener("fetch", event => {
   if (event.request.method !== "GET") return;
 
   const url = new URL(event.request.url);
-  if (url.origin !== self.location.origin) return;
+  const scopePath = new URL(self.registration.scope).pathname;
+  if (url.origin !== self.location.origin || !url.pathname.startsWith(scopePath)) return;
 
   const wantsFresh = event.request.mode === "navigate"
-    || /(?:index\.html|content\.generated\.js)$/.test(url.pathname);
+    || /\.(?:html|js|css|webmanifest)$/.test(url.pathname);
 
   if (wantsFresh) {
     event.respondWith(
