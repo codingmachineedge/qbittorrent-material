@@ -68,6 +68,7 @@ ToolButton {
     ToolTip.visible: hovered && root.tooltip.length > 0
     ToolTip.text: root.tooltip
     ToolTip.delay: 500
+    ToolTip.timeout: 5000
 
     // Attach logging without shadowing caller-supplied signal handlers.
     Connections {

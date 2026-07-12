@@ -114,7 +114,7 @@ private:
         connect(session, &BitTorrent::Session::torrentsLoaded, this, [this] { recount(); });
         connect(session, &BitTorrent::Session::torrentsUpdated, this, [this] { recount(); });
         connect(session, &BitTorrent::Session::torrentAdded, this, [this](BitTorrent::Torrent *) { recount(); });
-        connect(session, &BitTorrent::Session::torrentAboutToBeRemoved, this, [this](BitTorrent::Torrent *) { recount(); });
+        connect(session, &BitTorrent::Session::torrentRemoved, this, [this](const BitTorrent::TorrentID &) { recount(); });
         connect(session, &BitTorrent::Session::trackerEntryStatusesUpdated, this, [this](BitTorrent::Torrent *, const QHash<QString, BitTorrent::TrackerEntryStatus> &) { recount(); });
     }
 

@@ -151,7 +151,7 @@ private:
         const auto refresh = [this] { rebuild(); };
         connect(session, &BitTorrent::Session::torrentsLoaded, this, refresh);
         connect(session, &BitTorrent::Session::torrentAdded, this, [refresh](BitTorrent::Torrent *) { refresh(); });
-        connect(session, &BitTorrent::Session::torrentAboutToBeRemoved, this, [refresh](BitTorrent::Torrent *) { refresh(); });
+        connect(session, &BitTorrent::Session::torrentRemoved, this, [refresh](const BitTorrent::TorrentID &) { refresh(); });
         connect(session, &BitTorrent::Session::trackersAdded, this, [refresh](BitTorrent::Torrent *, const QList<BitTorrent::TrackerEntry> &) { refresh(); });
         connect(session, &BitTorrent::Session::trackersRemoved, this, [refresh](BitTorrent::Torrent *, const QStringList &) { refresh(); });
         connect(session, &BitTorrent::Session::trackersReset, this, [refresh](BitTorrent::Torrent *, const QList<BitTorrent::TrackerEntryStatus> &, const QList<BitTorrent::TrackerEntry> &) { refresh(); });

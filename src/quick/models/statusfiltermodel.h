@@ -80,7 +80,7 @@ public:
         {
         case LabelRole:
         case Qt::DisplayRole:
-            return QStringLiteral("%1 (%2)").arg(labelFor(status)).arg(m_counts.at(status));
+            return labelFor(status);
         case CountRole:
             return m_counts.at(status);
         case IconRole:
@@ -124,7 +124,7 @@ private:
         connect(session, &BitTorrent::Session::torrentsLoaded, this, [this] { recount(); });
         connect(session, &BitTorrent::Session::torrentsUpdated, this, [this] { recount(); });
         connect(session, &BitTorrent::Session::torrentAdded, this, [this](BitTorrent::Torrent *) { recount(); });
-        connect(session, &BitTorrent::Session::torrentAboutToBeRemoved, this, [this](BitTorrent::Torrent *) { recount(); });
+        connect(session, &BitTorrent::Session::torrentRemoved, this, [this](const BitTorrent::TorrentID &) { recount(); });
     }
 
     [[nodiscard]] static QString labelFor(int status)

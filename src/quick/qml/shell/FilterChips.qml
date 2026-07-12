@@ -59,17 +59,14 @@ Flow {
                 Text {
                     anchors.verticalCenter: parent.verticalCenter
                     text: chip.label
-                    font.family: Typography.family
-                    font.pixelSize: 13
-                    font.weight: Font.Medium
+                    font: Typography.labelLarge
                     color: chip.selected
                         ? Theme.color("onPrimaryContainer") : Theme.color("onSurfaceVariant")
                 }
                 Text {
                     anchors.verticalCenter: parent.verticalCenter
                     text: String(chip.count)
-                    font.family: Typography.monoFamily
-                    font.pixelSize: 11
+                    font: Typography.metadataMono
                     opacity: 0.75
                     color: chip.selected
                         ? Theme.color("onPrimaryContainer") : Theme.color("onSurfaceVariant")

@@ -98,7 +98,7 @@ Column {
                 }
                 Label {
                     width: root.width - 60
-                    text: rowItem.model.label
+                    text: rowItem.model.label + " (" + rowItem.model.count + ")"
                     elide: Text.ElideRight
                     font: Typography.bodyMedium
                     color: rowItem.selected ? Theme.color("primary") : Theme.color("onSurface")

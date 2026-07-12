@@ -72,5 +72,6 @@ Rectangle {
 
     ToolTip.visible: mouse.containsMouse && (root.tooltip.length > 0)
     ToolTip.delay: 600
+    ToolTip.timeout: 5000
     ToolTip.text: root.tooltip
 }

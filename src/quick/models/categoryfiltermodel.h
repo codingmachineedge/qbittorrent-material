@@ -169,7 +169,7 @@ private:
         connect(session, &BitTorrent::Session::torrentsUpdated, this, [this] { recount(); });
         connect(session, &BitTorrent::Session::torrentCategoryChanged, this, [this](BitTorrent::Torrent *, const QString &) { recount(); });
         connect(session, &BitTorrent::Session::torrentAdded, this, [this](BitTorrent::Torrent *) { recount(); });
-        connect(session, &BitTorrent::Session::torrentAboutToBeRemoved, this, [this](BitTorrent::Torrent *) { recount(); });
+        connect(session, &BitTorrent::Session::torrentRemoved, this, [this](const BitTorrent::TorrentID &) { recount(); });
     }
 
     void rebuild()

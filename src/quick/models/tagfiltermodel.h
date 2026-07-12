@@ -126,7 +126,7 @@ private:
         connect(session, &BitTorrent::Session::torrentTagAdded, this, [this](BitTorrent::Torrent *, const Tag &) { recount(); });
         connect(session, &BitTorrent::Session::torrentTagRemoved, this, [this](BitTorrent::Torrent *, const Tag &) { recount(); });
         connect(session, &BitTorrent::Session::torrentAdded, this, [this](BitTorrent::Torrent *) { recount(); });
-        connect(session, &BitTorrent::Session::torrentAboutToBeRemoved, this, [this](BitTorrent::Torrent *) { recount(); });
+        connect(session, &BitTorrent::Session::torrentRemoved, this, [this](const BitTorrent::TorrentID &) { recount(); });
     }
 
     [[nodiscard]] static QString labelFor(const Row &row)

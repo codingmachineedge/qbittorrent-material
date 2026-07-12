@@ -53,15 +53,15 @@ SessionController::SessionController(QObject *parent)
 
     const auto refreshTorrentCount = [this]
     {
-        // torrentAboutToBeRemoved fires before the list mutates.
+        // Deferred to coalesce bursts of add/load/remove into one update.
         QTimer::singleShot(0, this, [this] { emit torrentCountChanged(); });
     };
     connect(session, &Session::torrentsLoaded, this,
         [refreshTorrentCount](const QList<BitTorrent::Torrent *> &) { refreshTorrentCount(); });
     connect(session, &Session::torrentAdded, this,
         [refreshTorrentCount](BitTorrent::Torrent *) { refreshTorrentCount(); });
-    connect(session, &Session::torrentAboutToBeRemoved, this,
-        [refreshTorrentCount](BitTorrent::Torrent *) { refreshTorrentCount(); });
+    connect(session, &Session::torrentRemoved, this,
+        [refreshTorrentCount](const BitTorrent::TorrentID &) { refreshTorrentCount(); });
 
     connect(session, &Session::categoryAdded, this, &SessionController::categoryAdded);
     connect(session, &Session::categoryRemoved, this, &SessionController::categoryRemoved);
