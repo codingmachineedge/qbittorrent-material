@@ -54,6 +54,17 @@ namespace
     QString g_logFilePath;
     QtMessageHandler g_previousHandler = nullptr;
     bool g_installed = false;
+    bool g_fileSinkBroken = false; // throttles open/write warnings to once per failure streak
+
+    /// Emit a diagnostic straight to stderr, bypassing Qt's logging system.
+    /// Callers already hold @c g_sinkMutex (inside the message handler), so
+    /// routing this through qCWarning() would recurse and deadlock.
+    void reportSinkError(const QString &message)
+    {
+        const QByteArray line = ("[logging] WARNING: " + message + QLatin1Char('\n')).toUtf8();
+        fputs(line.constData(), stderr);
+        fflush(stderr);
+    }
 
     /// Human-readable, fixed-width level tag for a Qt message type.
     const char *levelTag(const QtMsgType type)
@@ -110,7 +121,22 @@ namespace
         if (!g_logFile.isOpen())
         {
             g_logFile.setFileName(g_logFilePath);
-            g_logFile.open(QIODevice::WriteOnly | QIODevice::Append | QIODevice::Text);
+            if (!g_logFile.open(QIODevice::WriteOnly | QIODevice::Append | QIODevice::Text))
+            {
+                if (!g_fileSinkBroken)
+                {
+                    reportSinkError(QStringLiteral("cannot open log file '%1': %2 (further open failures "
+                                                    "will be suppressed until it recovers)")
+                                         .arg(g_logFilePath, g_logFile.errorString()));
+                    g_fileSinkBroken = true;
+                }
+                return;
+            }
+            if (g_fileSinkBroken)
+            {
+                reportSinkError(QStringLiteral("log file '%1' opened successfully again").arg(g_logFilePath));
+                g_fileSinkBroken = false;
+            }
         }
 
         if (g_logFile.isOpen() && ((g_logFile.size() + line.size()) > MAX_LOG_FILE_SIZE))
@@ -118,13 +144,27 @@ namespace
             g_logFile.close();
             rotateLocked();
             g_logFile.setFileName(g_logFilePath);
-            g_logFile.open(QIODevice::WriteOnly | QIODevice::Append | QIODevice::Text);
+            if (!g_logFile.open(QIODevice::WriteOnly | QIODevice::Append | QIODevice::Text))
+            {
+                reportSinkError(QStringLiteral("cannot reopen log file '%1' after rotation: %2")
+                                     .arg(g_logFilePath, g_logFile.errorString()));
+                return;
+            }
         }
 
         if (g_logFile.isOpen())
         {
-            g_logFile.write(line);
-            g_logFile.flush();
+            const qint64 written = g_logFile.write(line);
+            if (written != line.size())
+            {
+                reportSinkError(QStringLiteral("log file write incomplete (%1/%2 bytes) for '%3': %4")
+                                     .arg(written).arg(line.size()).arg(g_logFilePath, g_logFile.errorString()));
+            }
+            if (!g_logFile.flush())
+            {
+                reportSinkError(QStringLiteral("log file flush failed for '%1': %2")
+                                     .arg(g_logFilePath, g_logFile.errorString()));
+            }
         }
     }
 
@@ -194,7 +234,8 @@ namespace Logging
             logsDir = QDir::tempPath() + QStringLiteral("/qbittorrent-logs");
         else
             logsDir = baseDir + QStringLiteral("/logs");
-        QDir().mkpath(logsDir);
+        if (!QDir().mkpath(logsDir))
+            reportSinkError(QStringLiteral("failed to create log directory '%1'; file logging may not work").arg(logsDir));
         g_logFilePath = logsDir + QStringLiteral("/qbittorrent.log");
 
         // Default verbosity: DEBUG for every qbt.* category (overridable via
