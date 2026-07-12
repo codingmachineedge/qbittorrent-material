@@ -830,6 +830,7 @@ ApplicationWindow {
     SpeedLimitDialog { id: speedLimitDialog; parent: Overlay.overlay }
     AboutDialog { id: aboutDialog; parent: Overlay.overlay }
     CookiesDialog { id: cookiesDialog; parent: Overlay.overlay }
+    AddNewTorrentDialog { id: addNewTorrentDialog; parent: Overlay.overlay }
     DownloadFromURLDialog {
         id: downloadFromURLDialog
         parent: Overlay.overlay
