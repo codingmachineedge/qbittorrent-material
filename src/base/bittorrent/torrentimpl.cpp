@@ -198,6 +198,13 @@ QString TorrentImpl::name() const
     if (hasMetadata())
         return m_torrentInfo.name();
 
+    // Metadata isn't available (e.g. a magnet still fetching it, or resume
+    // data that was checkpointed without the info dict) -- libtorrent still
+    // carries a display-name hint on add_torrent_params in that case.
+    const QString hintName = QString::fromStdString(m_ltAddTorrentParams.name);
+    if (!hintName.isEmpty())
+        return hintName;
+
     const QString commonName = m_infoHash.toTorrentID().toString();
     return commonName;
 }
@@ -1666,8 +1673,15 @@ void TorrentImpl::deferredRequestResumeData()
 
     if (!m_deferredRequestResumeDataInvoked)
     {
-        m_session->invoke([this]()
+        // The queued call outlives us if the torrent is removed before the
+        // event loop dispatches it (the invoke context is the session, not
+        // this torrent) -- re-look ourselves up before touching any member.
+        SessionImpl *session = m_session;
+        const TorrentID torrentID = id();
+        session->invoke([this, session, torrentID]()
         {
+            if (session->getTorrent(torrentID) != this)
+                return;
             requestResumeData();
             m_deferredRequestResumeDataInvoked = false;
         });
@@ -1713,7 +1727,11 @@ void TorrentImpl::updateProgress()
 
 void TorrentImpl::updateState()
 {
-    if (isMoveInProgress() || (m_nativeStatus.state == lt::torrent_status::checking_resume_data))
+    if (m_nativeStatus.state == lt::torrent_status::checking_resume_data)
+    {
+        m_state = TorrentState::CheckingResumeData;
+    }
+    else if (isMoveInProgress())
     {
         m_state = TorrentState::Moving;
     }

@@ -790,6 +790,9 @@ namespace BitTorrent
         const bool m_wasPexEnabled = m_isPeXEnabled;
 
         int m_numResumeData = 0;
+        // Torrents whose restore add is queued in libtorrent but whose
+        // add_torrent_alert hasn't landed yet (see prepareStartup()).
+        QSet<TorrentID> m_restoringTorrents;
         QList<TrackerEntry> m_additionalTrackerEntries;
         QList<TrackerEntry> m_additionalTrackerEntriesFromURL;
         QList<QRegularExpression> m_excludedFileNamesRegExpList;

@@ -22,6 +22,7 @@
 #include "addtorrenterror.h"
 #include "addtorrentparams.h"
 #include "categoryoptions.h"
+#include "infohash.h"
 #include "sharelimits.h"
 #include "torrentcontentremoveoption.h"
 #include "trackerentry.h"
@@ -31,10 +32,8 @@ class QString;
 
 namespace BitTorrent
 {
-    class InfoHash;
     class Torrent;
     class TorrentDescriptor;
-    class TorrentID;
     class TorrentInfo;
     struct CacheStatus;
     struct SessionStatus;
@@ -491,6 +490,9 @@ namespace BitTorrent
         void freeDiskSpaceChecked(qint64 result);
 
         void torrentAboutToBeRemoved(Torrent *torrent, TorrentRemoveOption removeOption);
+        // Emitted after the torrent is gone from torrents() -- unlike
+        // torrentAboutToBeRemoved, safe for recounting the remaining set.
+        void torrentRemoved(const TorrentID &id);
         void torrentAdded(Torrent *torrent);
         void torrentCategoryChanged(Torrent *torrent, const QString &oldCategory);
         // Any configuration mutation without a dedicated signal (limits, share limits,

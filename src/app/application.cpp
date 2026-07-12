@@ -473,13 +473,22 @@ void Application::cleanup()
         journal->shutdownFlush();
 #endif
 
-    // Drop the QML engine first so bindings stop touching engine singletons.
+    // Drop the QML engine first -- synchronously, so no QML binding or
+    // delegate can outlive the engine singletons torn down below.
     if (m_engine)
     {
-        m_engine->deleteLater();
+        delete m_engine;
         m_engine = nullptr;
-        qCDebug(lcApp) << "QML engine scheduled for deletion";
+        qCDebug(lcApp) << "QML engine destroyed";
     }
+
+#ifdef QBT_HAS_SESSION
+    // Tear the session down for real: ~SessionImpl requests a final resume-data
+    // save for every torrent and drains the alerts (bounded by the shutdown
+    // timeout) so the persisted torrent list reflects the state at exit.
+    BitTorrent::Session::freeInstance();
+    qCDebug(lcApp) << "BitTorrent session torn down";
+#endif
 
     qCInfo(lcApp) << "Application cleanup finished";
 }

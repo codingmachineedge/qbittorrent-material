@@ -128,7 +128,11 @@ void AppController::exit(bool force)
     }
 
     qCInfo(lcUi) << "Quitting application";
-    QCoreApplication::quit();
+    // Deferred: exit() is typically invoked from a QML signal handler, and
+    // quitting synchronously would run Application::cleanup() -- which tears
+    // down the QML engine -- while that handler is still on the stack.
+    QMetaObject::invokeMethod(QCoreApplication::instance(), &QCoreApplication::quit,
+            Qt::QueuedConnection);
 }
 
 void AppController::minimizeToTray()

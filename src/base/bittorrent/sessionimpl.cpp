@@ -56,6 +56,7 @@
 #include "filesearcher.h"
 #include "loadtorrentparams.h"
 #include "lttypecast.h"
+#include "resumedatastorage.h"
 #include "torrentdescriptor.h"
 #include "torrentimpl.h"
 
@@ -345,6 +346,8 @@ SessionImpl::SessionImpl(QObject *parent)
     m_resumeDataTimer = new QTimer(this);
     m_resumeDataTimer->setInterval(std::chrono::minutes(saveResumeDataInterval()));
     connect(m_resumeDataTimer, &QTimer::timeout, this, [this]() { generateResumeData(); });
+    if (saveResumeDataInterval() > 0)
+        m_resumeDataTimer->start();
 
     m_recentErroredTorrentsTimer = new QTimer(this);
     m_recentErroredTorrentsTimer->setSingleShot(true);
@@ -361,6 +364,11 @@ SessionImpl::SessionImpl(QObject *parent)
 
     m_asyncWorker = new QThreadPool(this);
     m_asyncWorker->setMaxThreadCount(1);
+
+    m_resumeDataStorage = new ResumeDataStorage(
+            specialFolderLocation(SpecialFolder::Data) / Path(u"resume-data"_s));
+    if (!m_resumeDataStorage->isAvailable())
+        qCWarning(lcSession) << "Resume data storage unavailable; the torrent list will not survive a restart";
 
     initializeNativeSession();
     configureComponents();
@@ -379,6 +387,12 @@ SessionImpl::SessionImpl(QObject *parent)
         updateTrackersFromURL();
 
     prepareStartup();
+
+    // Kick off the periodic status-refresh loop (post_torrent_updates ->
+    // state_update_alert -> enqueueRefresh -> ...). Without this first call
+    // the loop never starts and transfer rows freeze at their added state.
+    enqueueRefresh();
+
     qCInfo(lcSession) << "BitTorrent session initialized";
 }
 
@@ -389,6 +403,29 @@ SessionImpl::~SessionImpl()
     if (m_nativeSession)
     {
         saveResumeData();
+
+        // Give outstanding save_resume_data_alert(s) a bounded chance to arrive
+        // and reach handleTorrentResumeDataReady() before the native session
+        // (and its alert queue) goes away, or shutdown would silently drop
+        // whatever changed since the last periodic/event-triggered save.
+        if (m_numResumeData > 0)
+        {
+            const int timeoutMs = (shutdownTimeout() >= 0) ? shutdownTimeout() : 15000;
+            QElapsedTimer shutdownTimer;
+            shutdownTimer.start();
+            while ((m_numResumeData > 0) && (shutdownTimer.elapsed() < timeoutMs))
+            {
+                fetchPendingAlerts(lt::milliseconds(100));
+                for (const lt::alert *alert : m_alerts)
+                    handleAlert(const_cast<lt::alert *>(alert));
+            }
+            if (m_numResumeData > 0)
+            {
+                qCWarning(lcSession) << "Shutdown timed out waiting for" << m_numResumeData
+                                     << "resume data save(s) to complete";
+            }
+        }
+
         saveStatistics();
 
         // Do a graceful pause of libtorrent session
@@ -400,6 +437,9 @@ SessionImpl::~SessionImpl()
 
     qDeleteAll(m_torrents);
     m_torrents.clear();
+
+    delete m_resumeDataStorage;
+    m_resumeDataStorage = nullptr;
 
     qCInfo(lcSession) << "BitTorrent session shut down";
 }
@@ -556,10 +596,65 @@ void SessionImpl::configurePeerClasses()
 
 void SessionImpl::prepareStartup()
 {
-    // TODO(engine): load resume data via ResumeDataStorage and restore torrents in
-    // queue order, emitting startupProgressUpdated() and finally restored(). Wired
-    // to immediately signal "restored" so the UI can proceed in a clean profile.
     qCInfo(lcSession) << "Preparing session startup";
+
+    // NOTE(engine): torrents are restored in whatever order the resume store
+    // enumerates them (currently not the original queue order -- queue order
+    // itself isn't persisted yet either; see the TODO on saveTorrentsQueue()).
+    const QList<TorrentID> storedIds = m_resumeDataStorage
+            ? m_resumeDataStorage->torrentIds() : QList<TorrentID>();
+
+    int restoredCount = 0;
+    for (const TorrentID &id : storedIds)
+    {
+        LoadTorrentParams loadTorrentParams;
+        if (!m_resumeDataStorage->load(id, &loadTorrentParams))
+        {
+            qCWarning(lcSession) << "Skipping unreadable stored torrent" << id.toString();
+            continue;
+        }
+
+        lt::add_torrent_params &p = loadTorrentParams.ltAddTorrentParams;
+        p.flags |= lt::torrent_flags::update_subscribe;
+        p.flags |= lt::torrent_flags::duplicate_is_error;
+
+        // meta.json's savePath is authoritative for where the torrent lives;
+        // re-apply it over the resume blob in case the two ever disagree
+        // (e.g. a checkpoint that failed between its two file writes).
+        if (!loadTorrentParams.savePath.isEmpty())
+            p.save_path = loadTorrentParams.savePath.toString().toStdString();
+
+        // Known-before-loaded: duplicate adds racing the restore must hit the
+        // friendly isKnownTorrent() rejection, not libtorrent's silent error.
+        m_restoringTorrents.insert(id);
+
+        // Register a handler to create the TorrentImpl once libtorrent confirms
+        // the add. The stored ltAddTorrentParams already carries piece-verified
+        // resume state, so this does not trigger a full recheck.
+        m_addTorrentAlertHandlers.append([this, id, loadTorrentParams](const lt::add_torrent_alert *alert) mutable
+        {
+            m_restoringTorrents.remove(id);
+
+            if (alert->error)
+            {
+                qCWarning(lcSession) << "Failed to restore torrent:"
+                                     << QString::fromStdString(alert->error.message());
+                return;
+            }
+
+            TorrentImpl *torrent = createTorrent(alert->handle, std::move(loadTorrentParams));
+            m_loadedTorrents.append(torrent);
+            emit torrentAdded(torrent);
+            qCInfo(lcSession) << "Torrent restored:" << torrent->name();
+        });
+
+        m_nativeSession->async_add_torrent(p);
+        ++restoredCount;
+    }
+
+    if (restoredCount > 0)
+        qCInfo(lcSession) << "Restoring" << restoredCount << "torrent(s) from the resume data store";
+
     m_isRestored = true;
     emit startupProgressUpdated(100);
     emit restored();
@@ -1136,6 +1231,10 @@ void SessionImpl::enqueueRefresh()
 
     QTimer::singleShot(refreshInterval(), this, [this]()
     {
+        // Clear the flag as the scheduled refresh fires, so the resulting
+        // state_update_alert re-enqueues the next cycle and the loop
+        // self-sustains (see handleStateUpdateAlert).
+        m_refreshEnqueued = false;
         if (m_nativeSession)
         {
             m_nativeSession->post_torrent_updates();
@@ -1196,6 +1295,14 @@ qsizetype SessionImpl::torrentsCount() const
 
 bool SessionImpl::isKnownTorrent(const InfoHash &infoHash) const
 {
+    // Torrents queued for restore in prepareStartup() are known before their
+    // add_torrent_alert lands in m_torrents -- without this, a duplicate add
+    // in that window slips past the check and fails silently in libtorrent.
+    const TorrentID id = infoHash.toTorrentID();
+    if (m_restoringTorrents.contains(id))
+        return true;
+    if (infoHash.isHybrid() && m_restoringTorrents.contains(TorrentID::fromSHA1Hash(infoHash.v1())))
+        return true;
     return (findTorrent(infoHash) != nullptr);
 }
 
@@ -1375,7 +1482,14 @@ bool SessionImpl::removeTorrent(const TorrentID &id, const TorrentRemoveOption d
     else
         m_nativeSession->remove_torrent(nativeHandle, lt::session::delete_files);
 
+    if (m_resumeDataStorage && !m_resumeDataStorage->remove(id))
+    {
+        qCWarning(lcSession) << "Failed to erase stored resume data for" << id.toString()
+                             << "-- the torrent may reappear on next startup";
+    }
+
     delete torrent;
+    emit torrentRemoved(id);
     return true;
 }
 
@@ -1636,18 +1750,15 @@ void SessionImpl::banIP(const QString &ip)
 
 void SessionImpl::saveResumeData()
 {
+    // requestResumeData() increments m_numResumeData via
+    // handleTorrentResumeDataRequested(); the destructor drains the counter.
     for (TorrentImpl *torrent : asConst(m_torrents))
     {
         if (torrent->needSaveResumeData())
-        {
             torrent->requestResumeData();
-            ++m_numResumeData;
-        }
     }
 
-    // TODO(engine): wait (bounded by shutdownTimeout()) for outstanding
-    // save_resume_data alerts before returning during shutdown.
-    qCDebug(lcSession) << "Requested resume data for" << m_numResumeData << "torrent(s)";
+    qCDebug(lcSession) << "Requested resume data;" << m_numResumeData << "save(s) in flight";
 }
 
 void SessionImpl::generateResumeData()
@@ -1714,7 +1825,14 @@ void SessionImpl::exportTorrentFile(const Torrent *torrent, const Path &folderPa
 
 // --- Torrent-interface handlers (forward engine events to Session signals) ---
 
-void SessionImpl::handleTorrentResumeDataRequested(const TorrentImpl *) {}
+void SessionImpl::handleTorrentResumeDataRequested(const TorrentImpl *)
+{
+    // Every native save_resume_data() request produces exactly one
+    // save_resume_data(_failed)_alert, which decrements this counter -- so it
+    // must be incremented here, on the request, to track in-flight saves
+    // (the destructor's bounded drain relies on it being balanced).
+    ++m_numResumeData;
+}
 
 void SessionImpl::handleTorrentNeedSaveResumeData(TorrentImpl *torrent)
 {
@@ -1725,9 +1843,8 @@ void SessionImpl::handleTorrentNeedSaveResumeData(TorrentImpl *torrent)
 
 void SessionImpl::handleTorrentResumeDataReady(TorrentImpl *torrent, LoadTorrentParams data)
 {
-    Q_UNUSED(torrent);
-    // TODO(engine): persist `data` (including ltAddTorrentParams) via ResumeDataStorage.
-    Q_UNUSED(data);
+    if (m_resumeDataStorage && torrent)
+        m_resumeDataStorage->store(torrent->id(), data);
 }
 
 void SessionImpl::handleTorrentShareLimitChanged(TorrentImpl *torrent)
@@ -2601,8 +2718,15 @@ void SessionImpl::setSaveResumeDataInterval(const int value)
 {
     if (value == m_saveResumeDataInterval) return;
     m_saveResumeDataInterval = value;
-    if (value > 0) m_resumeDataTimer->setInterval(std::chrono::minutes(value));
-    else m_resumeDataTimer->stop();
+    if (value > 0)
+    {
+        m_resumeDataTimer->setInterval(std::chrono::minutes(value));
+        m_resumeDataTimer->start();
+    }
+    else
+    {
+        m_resumeDataTimer->stop();
+    }
 }
 
 std::chrono::minutes SessionImpl::saveStatisticsInterval() const { return std::chrono::minutes(m_saveStatisticsInterval.get()); }
