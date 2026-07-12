@@ -10,11 +10,11 @@ The completed desktop shell uses a 64px command bar, persistent 248px navigation
 
 ## Start here
 
-- [Getting started](Getting-Started.md) — install a prerelease, build locally, and launch the app.
+- [Getting started](Getting-Started.md) — install a release, build locally, and launch the app.
 - [Interface tour](Interface-Tour.md) — learn the navigation, filters, transfer table, properties, and status areas.
 - [Workspace tabs](Workspace-Tabs.md) — create persistent pages, customize typography, and move snapshots or complete local Git history.
 - [Search, filters, and portability](Search-Import-Export.md) — use regex search, the filter builder, and JSON/Markdown import and export.
-- [Releases and automation](Releases.md) — understand the installer pipeline and per-push prereleases.
+- [Releases and automation](Releases.md) — understand the installer pipeline and per-push releases.
 - [Architecture](Architecture.md) — explore the engine, controller, model, and QML boundaries.
 - [Troubleshooting](Troubleshooting.md) — solve common build, packaging, launch, and documentation issues.
 - [Contributing](Contributing.md) — keep code, visuals, and docs consistent.

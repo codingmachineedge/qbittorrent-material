@@ -28,7 +28,7 @@ and tray tooltip while keeping application identity and paths stable.
 No. It has local history only. Nothing leaves the computer unless you export
 and share a JSON snapshot or complete repository.
 
-## Why is each push a prerelease?
+## Why does each push publish its own release?
 
 The project favors traceable test builds. Each release points at one commit and contains the exact installer that passed the automated smoke gate.
 

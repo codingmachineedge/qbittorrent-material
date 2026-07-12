@@ -1,8 +1,8 @@
 # Releases and Automation
 
-## One prerelease per push
+## One release per push
 
-Every branch push runs the `Build and release every push` workflow on Windows Server 2022. It configures MSVC and Qt, restores vcpkg caches, builds the application, packages NSIS, performs the installed-app smoke test, and creates a uniquely tagged prerelease.
+Every branch push runs the `Build and release every push` workflow on Windows Server 2022. It configures MSVC and Qt, restores vcpkg caches, builds the application, packages NSIS, performs the installed-app smoke test, and creates a uniquely tagged, full GitHub release marked "latest."
 
 The dependency restore includes libgit2, which powers the app's private
 workspace repository without requiring `git.exe`. The installed-app launch gate

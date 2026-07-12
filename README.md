@@ -127,12 +127,12 @@ CPack writes local installers and SHA-256 checksums to `build\packages`.
 See [`docs/BUILDING.md`](docs/BUILDING.md) for prerequisites, manual CMake
 commands, and Linux/macOS instructions.
 
-## Continuous prereleases
+## Continuous releases
 
 Every branch push runs a Windows installer build on GitHub Actions using
 `windows-2022` and Qt 6.8.3. A successful run publishes the installer as a
-release asset on a uniquely tagged GitHub prerelease for that exact commit. No
-separate Actions artifact is retained.
+release asset on a uniquely tagged, full GitHub release for that exact
+commit. No separate Actions artifact is retained.
 
 ## License
 

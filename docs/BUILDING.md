@@ -108,13 +108,13 @@ then configures and builds with CMake and Ninja:
 ./run.sh --clean  # clean, build, and run
 ```
 
-## Continuous Windows prereleases
+## Continuous Windows releases
 
 Every branch push triggers the `Build and release every push` GitHub Actions
 workflow. It builds on `windows-2022` with MSVC 2022 and Qt 6.8.3, creates and
-smoke-tests the NSIS installer, and publishes it as a GitHub prerelease:
+smoke-tests the NSIS installer, and publishes it as a full GitHub release:
 
-- A GitHub prerelease containing the Windows x64 installer as its release asset.
+- A GitHub release containing the Windows x64 installer as its release asset.
 
 The installed-app gate removes every Git executable directory from `PATH`, then
 verifies that bundled libgit2 initializes and commits a clean repository. It
@@ -126,10 +126,10 @@ removed and not resurrected.
 The workflow intentionally does not retain a separate Actions artifact.
 
 Each push receives a unique tag in the form
-`build-<run-number>-<short-sha>`. The prerelease targets the exact pushed
-commit and records the branch, build ID, and installer SHA-256 checksum in its
-release notes. The workflow can also be started manually with
-`workflow_dispatch`.
+`build-<run-number>-<short-sha>`. The release targets the exact pushed
+commit, is marked "latest" on creation, and records the branch, build ID, and
+installer SHA-256 checksum in its release notes. The workflow can also be
+started manually with `workflow_dispatch`.
 
 ## Preview the documentation site
 

@@ -1,8 +1,8 @@
 # Getting Started
 
-## Install a continuous prerelease
+## Install a continuous release
 
-Every successful push publishes a Windows x64 installer on the repository's Releases page. Choose the newest prerelease for the branch and commit you want to test, verify the SHA-256 value in its release notes, then run the NSIS installer.
+Every successful push publishes a Windows x64 installer on the repository's Releases page. Choose the newest release for the branch and commit you want to test, verify the SHA-256 value in its release notes, then run the NSIS installer.
 
 The CI smoke gate silently installs the package into an isolated directory, checks the Qt platform plugin, launches the installed executable for ten seconds, and silently uninstalls it before publishing.
 

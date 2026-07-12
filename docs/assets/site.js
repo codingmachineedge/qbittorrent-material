@@ -1735,10 +1735,11 @@
   }
 
   // Point the download buttons straight at the newest Windows installer .exe.
-  // Every push publishes a *prerelease* (never marked "latest"), so the
-  // /releases/latest endpoint returns nothing — the releases LIST must be
-  // queried and the newest "*-windows-x64.exe" asset chosen. On any failure
-  // (offline, API rate limit) the buttons keep their /releases fallback href.
+  // Every push publishes a full release and is marked "latest" on creation,
+  // but pushes on different branches can complete out of order, so the
+  // releases LIST is queried and the newest "*-windows-x64.exe" asset chosen
+  // rather than trusting /releases/latest. On any failure (offline, API rate
+  // limit) the buttons keep their /releases fallback href.
   function resolveInstallerLink() {
     var links = document.querySelectorAll(".js-installer-link");
     if (!links.length || typeof fetch !== "function") return;
