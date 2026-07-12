@@ -166,18 +166,20 @@ if (WIN32)
     # source as argv[1] (Application::run() adds it on cold start).
     #
     # The actual WriteRegStr/DeleteRegKey commands live in installer/*.nsh and
-    # are pulled in with a single !include line. Embedding them as CMake
-    # strings (even bracket arguments) does NOT survive the CMake ->
-    # CPackConfig.cmake -> project.nsi round trip: cpack re-parses and
-    # re-serializes the variable value, which corrupts the quoting/backslashes
-    # and produced "WriteRegStr expects 4 parameters, got 1" from makensis.
-    # !include keeps the NSIS source untouched by that round trip.
+    # are pulled in with a single !include line. The !include argument must be
+    # single-quoted: CPack pastes this variable verbatim between double quotes
+    # in CPackConfig.cmake, so an embedded double quote splits the value into
+    # several CMake arguments and the NSIS generator then emits `!include`
+    # with no parameter at all ("!include expects 1-3 parameters, got 0").
+    # The path must use backslashes (makensis does not resolve forward-slash
+    # absolute paths), doubled here because cpack re-parses CPackConfig.cmake
+    # and collapses each \\ back to \.
     file(TO_NATIVE_PATH "${CMAKE_SOURCE_DIR}/installer/file_associations_install.nsh" _qbt_nsis_install_nsh)
     file(TO_NATIVE_PATH "${CMAKE_SOURCE_DIR}/installer/file_associations_uninstall.nsh" _qbt_nsis_uninstall_nsh)
     string(REPLACE "\\" "\\\\" _qbt_nsis_install_nsh "${_qbt_nsis_install_nsh}")
     string(REPLACE "\\" "\\\\" _qbt_nsis_uninstall_nsh "${_qbt_nsis_uninstall_nsh}")
-    set(CPACK_NSIS_EXTRA_INSTALL_COMMANDS "!include \"${_qbt_nsis_install_nsh}\"")
-    set(CPACK_NSIS_EXTRA_UNINSTALL_COMMANDS "!include \"${_qbt_nsis_uninstall_nsh}\"")
+    set(CPACK_NSIS_EXTRA_INSTALL_COMMANDS "!include '${_qbt_nsis_install_nsh}'")
+    set(CPACK_NSIS_EXTRA_UNINSTALL_COMMANDS "!include '${_qbt_nsis_uninstall_nsh}'")
 endif()
 
 include(CPack)
