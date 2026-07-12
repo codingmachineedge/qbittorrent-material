@@ -68,6 +68,11 @@
 #define QBT_HAS_DOWNLOAD_MANAGER 1
 #endif
 
+#if __has_include("base/net/geoipmanager.h")
+#include "base/net/geoipmanager.h"
+#define QBT_HAS_GEOIP 1
+#endif
+
 #if __has_include("base/torrentfileswatcher.h")
 #include "base/torrentfileswatcher.h"
 #define QBT_HAS_TORRENT_FILES_WATCHER 1
@@ -367,6 +372,14 @@ void Application::initEngine()
     // must be created after ProxyConfigurationManager above.
     Net::DownloadManager::initInstance();
     qCDebug(lcEngine) << "Net::DownloadManager ready";
+#endif
+
+#ifdef QBT_HAS_GEOIP
+    // Peer-country resolution (PeerInfo::country()). Depends on DownloadManager
+    // above for its database-update fetches; must exist before any torrent's
+    // peer list is queried, or PeerInfo::country() dereferences a null instance.
+    Net::GeoIPManager::initInstance();
+    qCDebug(lcEngine) << "Net::GeoIPManager ready";
 #endif
 
 #ifdef QBT_HAS_SESSION

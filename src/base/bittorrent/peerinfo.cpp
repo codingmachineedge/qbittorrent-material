@@ -339,8 +339,11 @@ QString PeerInfo::flagsDescription() const
 QString PeerInfo::country() const
 {
     if (m_country.isEmpty())
+    {
+        const auto *geoIPManager = Net::GeoIPManager::instance();
         m_country = Net::GeoIPManager::CountryName(
-                Net::GeoIPManager::instance()->lookup(address().ip));
+                geoIPManager ? geoIPManager->lookup(address().ip) : QString());
+    }
     return m_country;
 }
 
