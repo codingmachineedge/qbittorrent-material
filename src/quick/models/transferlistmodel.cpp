@@ -145,13 +145,25 @@ int TransferListModel::rowCount(const QModelIndex &parent) const
 
 void TransferListModel::onTorrentsLoaded(const QList<Torrent *> &torrents)
 {
-    if (torrents.isEmpty())
+    // Session::torrentAdded() already fires for every torrent in this same
+    // batch (see SessionImpl's add-torrent-alert handler), and onTorrentAdded()
+    // inserts it immediately. Skip anything already tracked here, or a torrent
+    // added via the GUI (as opposed to loaded from resume data at startup)
+    // would end up with two rows.
+    QList<Torrent *> newTorrents;
+    newTorrents.reserve(torrents.size());
+    for (Torrent *const torrent : torrents)
+    {
+        if (torrent && !m_rowByTorrent.contains(torrent))
+            newTorrents.append(torrent);
+    }
+    if (newTorrents.isEmpty())
         return;
 
-    qCInfo(lcModel) << "TransferListModel loading" << torrents.size() << "torrent(s)";
+    qCInfo(lcModel) << "TransferListModel loading" << newTorrents.size() << "torrent(s)";
     beginInsertRows({}, static_cast<int>(m_torrents.size())
-            , static_cast<int>(m_torrents.size() + torrents.size() - 1));
-    for (Torrent *const torrent : torrents)
+            , static_cast<int>(m_torrents.size() + newTorrents.size() - 1));
+    for (Torrent *const torrent : newTorrents)
     {
         m_rowByTorrent.insert(torrent, static_cast<int>(m_torrents.size()));
         m_torrents.append(torrent);
