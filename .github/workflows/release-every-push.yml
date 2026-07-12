@@ -69,6 +69,17 @@ jobs:
         shell: pwsh
         run: |
           cpack --config build/CPackConfig.cmake -G NSIS -C Release
+          $cpackExitCode = $LASTEXITCODE
+
+          $nsisLog = "build/packages/_CPack_Packages/win64/NSIS/NSISOutput.log"
+          if (Test-Path -LiteralPath $nsisLog) {
+            Write-Host "----- NSISOutput.log -----"
+            Get-Content -LiteralPath $nsisLog
+            Write-Host "----- end NSISOutput.log -----"
+          }
+          if ($cpackExitCode -ne 0) {
+            throw "cpack exited with code $cpackExitCode."
+          }
 
           $installers = @(
             Get-ChildItem -Path "build/packages" -File `
