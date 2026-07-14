@@ -39,6 +39,19 @@ available. The light palette uses the supplied cool-neutral Material tokens;
 the dark palette uses their Google Material counterparts. Both retain visible
 focus, semantic transfer states, and compact monospace operational data.
 
+The shell's menu bar, header commands, and Material tray menu invoke shared
+actions. Header icon controls, the Add/navigation rail, and status-filter chips
+are keyboard reachable, expose descriptive accessible names, and show a clear
+focus ring. The Behavior-page tray-icon choice is staged with the Options
+transaction: **Apply** commits and refreshes the native tray icon, while
+**Cancel** preserves the active icon.
+
+The About dialog renders its bundled GPL notice directly from the QRC resource
+bundle. Peer-country flags resolve through
+the registered `image://flags` provider; flag SVGs are optional, and an absent
+asset intentionally becomes a transparent placeholder rather than a broken
+image.
+
 ## Persistent custom workspace
 
 The built-in **Workspace** adds browser-style tabs for personal plain-text pages.
@@ -78,8 +91,10 @@ publishing, and Wiki synchronization.
 ## Screenshots
 
 Captured from the native Windows build with an isolated, empty test profile.
-The full annotated 13-view gallery and capture matrix live in
-[`docs/SCREENSHOTS.md`](docs/SCREENSHOTS.md).
+The complete 17-capture visual tour and capture matrix live in
+[`docs/SCREENSHOTS.md`](docs/SCREENSHOTS.md). Captures `14`–`17` exercise
+the compact 960×640 Split Dock and Card Flow layouts in Light and Dark themes.
+The deterministic capture path saves each PNG at its documented logical target.
 
 ![Light Transfers workspace in the complete qBittorrent Material shell](docs/images/app/01-main-window.png)
 
@@ -106,6 +121,14 @@ The full annotated 13-view gallery and capture matrix live in
 | Download from URLs | About |
 | --- | --- |
 | ![Download from URLs dialog](docs/images/app/12-workspace-portability.png) | ![About qBittorrent dialog in Dark mode](docs/images/app/13-restored-workspace.png) |
+
+| Split Dock · Light | Split Dock · Dark |
+| --- | --- |
+| ![Compact Split Dock layout in Light mode](docs/images/app/14-split-dock-compact.png) | ![Compact Split Dock layout in Dark mode](docs/images/app/15-split-dock-dark-compact.png) |
+
+| Card Flow · Light | Card Flow · Dark |
+| --- | --- |
+| ![Compact Card Flow layout in Light mode](docs/images/app/16-card-flow-compact.png) | ![Compact Card Flow layout in Dark mode](docs/images/app/17-card-flow-dark-compact.png) |
 
 ## Building
 

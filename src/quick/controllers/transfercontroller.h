@@ -79,6 +79,14 @@ public:
     Q_INVOKABLE void removeTags(const QStringList &tags);
     Q_INVOKABLE void removeAllTags();
 
+    // --- trackers / torrent files ---
+    /// Trackers common to the selection, formatted for TrackerEntriesDialog.
+    Q_INVOKABLE QString trackersText() const;
+    /// Replace every selected torrent's trackers with the dialog's tiered text.
+    Q_INVOKABLE void setTrackers(const QString &text);
+    /// Export every selected torrent to @p directory. Returns false on any failure.
+    Q_INVOKABLE bool exportTorrent(const QString &directory);
+
     // --- queue ---
     Q_INVOKABLE void queueTop();
     Q_INVOKABLE void queueUp();

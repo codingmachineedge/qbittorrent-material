@@ -84,16 +84,18 @@ The site includes `.nojekyll`, a web manifest, an offline service worker, projec
 
 ## Native application screenshots
 
-The Pages gallery and root README share the stable `docs/images/app/01`–`13`
-filenames. They cover the shared 64px command bar, 248px navigation, 32px
+The Pages gallery and root README share all 17 stable captured
+`docs/images/app/01`–`17` filenames. Captures `14`–`17` cover compact
+960×640 logical Split Dock and Card Flow views in each Light and Dark theme.
+Together, the tour covers the shared 64px command bar, navigation,
 status footer, Transfers, Search, RSS, Execution Log, Workspace, Options, and
-representative dialogs in Light and Dark modes.
+representative dialogs.
 
-The current raster dimensions are 960×900 for `01`, `02`, and `06`–`11`;
-960×640 for `03`; and 960×768 for `04`, `05`, `12`, and `13`. Keep the intrinsic
-`width`/`height` attributes in `index.html` and the `sizes` entries in
-`manifest.webmanifest` synchronized with the actual files whenever the gallery
-is refreshed; the capture surface may clamp a requested native window size.
+The current logical and PNG dimensions are 960×900 for `01`, `02`, and
+`06`–`11`; 960×640 for `03` and `14`–`17`; and 960×768 for `04`, `05`,
+`12`, and `13`. Keep the intrinsic `width`/`height` attributes in
+`index.html` and the `sizes` entries in `manifest.webmanifest` synchronized
+with the actual files whenever the gallery is refreshed.
 
 ## Visual QA checklist
 
@@ -101,8 +103,10 @@ is refreshed; the capture surface may clamp a requested native window size.
 2. Tablet width near 900 pixels.
 3. Mobile width at 390 pixels.
 4. Light, dark, reduced-motion, and high-contrast preferences.
-5. Keyboard-only navigation and visible focus states.
+5. Keyboard-only navigation and visible focus states, including header icon
+   buttons, the Add/navigation rail, and status-filter chips.
 6. Plain, regex, invalid-regex, filtered, and empty-result searches.
 7. Markdown/JSON import, wiki export, and search-profile round trip.
 8. Internal document links, table of contents, copy-code buttons, and gallery lightbox.
-9. Workspace guide search, internal links, and all 13 native application captures.
+9. Workspace guide search, internal links, and all 17 captured native
+   application views, including compact Split Dock and Card Flow in both themes.

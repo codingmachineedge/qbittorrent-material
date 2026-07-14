@@ -15,14 +15,20 @@
 #include <QClipboard>
 #include <QDesktopServices>
 #include <QGuiApplication>
+#include <QMap>
+#include <QSet>
+#include <QStringView>
 #include <QUrl>
 
 #include "base/bittorrent/infohash.h"
 #include "base/bittorrent/session.h"
 #include "base/bittorrent/sharelimits.h"
+#include "base/bittorrent/trackerentry.h"
+#include "base/bittorrent/trackerentrystatus.h"
 #include "base/bittorrent/torrent.h"
 #include "base/logging.h"
 #include "base/tag.h"
+#include "base/utils/fs.h"
 #include "base/utils/fs/path.h"
 #include "base/utils/misc.h"
 
@@ -233,6 +239,112 @@ void TransferController::removeAllTags()
     qCInfo(lcUi) << "Remove all tags from" << torrents.size() << "torrent(s)";
     for (Torrent *const torrent : torrents)
         torrent->clearTags();
+}
+
+// --- trackers / torrent files ---
+
+QString TransferController::trackersText() const
+{
+    const QList<Torrent *> torrents = selectedTorrents();
+    if (torrents.isEmpty())
+        return {};
+
+    const QList<TrackerEntryStatus> firstTrackers = torrents.first()->trackers();
+    QSet<QString> commonUrls;
+    for (const TrackerEntryStatus &tracker : firstTrackers)
+    {
+        if (!tracker.url.isEmpty())
+            commonUrls.insert(tracker.url);
+    }
+
+    for (qsizetype i = 1; i < torrents.size(); ++i)
+    {
+        QSet<QString> urls;
+        for (const TrackerEntryStatus &tracker : torrents.at(i)->trackers())
+        {
+            if (!tracker.url.isEmpty())
+                urls.insert(tracker.url);
+        }
+        commonUrls.intersect(urls);
+    }
+
+    // Preserve the first selected torrent's tiering and order while displaying
+    // only URLs shared by every selected torrent.
+    QMap<int, QStringList> urlsByTier;
+    QSet<QString> emitted;
+    for (const TrackerEntryStatus &tracker : firstTrackers)
+    {
+        if (tracker.url.isEmpty() || !commonUrls.contains(tracker.url)
+                || emitted.contains(tracker.url))
+        {
+            continue;
+        }
+        urlsByTier[qMax(0, tracker.tier)].append(tracker.url);
+        emitted.insert(tracker.url);
+    }
+
+    QStringList tiers;
+    for (auto it = urlsByTier.cbegin(); it != urlsByTier.cend(); ++it)
+        tiers.append(it.value().join(u'\n'));
+    return tiers.join(QStringLiteral("\n\n"));
+}
+
+void TransferController::setTrackers(const QString &text)
+{
+    const QList<Torrent *> torrents = selectedTorrents();
+    if (torrents.isEmpty())
+        return;
+
+    const QList<TrackerEntry> trackers = parseTrackerEntries(QStringView {text});
+    qCInfo(lcUi) << "Replace trackers on" << torrents.size() << "torrent(s) with"
+                 << trackers.size() << "entry(s)";
+    for (Torrent *const torrent : torrents)
+        torrent->replaceTrackers(trackers);
+}
+
+bool TransferController::exportTorrent(const QString &directory)
+{
+    const QList<Torrent *> torrents = selectedTorrents();
+    const Path exportDirectory {directory.trimmed()};
+    if (torrents.isEmpty() || exportDirectory.isEmpty() || !Utils::Fs::isDir(exportDirectory))
+    {
+        qCWarning(lcUi) << "Export torrent requested without a selection or valid directory";
+        return false;
+    }
+
+    bool succeeded = true;
+    QSet<QString> outputNames;
+    for (const Torrent *const torrent : torrents)
+    {
+        QString baseName = Utils::Fs::toValidFileName(torrent->name());
+        if (baseName.isEmpty())
+            baseName = QStringLiteral("torrent");
+
+        QString fileName;
+        Path outputPath;
+        for (int suffix = 1; ; ++suffix)
+        {
+            fileName = (suffix == 1)
+                ? baseName + QStringLiteral(".torrent")
+                : baseName + QStringLiteral(" (%1).torrent").arg(suffix);
+            outputPath = exportDirectory / Path(fileName);
+            if (!outputNames.contains(fileName) && !outputPath.exists())
+                break;
+        }
+        outputNames.insert(fileName);
+
+        const auto result = torrent->exportToFile(outputPath);
+        if (!result)
+        {
+            qCWarning(lcUi) << "Failed to export torrent" << torrent->name()
+                            << "to" << outputPath.data() << ':' << result.error();
+            succeeded = false;
+            continue;
+        }
+
+        qCInfo(lcUi) << "Exported torrent" << torrent->name() << "to" << outputPath.data();
+    }
+    return succeeded;
 }
 
 // --- queue ---

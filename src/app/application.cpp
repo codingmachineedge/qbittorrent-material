@@ -15,6 +15,7 @@
 #include <QCryptographicHash>
 #include <QDateTime>
 #include <QDir>
+#include <QFile>
 #include <QIcon>
 #include <QLocalServer>
 #include <QLocalSocket>
@@ -32,6 +33,7 @@
 #include "base/settingsstorage.h"
 #include "app/appcontroller.h"
 #include "app/desktopintegration.h"
+#include "quick/theme/iconprovider.h"
 
 // --- Optional cross-team engine headers (tolerant coupling) ------------------
 // Application depends on engine/i18n headers produced by other feature teams.
@@ -110,6 +112,18 @@ namespace
         const QByteArray digest =
             QCryptographicHash::hash(seed.toUtf8(), QCryptographicHash::Sha1).toHex().left(16);
         return u"qbittorrent-material-"_qs + QString::fromLatin1(digest);
+    }
+
+    QString bundledLicenseNotice()
+    {
+        QFile licenseFile(u":/html/gpl.html"_qs);
+        if (!licenseFile.open(QIODevice::ReadOnly | QIODevice::Text))
+        {
+            qCWarning(lcApp) << "Unable to read bundled GPL notice:" << licenseFile.errorString();
+            return {};
+        }
+
+        return QString::fromUtf8(licenseFile.readAll());
     }
 }
 
@@ -248,6 +262,10 @@ int Application::run()
     // Let the engine find QML modules deployed next to the executable (e.g.
     // Qt.labs.platform, copied there by windeployqt) so file-picker dialogs work.
     m_engine->addImportPath(applicationDirPath() + u"/qml"_qs);
+    // The peer list resolves country flags through image://flags/<iso>. The
+    // engine owns the provider after registration; it returns a transparent
+    // placeholder when an optional flag asset is not bundled.
+    m_engine->addImageProvider(u"flags"_qs, new FlagImageProvider);
     registerContext();
     loadMainQml();
 
@@ -429,6 +447,10 @@ void Application::registerContext()
     appInfo.insert(u"version"_qs, applicationVersion());
     appInfo.insert(u"qtVersion"_qs, QString::fromLatin1(qVersion()));
     appInfo.insert(u"launchTime"_qs, m_launchTimeSecsSinceEpoch);
+    // Load the About-dialog notice through QFile rather than QML XHR. This is
+    // synchronous, works for every QRC deployment mode, and leaves a visible
+    // fallback in QML when a packaging regression omits the resource.
+    appInfo.insert(u"licenseText"_qs, bundledLicenseNotice());
     m_engine->rootContext()->setContextProperty(u"ApplicationInfo"_qs, appInfo);
 
     qCDebug(lcApp) << "Registered ApplicationInfo context property";

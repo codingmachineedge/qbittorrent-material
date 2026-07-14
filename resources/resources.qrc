@@ -8,15 +8,18 @@
       :/fonts/MaterialSymbolsOutlined.ttf   (MDIcon glyphs)
       :/fonts/Roboto.ttf, :/fonts/RobotoMono.ttf
       :/i18n/cantonese.json                 (FunnyTranslator catalog)
+      :/branding/logo-mark.svg              (window and normal tray artwork)
+      :/branding/logo-monochrome.svg        (monochrome tray artwork)
       :/html/gpl.html                       (About dialog license text)
-      :/icons/tray/qbittorrent-tray*.png    (system tray artwork)
 
   NOTE: By default the build does NOT compile this file verbatim — it uses a
   tolerant glob of whatever assets currently exist (see src/CMakeLists.txt), so
-  the project builds before every asset has landed. Set -DQBT_BUNDLE_QRC=ON to
-  compile this manifest as-is once all listed files are present. The 369 country
-  flag SVGs are intentionally not enumerated here; they are bundled by the glob
-  from resources/icons/flags/ and served via image://flags/<iso>.
+  the project builds before optional assets have landed. This manifest itself
+  contains only checked-in resources, so -DQBT_BUNDLE_QRC=ON is valid today.
+  Country flag SVGs remain optional: when none are bundled, FlagImageProvider
+  returns a transparent placeholder for image://flags/<iso> instead of a broken
+  image. DesktopIntegration uses the branding SVG above rather than absent tray
+  PNG assets.
 -->
 <RCC>
     <qresource prefix="/">
@@ -25,9 +28,7 @@
         <file alias="fonts/RobotoMono.ttf">fonts/RobotoMono.ttf</file>
         <file alias="i18n/cantonese.json">i18n/cantonese.json</file>
         <file alias="branding/logo-mark.svg">branding/logo-mark.svg</file>
+        <file alias="branding/logo-monochrome.svg">branding/logo-monochrome.svg</file>
         <file alias="html/gpl.html">html/gpl.html</file>
-        <file alias="icons/tray/qbittorrent-tray.png">icons/tray/qbittorrent-tray.png</file>
-        <file alias="icons/tray/qbittorrent-tray-light.png">icons/tray/qbittorrent-tray-light.png</file>
-        <file alias="icons/tray/qbittorrent-tray-dark.png">icons/tray/qbittorrent-tray-dark.png</file>
     </qresource>
 </RCC>

@@ -5,6 +5,7 @@
  */
 
 import QtQuick
+import QtQuick.Controls
 import qBittorrent
 
 /*!
@@ -27,7 +28,7 @@ Flow {
     Repeater {
         model: statusModel
 
-        delegate: Rectangle {
+        delegate: AbstractButton {
             id: chip
             required property string label
             required property int count
@@ -37,14 +38,25 @@ Flow {
 
             height: 32
             width: chipRow.implicitWidth + 28
-            radius: 16
-            color: selected ? Theme.color("primaryContainer") : "transparent"
-            border.width: 1
-            border.color: selected ? Theme.color("primaryContainer") : Theme.color("outline")
+            padding: 0
+            hoverEnabled: true
+            activeFocusOnTab: true
 
-            Behavior on color { ColorAnimation { duration: 200 } }
+            Accessible.role: Accessible.Button
+            Accessible.name: qsTr("%1 filter, %2 torrents").arg(chip.label).arg(chip.count)
+            Accessible.description: chip.selected
+                ? qsTr("Current filter") : qsTr("Apply filter")
 
-            Row {
+            background: Rectangle {
+                radius: 16
+                color: chip.selected ? Theme.color("primaryContainer") : "transparent"
+                border.width: chip.visualFocus ? 2 : 1
+                border.color: chip.selected ? Theme.color("primaryContainer") : Theme.color("outline")
+
+                Behavior on color { ColorAnimation { duration: 200 } }
+            }
+
+            contentItem: Row {
                 id: chipRow
                 anchors.centerIn: parent
                 spacing: 6
@@ -73,13 +85,10 @@ Flow {
                 }
             }
 
-            MouseArea {
-                anchors.fill: parent
-                cursorShape: Qt.PointingHandCursor
-                onClicked: {
-                    if (root.filterProxy)
-                        root.filterProxy.statusFilter = value
-                }
+            HoverHandler { cursorShape: Qt.PointingHandCursor }
+            onClicked: {
+                if (root.filterProxy)
+                    root.filterProxy.statusFilter = value
             }
         }
     }

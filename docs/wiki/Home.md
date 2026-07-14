@@ -6,6 +6,20 @@ This wiki is maintained in the main repository so the GitHub Wiki and the search
 
 The completed desktop shell uses a 64px command bar, persistent 248px navigation, and a compact 32px footer. Transfers, Search, RSS, Execution Log, and the personal Workspace are native Qt Quick workspaces. Their content follows a consistent 24px page gutter, flat 24px-radius panels, 40px controls, and compact tables and split views. Choose **System**, **Light**, or **Dark** without changing the underlying workflows or data models.
 
+## Smoke-tested shell behaviors
+
+- The menu bar, header/toolbar, and Material tray menu route through shared
+  actions, so equivalent commands invoke the same application behavior.
+- Header icon buttons, the Add button and navigation rail, and status-filter
+  chips are keyboard reachable, have accessible labels, and keep a visible
+  focus state.
+- The Behavior-page tray-icon style is an Options transaction: **Apply**
+  commits and refreshes the tray icon, while **Cancel** keeps the active style.
+- The About dialog reads its bundled GPL notice from the QRC resource bundle.
+  Peer flags use the registered
+  `image://flags` provider; missing optional SVGs intentionally render as a
+  transparent fallback instead of a broken image.
+
 ![qBittorrent Material dashboard](images/app/01-main-window.png)
 
 ## Start here

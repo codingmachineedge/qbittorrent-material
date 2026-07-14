@@ -20,17 +20,21 @@ import qBittorrent
     \brief Material rebuild of the legacy \c AboutDialog.
 
     A tabbed "About" dialog (About / Authors / Special Thanks / Translation /
-    License). The License tab streams the bundled GPL text from
-    \c qrc:/html/gpl.html at open time via an \c XMLHttpRequest — the large
-    license body is never pasted inline in QML. External links are opened in the
-    system browser via \c Qt.openUrlExternally.
+    License). The License tab renders the bundled GPL notice supplied through
+    the application context from \c :/html/gpl.html, rather than pasting it
+    inline in QML. External links are opened in the system browser via
+    \c Qt.openUrlExternally.
 */
 Dialog {
     id: root
 
-    // The bundled license HTML, loaded lazily from the Qt resource bundle.
-    property string _licenseText: ""
-    property bool _licenseLoaded: false
+    // The C++ context loads the QRC once before Main.qml is instantiated. Keep
+    // an explicit visible fallback if a packaging regression omits the asset.
+    readonly property string licenseText: ApplicationInfo.licenseText.length > 0
+                                       ? ApplicationInfo.licenseText
+                                       : qsTr("Could not load the bundled license notice.")
+    // Used by deterministic captures; regular invocations retain the About tab.
+    property int initialTab: 0
 
     title: qsTr("About qBittorrent")
     modal: true
@@ -48,31 +52,9 @@ Dialog {
         color: Theme.color("surface")
     }
 
-    // Pull the GPL text out of the resource bundle exactly once.
-    function _loadLicense() {
-        if (root._licenseLoaded)
-            return
-        const xhr = new XMLHttpRequest()
-        xhr.onreadystatechange = function () {
-            if (xhr.readyState !== XMLHttpRequest.DONE)
-                return
-            // qrc requests report status 0 on success.
-            if ((xhr.status === 200) || (xhr.status === 0)) {
-                root._licenseText = xhr.responseText
-                root._licenseLoaded = true
-                Log.debug("ui", "AboutDialog loaded gpl.html (" + root._licenseText.length + " chars)")
-            } else {
-                Log.warning("ui", "AboutDialog failed to load gpl.html; status " + xhr.status)
-                root._licenseText = qsTr("Could not load the license text.")
-            }
-        }
-        xhr.open("GET", "qrc:/html/gpl.html")
-        xhr.send()
-    }
-
     onOpened: {
         Log.debug("ui", "AboutDialog opened")
-        root._loadLicense()
+        tabBar.currentIndex = Math.max(0, Math.min(tabBar.count - 1, root.initialTab))
     }
     onClosed: Log.debug("ui", "AboutDialog closed")
 
@@ -313,12 +295,16 @@ Dialog {
                 id: licenseScroll
                 clip: true
                 contentWidth: availableWidth
+                // Keep the scrollable extent synchronized with the rich-text
+                // label's implicit height.
+                contentHeight: licenseLabel.implicitHeight
 
                 Label {
+                    id: licenseLabel
                     width: licenseScroll.availableWidth
                     wrapMode: Text.WordWrap
                     textFormat: Text.RichText
-                    text: root._licenseText
+                    text: root.licenseText
                     font: Typography.bodyMedium
                     color: Theme.color("onSurface")
                     onLinkActivated: (link) => Qt.openUrlExternally(link)

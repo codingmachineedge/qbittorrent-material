@@ -336,10 +336,13 @@ Flickable {
                     ComboBox {
                         Layout.fillWidth: true
                         model: [ qsTr("Normal"), qsTr("Monochrome") ]
-                        currentIndex: ThemeManager.trayIconStyle
+                        // Keep this choice inside the Options transaction.  The
+                        // active ThemeManager value changes only after Apply.
+                        currentIndex: (root.rev, OptionsController.value(
+                                               "trayIconStyle", ThemeManager.Normal))
                         onActivated: (i) => {
-                            Log.info("theme", "Tray icon style -> " + i)
-                            ThemeManager.trayIconStyle = i
+                            Log.info("theme", "Staged tray icon style -> " + i)
+                            OptionsController.setValue("trayIconStyle", i)
                         }
                     }
                 }

@@ -2,7 +2,7 @@
   "id": "./",
   "name": "qBittorrent Material Documentation",
   "short_name": "qBT Material",
-  "description": "The native qBittorrent Material rewrite, searchable documentation, 13-view visual tour, and project wiki.",
+  "description": "The native qBittorrent Material rewrite, searchable documentation, 17-view visual tour, and project wiki.",
   "lang": "en",
   "dir": "ltr",
   "start_url": "./",
@@ -117,7 +117,35 @@
       "sizes": "960x768",
       "type": "image/png",
       "form_factor": "wide",
-      "label": "About qBittorrent dialog in Dark mode"
+      "label": "About License dialog with bundled GPL notice in Dark mode"
+    },
+    {
+      "src": "images/app/14-split-dock-compact.png",
+      "sizes": "960x640",
+      "type": "image/png",
+      "form_factor": "wide",
+      "label": "Compact Split Dock Transfers layout in Light mode"
+    },
+    {
+      "src": "images/app/15-split-dock-dark-compact.png",
+      "sizes": "960x640",
+      "type": "image/png",
+      "form_factor": "wide",
+      "label": "Compact Split Dock Transfers layout in Dark mode"
+    },
+    {
+      "src": "images/app/16-card-flow-compact.png",
+      "sizes": "960x640",
+      "type": "image/png",
+      "form_factor": "wide",
+      "label": "Compact Card Flow Transfers layout in Light mode"
+    },
+    {
+      "src": "images/app/17-card-flow-dark-compact.png",
+      "sizes": "960x640",
+      "type": "image/png",
+      "form_factor": "wide",
+      "label": "Compact Card Flow Transfers layout in Dark mode"
     },
     {
       "src": "images/site/01-landing-desktop.png",

@@ -13,3 +13,10 @@
 - Resume-data persistence is still stubbed in this fork; torrents do NOT
   survive restarts. The journal exposes journaledOnlyTorrentIds() +
   restoreMissingTorrents() instead of treating those as deletions.
+- 2026-07-13 — Change handoff: scope covers keyboard/focus accessibility for
+  header icons, the Add/navigation rail, and filter chips; shared
+  menu/toolbar/tray action routing; the staged tray-icon setting (Apply commits,
+  Cancel preserves the active value); the About GPL QRC notice; and the
+  registered country-flag provider. Flag SVGs remain optional: a missing asset
+  intentionally returns a transparent fallback. A package-only CPack smoke
+  succeeded; the installer was not executed locally.

@@ -1036,7 +1036,8 @@ ApplicationWindow {
             switch (root.captureDialog) {
             case "options": optionsDialog.open(); break
             case "add-link": downloadFromURLDialog.open(); break
-            case "about": aboutDialog.open(); break
+            case "about": aboutDialog.initialTab = 0; aboutDialog.open(); break
+            case "about-license": aboutDialog.initialTab = 4; aboutDialog.open(); break
             case "statistics": statisticsDialog.open(); break
             case "speed-limits": speedLimitDialog.open(); break
             case "history": root.activePanel = "history"; break

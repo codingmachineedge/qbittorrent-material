@@ -64,9 +64,10 @@ repository. End users do not need to install the Git command-line client.
 
 ## Visual smoke-test gallery
 
-The checked-in visual gallery was captured from the installed Windows package
-using a fresh test profile. It provides a quick UI handoff alongside the
-installer build and smoke test:
+The checked-in visual gallery is captured from the native Windows build using a
+fresh test profile and the deterministic capture path. It provides a quick UI
+handoff alongside the package-only CPack smoke; the pushed GitHub Actions gate
+performs the installed-package validation:
 
 ![qBittorrent Material dashboard](images/app/01-main-window.png)
 

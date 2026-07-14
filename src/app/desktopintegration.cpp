@@ -18,6 +18,7 @@
 
 #include "base/logging.h"
 #include "app/application.h"
+#include "quick/theme/thememanager.h"
 
 #if __has_include("base/preferences.h")
 #include "base/preferences.h"
@@ -28,18 +29,20 @@ using namespace Qt::StringLiterals;
 
 namespace
 {
-    const QString kTrayStyleKey = u"Appearance/TrayIconStyle"_qs;
     const QString kNotificationsKey = u"Preferences/General/NotificationEnabled"_qs;
 
-    // Tray icon style values mirror the legacy enum: 0 Normal, 1 Monochrome
-    // (light desktop), 2 Monochrome (dark desktop).
-    QString trayIconResource(int style)
+    QString trayIconResource(const ThemeManager::TrayIconStyle style)
     {
         switch (style)
         {
-        case 1:
-        case 2:  return u":/branding/logo-monochrome.svg"_qs;
-        default: return u":/branding/logo-mark.svg"_qs;
+        case ThemeManager::Normal:
+            return u":/branding/logo-mark.svg"_qs;
+        case ThemeManager::Monochrome:
+        default:
+            // Legacy profiles may retain the historic dark-monochrome value
+            // (2). Treat every non-normal value as monochrome so their tray
+            // artwork remains visually compatible.
+            return u":/branding/logo-monochrome.svg"_qs;
         }
     }
 }
@@ -52,6 +55,12 @@ DesktopIntegration::DesktopIntegration(QObject *parent)
 #ifdef QBT_HAS_PREFERENCES
     m_notificationsEnabled = Preferences::instance()->value(kNotificationsKey, true).toBool();
 #endif
+
+    // OptionsController commits this setting through ThemeManager on Apply.
+    // Updating the native icon here keeps the actual system tray in sync with
+    // the committed style without making a staged edit visible prematurely.
+    connect(ThemeManager::instance(), &ThemeManager::trayIconStyleChanged,
+        this, &DesktopIntegration::refreshTrayIcon);
 
     if (QSystemTrayIcon::isSystemTrayAvailable())
     {
@@ -120,11 +129,7 @@ void DesktopIntegration::createTrayIcon()
 
 QIcon DesktopIntegration::resolveTrayIcon() const
 {
-    int style = 0;
-#ifdef QBT_HAS_PREFERENCES
-    style = Preferences::instance()->value(kTrayStyleKey, 0).toInt();
-#endif
-    const QString resource = trayIconResource(style);
+    const QString resource = trayIconResource(ThemeManager::instance()->trayIconStyle());
     QIcon icon(resource);
     if (icon.isNull())
     {

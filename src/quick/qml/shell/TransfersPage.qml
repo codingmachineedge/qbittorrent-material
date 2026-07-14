@@ -8,6 +8,7 @@ import QtQuick
 import QtQuick.Controls
 import QtQuick.Controls.Material
 import QtQuick.Layouts
+import Qt.labs.platform as Platform
 import qBittorrent
 
 /*!
@@ -70,6 +71,10 @@ Item {
         if (!text || text.indexOf("0 B/s") === 0)
             return Theme.color("onSurfaceVariant")
         return seeding ? Theme.color("primary") : Theme.color("success")
+    }
+
+    function localPath(url) {
+        return decodeURIComponent(("" + url).replace(/^file:\/\/\/?/, ""))
     }
 
     // ---- Selection -----------------------------------------------------------
@@ -161,26 +166,38 @@ Item {
                     { icon: "folder_open", tip: qsTr("Open folder"), act: function() { TransferController.openDestination() } },
                     { icon: "delete", danger: true, tip: qsTr("Remove"), act: function() { root.deleteRequested() } }
                 ]
-                delegate: Rectangle {
+                delegate: AbstractButton {
+                    id: selectionActionButton
                     required property var modelData
                     anchors.verticalCenter: parent.verticalCenter
-                    width: 38; height: 38; radius: 19
-                    color: selBarBtn.containsMouse
-                        ? (modelData.danger ? Theme.color("errorContainer") : Theme.color("hoverStrong"))
-                        : "transparent"
-                    MDIcon {
+                    width: 38
+                    height: 38
+                    padding: 0
+                    hoverEnabled: true
+                    activeFocusOnTab: true
+                    Accessible.name: modelData.tip
+                    Accessible.description: qsTr("Action for the selected torrent")
+
+                    background: Rectangle {
+                        radius: 19
+                        color: selectionActionButton.hovered
+                            ? (selectionActionButton.modelData.danger ? Theme.color("errorContainer") : Theme.color("hoverStrong"))
+                            : "transparent"
+                        border.width: selectionActionButton.visualFocus ? 2 : 0
+                        border.color: selectionActionButton.modelData.danger
+                            ? Theme.color("error") : Theme.color("primary")
+                    }
+                    contentItem: MDIcon {
                         anchors.centerIn: parent
-                        name: modelData.icon
+                        name: selectionActionButton.modelData.icon
                         size: 20
-                        color: modelData.danger ? Theme.color("error") : Theme.color("onSurface")
+                        color: selectionActionButton.modelData.danger
+                            ? Theme.color("error") : Theme.color("onSurface")
                     }
-                    MouseArea {
-                        id: selBarBtn
-                        anchors.fill: parent
-                        hoverEnabled: true
-                        cursorShape: Qt.PointingHandCursor
-                        onClicked: modelData.act()
-                    }
+                    HoverHandler { cursorShape: Qt.PointingHandCursor }
+                    ToolTip.visible: selectionActionButton.hovered
+                    ToolTip.text: modelData.tip
+                    onClicked: modelData.act()
                 }
             }
         }
@@ -268,11 +285,31 @@ Item {
                     Layout.margins: 8
                     spacing: 2
 
-                    Rectangle {
-                        width: 36; height: 36; radius: 8
-                        color: Theme.color("primaryContainer")
-                        MDIcon { anchors.centerIn: parent; name: "note_add"; size: 20; color: Theme.color("onPrimaryContainer") }
-                        MouseArea { anchors.fill: parent; cursorShape: Qt.PointingHandCursor; onClicked: root.shell.addTorrentFile() }
+                    AbstractButton {
+                        id: splitDockAddButton
+                        width: 36
+                        height: 36
+                        padding: 0
+                        hoverEnabled: true
+                        activeFocusOnTab: true
+                        Accessible.name: qsTr("Add torrent")
+                        Accessible.description: qsTr("Add a torrent file")
+                        background: Rectangle {
+                            radius: 8
+                            color: Theme.color("primaryContainer")
+                            border.width: splitDockAddButton.visualFocus ? 2 : 0
+                            border.color: Theme.color("primary")
+                        }
+                        contentItem: MDIcon {
+                            anchors.centerIn: parent
+                            name: "note_add"
+                            size: 20
+                            color: Theme.color("onPrimaryContainer")
+                        }
+                        HoverHandler { cursorShape: Qt.PointingHandCursor }
+                        ToolTip.visible: splitDockAddButton.hovered
+                        ToolTip.text: qsTr("Add torrent")
+                        onClicked: root.shell.addTorrentFile()
                     }
                     Repeater {
                         model: [
@@ -280,17 +317,34 @@ Item {
                             { icon: "pause", tip: qsTr("Stop"), act: function() { TransferController.stop() } },
                             { icon: "delete", tip: qsTr("Remove"), act: function() { root.deleteRequested() } }
                         ]
-                        delegate: Rectangle {
+                        delegate: AbstractButton {
+                            id: splitDockActionButton
                             required property var modelData
-                            width: 36; height: 36; radius: 8
-                            color: sbMouse.containsMouse ? Theme.color("hoverStrong") : "transparent"
-                            MDIcon { anchors.centerIn: parent; name: parent.modelData.icon; size: 20; color: Theme.color("onSurface") }
-                            MouseArea {
-                                id: sbMouse
-                                anchors.fill: parent; hoverEnabled: true
-                                cursorShape: Qt.PointingHandCursor
-                                onClicked: parent.modelData.act()
+                            width: 36
+                            height: 36
+                            padding: 0
+                            hoverEnabled: true
+                            activeFocusOnTab: true
+                            Accessible.name: modelData.tip
+                            Accessible.description: qsTr("Action for the selected torrent")
+                            background: Rectangle {
+                                radius: 8
+                                color: splitDockActionButton.hovered ? Theme.color("hoverStrong") : "transparent"
+                                border.width: splitDockActionButton.visualFocus ? 2 : 0
+                                border.color: splitDockActionButton.modelData.icon === "delete"
+                                    ? Theme.color("error") : Theme.color("primary")
                             }
+                            contentItem: MDIcon {
+                                anchors.centerIn: parent
+                                name: splitDockActionButton.modelData.icon
+                                size: 20
+                                color: splitDockActionButton.modelData.icon === "delete"
+                                    ? Theme.color("error") : Theme.color("onSurface")
+                            }
+                            HoverHandler { cursorShape: Qt.PointingHandCursor }
+                            ToolTip.visible: splitDockActionButton.hovered
+                            ToolTip.text: modelData.tip
+                            onClicked: modelData.act()
                         }
                     }
                 }
@@ -919,15 +973,28 @@ Item {
         id: rowMenu
         onRenameRequested: renameDialog.open()
         onSetLocationRequested: setLocationDialog.open()
-        onManageContentRequested: Log.warning("ui", "Manage content: not wired in the redesigned page yet")
-        onEditTrackersRequested: trackersDialog.open()
+        onManageContentRequested: {
+            if (TransferController.selectionCount !== 1)
+                return
+            PropertiesController.currentTab = PropertiesController.Content
+            contentDialog.open()
+        }
+        onEditTrackersRequested: {
+            if (TransferController.selectionCount <= 0)
+                return
+            trackersDialog.trackersText = TransferController.trackersText()
+            trackersDialog.open()
+        }
         onTorrentOptionsRequested: {
             torrentOptionsDialog.torrentIds = TransferController.selectedIds
             torrentOptionsDialog.initialValues = ({})
             torrentOptionsDialog.open()
         }
         onPreviewRequested: TransferController.preview()
-        onExportRequested: Log.warning("ui", "Export .torrent: not wired in the redesigned page yet")
+        onExportRequested: {
+            if (TransferController.selectionCount > 0)
+                exportDialog.open()
+        }
         onDeleteRequested: root.deleteRequested()
         onNewCategoryRequested: newCategoryDialog.open()
         onAddTagRequested: addTagDialog.open()
@@ -973,10 +1040,57 @@ Item {
     TrackerEntriesDialog {
         id: trackersDialog
         parent: Overlay.overlay
-        onTrackersAccepted: (text) => {
-            if (typeof TransferController.setTrackers === "function")
-                TransferController.setTrackers(text)
+        onTrackersAccepted: (text) => TransferController.setTrackers(text)
+    }
+    Dialog {
+        id: contentDialog
+        parent: Overlay.overlay
+        modal: true
+        anchors.centerIn: parent
+        width: Math.min(1040, (parent ? parent.width : 1040) * 0.95)
+        height: Math.min(700, (parent ? parent.height : 700) * 0.9)
+        padding: 0
+        Material.elevation: Spacing.elevationDialog
+        Material.roundedScale: Material.MediumScale
+
+        background: Rectangle {
+            radius: Spacing.radiusDialog
+            color: Theme.color("surface")
         }
+        header: Label {
+            text: qsTr("Manage content")
+            font: Typography.headlineSmall
+            color: Theme.color("onSurface")
+            padding: Spacing.lg
+        }
+        contentItem: ContentTab {
+            width: contentDialog.availableWidth
+            height: contentDialog.availableHeight
+        }
+        footer: DialogButtonBox {
+            padding: Spacing.lg
+            Button {
+                text: qsTr("Close")
+                flat: true
+                DialogButtonBox.buttonRole: DialogButtonBox.RejectRole
+                onClicked: contentDialog.close()
+            }
+        }
+    }
+    Platform.FolderDialog {
+        id: exportDialog
+        title: qsTr("Choose export directory")
+        onAccepted: {
+            const directory = root.localPath(folder)
+            if (TransferController.exportTorrent(directory))
+                actionSnackbar.show(qsTr("Torrent file(s) exported."))
+            else
+                actionSnackbar.show(qsTr("Could not export the selected torrent file(s)."))
+        }
+    }
+    Snackbar {
+        id: actionSnackbar
+        parent: Overlay.overlay
     }
     TorrentOptionsDialog {
         id: torrentOptionsDialog

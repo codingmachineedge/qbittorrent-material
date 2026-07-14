@@ -13,7 +13,7 @@ import qBittorrent
     \brief 40px round icon button used across the redesigned header
            (bell, history, theme toggle, settings), with an optional badge.
 */
-Rectangle {
+AbstractButton {
     id: root
 
     property string iconName: ""
@@ -23,54 +23,59 @@ Rectangle {
     property int badgeCount: 0
     property color iconColor: Theme.color("onSurface")
 
-    signal clicked()
-
     width: 40
     height: 40
-    radius: 20
-    color: root.active ? Theme.color("primaryContainer")
-                       : (mouse.containsMouse ? Theme.color("hoverStrong") : "transparent")
+    padding: 0
+    hoverEnabled: true
+    activeFocusOnTab: true
 
-    Behavior on color { ColorAnimation { duration: 200 } }
+    Accessible.role: Accessible.Button
+    Accessible.name: root.tooltip.length > 0 ? root.tooltip : root.iconName
 
-    MDIcon {
-        anchors.centerIn: parent
-        name: root.iconName
-        size: root.iconSize
-        color: root.active ? Theme.color("onPrimaryContainer") : root.iconColor
+    background: Rectangle {
+        radius: width / 2
+        color: root.active ? Theme.color("primaryContainer")
+                           : (root.hovered ? Theme.color("hoverStrong") : "transparent")
+        border.width: root.visualFocus ? 2 : 0
+        border.color: Theme.color("primary")
+
+        Behavior on color { ColorAnimation { duration: 200 } }
     }
 
-    Rectangle {
-        visible: root.badgeCount > 0
-        anchors.top: parent.top
-        anchors.right: parent.right
-        anchors.topMargin: 3
-        anchors.rightMargin: 3
-        width: Math.max(16, badgeLabel.implicitWidth + 8)
-        height: 16
-        radius: 8
-        color: Theme.color("error")
-
-        Text {
-            id: badgeLabel
+    contentItem: Item {
+        MDIcon {
             anchors.centerIn: parent
-            text: root.badgeCount > 99 ? "99+" : String(root.badgeCount)
-            color: "#ffffff"
-            font.family: Typography.family
-            font.pixelSize: 10
-            font.weight: Font.Bold
+            name: root.iconName
+            size: root.iconSize
+            color: root.active ? Theme.color("onPrimaryContainer") : root.iconColor
+        }
+
+        Rectangle {
+            visible: root.badgeCount > 0
+            anchors.top: parent.top
+            anchors.right: parent.right
+            anchors.topMargin: 3
+            anchors.rightMargin: 3
+            width: Math.max(16, badgeLabel.implicitWidth + 8)
+            height: 16
+            radius: 8
+            color: Theme.color("error")
+
+            Text {
+                id: badgeLabel
+                anchors.centerIn: parent
+                text: root.badgeCount > 99 ? "99+" : String(root.badgeCount)
+                color: "#ffffff"
+                font.family: Typography.family
+                font.pixelSize: 10
+                font.weight: Font.Bold
+            }
         }
     }
 
-    MouseArea {
-        id: mouse
-        anchors.fill: parent
-        hoverEnabled: true
-        cursorShape: Qt.PointingHandCursor
-        onClicked: root.clicked()
-    }
+    HoverHandler { cursorShape: Qt.PointingHandCursor }
 
-    ToolTip.visible: mouse.containsMouse && (root.tooltip.length > 0)
+    ToolTip.visible: root.hovered && (root.tooltip.length > 0)
     ToolTip.delay: 600
     ToolTip.timeout: 5000
     ToolTip.text: root.tooltip

@@ -33,8 +33,8 @@ class QSystemTrayIcon;
  *     `SystemTrayMenu` at the cursor (we intentionally do NOT attach a native
  *     QMenu so the tray menu stays Material like the rest of the UI).
  *
- * The tray icon artwork honors the legacy `Appearance/TrayIconStyle` setting
- * (Normal / Monochrome light / Monochrome dark).
+ * The tray icon artwork follows ThemeManager's legacy
+ * `Appearance/TrayIconStyle` setting (Normal / Monochrome).
  */
 class DesktopIntegration : public QObject
 {

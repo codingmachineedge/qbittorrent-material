@@ -31,23 +31,23 @@ install_deps() {
             qt6-base-dev qt6-base-private-dev qt6-declarative-dev qt6-declarative-private-dev \
             libqt6svg6-dev qml6-module-qtquick-controls qml6-module-qtquick-layouts \
             qml6-module-qtquick-window qml6-module-qtqml-workerscript \
-            libtorrent-rasterbar-dev libboost-all-dev libssl-dev zlib1g-dev
+            libtorrent-rasterbar-dev libgit2-dev libboost-all-dev libssl-dev zlib1g-dev
     elif have dnf; then
         info "Installing dependencies via dnf..."
         sudo dnf install -y gcc-c++ cmake ninja-build \
             qt6-qtbase-devel qt6-qtdeclarative-devel qt6-qtsvg-devel \
-            rb_libtorrent-devel boost-devel openssl-devel zlib-devel
+            rb_libtorrent-devel libgit2-devel boost-devel openssl-devel zlib-devel
     elif have pacman; then
         info "Installing dependencies via pacman..."
         sudo pacman -S --needed --noconfirm \
             base-devel cmake ninja qt6-base qt6-declarative qt6-svg \
-            libtorrent-rasterbar boost openssl zlib
+            libtorrent-rasterbar libgit2 boost openssl zlib
     elif have brew; then
         info "Installing dependencies via Homebrew..."
-        brew install cmake ninja qt libtorrent-rasterbar boost openssl@3 zlib
+        brew install cmake ninja qt libtorrent-rasterbar libgit2 boost openssl@3 zlib
         export CMAKE_PREFIX_PATH="$(brew --prefix qt):$(brew --prefix openssl@3):${CMAKE_PREFIX_PATH:-}"
     else
-        die "No supported package manager found (apt/dnf/pacman/brew). Install Qt6, libtorrent-rasterbar, Boost, OpenSSL, zlib, CMake and Ninja manually, then re-run."
+        die "No supported package manager found (apt/dnf/pacman/brew). Install Qt6, libtorrent-rasterbar, libgit2, Boost, OpenSSL, zlib, CMake and Ninja manually, then re-run."
     fi
 }
 

@@ -5,6 +5,7 @@
  */
 
 import QtQuick
+import QtQuick.Controls
 import QtQuick.Layouts
 import qBittorrent
 
@@ -53,18 +54,31 @@ Rectangle {
 
                 Repeater {
                     model: root.navModel
-                    delegate: Rectangle {
+                    delegate: AbstractButton {
+                        id: segmentButton
                         required property var modelData
                         required property int index
                         readonly property bool active: root.currentTab === modelData.page
 
                         height: 32
                         width: segRow.implicitWidth + 28
-                        radius: 16
-                        color: active ? Theme.color("primaryContainer")
-                                      : (segMouse.containsMouse ? Theme.color("hoverStrong") : "transparent")
+                        padding: 0
+                        hoverEnabled: true
+                        activeFocusOnTab: true
 
-                        Row {
+                        Accessible.name: segmentButton.modelData.label
+                        Accessible.description: segmentButton.active
+                            ? qsTr("Current destination") : qsTr("Open destination")
+
+                        background: Rectangle {
+                            radius: 16
+                            color: segmentButton.active ? Theme.color("primaryContainer")
+                                                       : (segmentButton.hovered ? Theme.color("hoverStrong") : "transparent")
+                            border.width: segmentButton.visualFocus ? 2 : 0
+                            border.color: Theme.color("primary")
+                        }
+
+                        contentItem: Row {
                             id: segRow
                             anchors.centerIn: parent
                             spacing: 6
@@ -103,13 +117,8 @@ Rectangle {
                                 }
                             }
                         }
-                        MouseArea {
-                            id: segMouse
-                            anchors.fill: parent
-                            hoverEnabled: true
-                            cursorShape: Qt.PointingHandCursor
-                            onClicked: root.navRequested(modelData.page)
-                        }
+                        HoverHandler { cursorShape: Qt.PointingHandCursor }
+                        onClicked: root.navRequested(modelData.page)
                     }
                 }
             }
@@ -145,6 +154,10 @@ Rectangle {
                     objectName: "headerFilterInput"
                     Layout.fillWidth: true
                     text: searchPill.textFilter
+                    Accessible.name: qsTr("Filter torrents")
+                    Accessible.description: searchPill.useRegex
+                        ? qsTr("Filter transfers with a regular expression")
+                        : qsTr("Filter transfers by text")
                     onTextEdited: { if (root.filterProxy) root.filterProxy.textFilter = text }
                     font.family: Typography.family
                     font.pixelSize: 14
@@ -154,21 +167,40 @@ Rectangle {
 
                     Text {
                         anchors.verticalCenter: parent.verticalCenter
+                        width: parent.width
                         visible: filterInput.text.length === 0
-                        text: searchPill.useRegex ? qsTr("Search with /regex/") : qsTr("Search torrents")
+                        text: searchPill.useRegex
+                            ? (filterInput.width < 110 ? qsTr("Regex") : qsTr("Search with /regex/"))
+                            : (filterInput.width < 110 ? qsTr("Search") : qsTr("Search torrents"))
+                        elide: Text.ElideRight
                         font: filterInput.font
                         color: Theme.color("onSurfaceVariant")
                     }
                 }
 
-                Rectangle {
+                AbstractButton {
+                    id: regexToggle
                     Layout.preferredHeight: 28
                     Layout.preferredWidth: rxLabel.implicitWidth + 20
-                    radius: 14
-                    color: searchPill.useRegex
-                        ? (searchPill.rxInvalid ? Theme.color("errorContainer") : Theme.color("primaryContainer"))
-                        : "transparent"
-                    Text {
+                    padding: 0
+                    hoverEnabled: true
+                    activeFocusOnTab: true
+                    checkable: true
+                    checked: searchPill.useRegex
+                    Accessible.name: searchPill.useRegex
+                        ? qsTr("Disable regular-expression filtering")
+                        : qsTr("Enable regular-expression filtering")
+                    Accessible.description: qsTr("Toggle regular-expression filtering")
+
+                    background: Rectangle {
+                        radius: 14
+                        color: searchPill.useRegex
+                            ? (searchPill.rxInvalid ? Theme.color("errorContainer") : Theme.color("primaryContainer"))
+                            : (regexToggle.hovered ? Theme.color("hoverStrong") : "transparent")
+                        border.width: regexToggle.visualFocus ? 2 : 0
+                        border.color: Theme.color("primary")
+                    }
+                    contentItem: Text {
                         id: rxLabel
                         anchors.centerIn: parent
                         text: ".*"
@@ -179,11 +211,8 @@ Rectangle {
                             ? (searchPill.rxInvalid ? Theme.color("error") : Theme.color("onPrimaryContainer"))
                             : Theme.color("onSurfaceVariant")
                     }
-                    MouseArea {
-                        anchors.fill: parent
-                        cursorShape: Qt.PointingHandCursor
-                        onClicked: { if (root.filterProxy) root.filterProxy.useRegex = !root.filterProxy.useRegex }
-                    }
+                    HoverHandler { cursorShape: Qt.PointingHandCursor }
+                    onClicked: { if (root.filterProxy) root.filterProxy.useRegex = !root.filterProxy.useRegex }
                 }
 
                 HeaderIconButton {
@@ -242,18 +271,35 @@ Rectangle {
         }
 
         // --- Alternative speed limits toggle ----------------------------------
-        Rectangle {
+        AbstractButton {
+            id: alternativeLimitsButton
             readonly property bool altOn: SpeedLimitController.alternativeLimitsEnabled || false
             Layout.preferredHeight: 34
             Layout.preferredWidth: altRow.implicitWidth + 28
-            radius: 17
-            color: altOn ? Theme.color("primaryContainer") : "transparent"
-            border.width: 1
-            border.color: altOn ? Theme.color("primaryContainer") : Theme.color("outline")
+            padding: 0
+            hoverEnabled: true
+            activeFocusOnTab: true
+            checkable: true
+            checked: altOn
+            Accessible.name: qsTr("Alternative speed limits")
+            Accessible.description: altOn
+                ? qsTr("Disable alternative speed limits")
+                : qsTr("Enable alternative speed limits")
 
-            Behavior on color { ColorAnimation { duration: 250 } }
+            background: Rectangle {
+                radius: 17
+                color: alternativeLimitsButton.altOn
+                    ? Theme.color("primaryContainer")
+                    : (alternativeLimitsButton.hovered ? Theme.color("hoverStrong") : "transparent")
+                border.width: alternativeLimitsButton.visualFocus ? 2 : 1
+                border.color: alternativeLimitsButton.visualFocus
+                    ? Theme.color("primary")
+                    : (alternativeLimitsButton.altOn ? Theme.color("primaryContainer") : Theme.color("outline"))
 
-            Row {
+                Behavior on color { ColorAnimation { duration: 250 } }
+            }
+
+            contentItem: Row {
                 id: altRow
                 anchors.centerIn: parent
                 spacing: 6
@@ -272,11 +318,8 @@ Rectangle {
                     color: parent.parent.altOn ? Theme.color("onPrimaryContainer") : Theme.color("onSurfaceVariant")
                 }
             }
-            MouseArea {
-                anchors.fill: parent
-                cursorShape: Qt.PointingHandCursor
-                onClicked: SpeedLimitController.toggleAlternativeLimits()
-            }
+            HoverHandler { cursorShape: Qt.PointingHandCursor }
+            onClicked: SpeedLimitController.toggleAlternativeLimits()
         }
 
         // --- Panel buttons -----------------------------------------------------

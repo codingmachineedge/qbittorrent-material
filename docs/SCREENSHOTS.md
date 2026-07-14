@@ -2,26 +2,31 @@
 
 The native Windows captures use an isolated, empty test profile. They show the
 real Qt Quick interface without personal torrents, paths, tracker data, or
-account details. The stable `01`–`13` filenames are retained for existing links;
-their captions below describe the current full-screen capture set.
+account details. Each saved PNG matches its documented logical window target.
+The stable `01`–`17` filenames are retained for existing links, and the
+complete tour includes compact Split Dock and Card Flow in both palettes.
 
 ## Capture matrix
 
-| File | Target | Theme | Surface |
-| --- | ---: | --- | --- |
-| `01-main-window.png` | 960×900 | Light | Transfers and complete shell |
-| `02-toolbar-and-filter.png` | 960×900 | Dark | Transfers and complete shell |
-| `03-filter-sidebar.png` | 960×640 | Light | Compact Transfers shell |
-| `04-transfer-list.png` | 960×768 | Light | Transfers table and filters |
-| `05-properties-tabs.png` | 960×768 | Dark | Transfers properties |
-| `06-statusbar.png` | 960×900 | Light | Execution Log |
-| `07-navigation-and-toolbar.png` | 960×900 | Dark | Search |
-| `08-main-workspace.png` | 960×900 | Light | RSS reader |
-| `09-custom-workspace-tabs.png` | 960×900 | Light | Personal Workspace |
-| `10-tab-context-menu.png` | 960×900 | Light | Options |
-| `11-tab-typography-color.png` | 960×900 | Dark | Options |
-| `12-workspace-portability.png` | 960×768 | Light | Download from URLs dialog |
-| `13-restored-workspace.png` | 960×768 | Dark | About qBittorrent dialog |
+| File | Logical target | Theme | Surface | Status |
+| --- | ---: | --- | --- | --- |
+| `01-main-window.png` | 960×900 | Light | Transfers and complete shell | Captured |
+| `02-toolbar-and-filter.png` | 960×900 | Dark | Transfers and complete shell | Captured |
+| `03-filter-sidebar.png` | 960×640 | Light | Compact Transfers shell | Captured |
+| `04-transfer-list.png` | 960×768 | Light | Transfers table and filters | Captured |
+| `05-properties-tabs.png` | 960×768 | Dark | Transfers properties | Captured |
+| `06-statusbar.png` | 960×900 | Light | Execution Log | Captured |
+| `07-navigation-and-toolbar.png` | 960×900 | Dark | Search | Captured |
+| `08-main-workspace.png` | 960×900 | Light | RSS reader | Captured |
+| `09-custom-workspace-tabs.png` | 960×900 | Light | Personal Workspace | Captured |
+| `10-tab-context-menu.png` | 960×900 | Light | Options | Captured |
+| `11-tab-typography-color.png` | 960×900 | Dark | Options | Captured |
+| `12-workspace-portability.png` | 960×768 | Light | Download from URLs dialog | Captured |
+| `13-restored-workspace.png` | 960×768 | Dark | About License dialog | Captured |
+| `14-split-dock-compact.png` | 960×640 | Light | Compact Split Dock | Captured |
+| `15-split-dock-dark-compact.png` | 960×640 | Dark | Compact Split Dock | Captured |
+| `16-card-flow-compact.png` | 960×640 | Light | Compact Card Flow | Captured |
+| `17-card-flow-dark-compact.png` | 960×640 | Dark | Compact Card Flow | Captured |
 
 ## Shared desktop shell
 
@@ -29,6 +34,11 @@ Every workspace uses the same compact geometry: a 64px command bar, persistent
 248px grouped navigation, 24px content gutters, flat bordered panels with 24px
 corners, 40px controls, and a 32px status footer. Operational values use
 monospace type, while pale-blue selection and explicit labels keep state clear.
+
+The menu bar, header/toolbar, and Material tray menu route commands through
+shared actions. Header icon controls, the Add button and navigation rail, and
+status-filter chips are keyboard operable with descriptive accessible names and
+a visible focus indication.
 
 System mode follows the operating system. Light and Dark can also be selected
 explicitly; the first two Transfers captures show both palettes.
@@ -41,6 +51,17 @@ The 960×640 capture verifies that the native desktop hierarchy remains usable
 at the supported compact window size without pretending to be a phone layout.
 
 ![Compact Transfers workspace](images/app/03-filter-sidebar.png)
+
+The additional compact captures extend that target to Split Dock and Card Flow
+in both palettes, exercising their docked detail hierarchy without clipping.
+
+| Split Dock · Light | Split Dock · Dark |
+| --- | --- |
+| ![Compact Split Dock layout in Light mode](images/app/14-split-dock-compact.png) | ![Compact Split Dock layout in Dark mode](images/app/15-split-dock-dark-compact.png) |
+
+| Card Flow · Light | Card Flow · Dark |
+| --- | --- |
+| ![Compact Card Flow layout in Light mode](images/app/16-card-flow-compact.png) | ![Compact Card Flow layout in Dark mode](images/app/17-card-flow-dark-compact.png) |
 
 ## Transfers and properties
 
@@ -82,7 +103,9 @@ Transfers, Search, RSS, and Execution Log.
 ## Options and dialogs
 
 Options keeps its settings categories and staged Apply/Cancel workflow inside a
-large Material dialog. The paired captures verify Light and Dark rendering.
+large Material dialog. The paired captures verify Light and Dark rendering. In
+particular, the tray-icon style remains staged until **Apply** commits it and
+refreshes the native tray icon; **Cancel** leaves the active icon unchanged.
 
 ![Options dialog in Light mode](images/app/10-tab-context-menu.png)
 
@@ -93,7 +116,12 @@ restrained elevation, 40px actions, visible labels, and keyboard-safe focus.
 
 ![Download from URLs dialog](images/app/12-workspace-portability.png)
 
-![About qBittorrent dialog in Dark mode](images/app/13-restored-workspace.png)
+![About License dialog in Dark mode](images/app/13-restored-workspace.png)
+
+The About License tab renders the bundled GPL notice directly from the QRC
+resource. Peer-country flags are served by the registered `image://flags`
+provider; optional missing SVG assets degrade to a transparent placeholder
+rather than a broken image.
 
 ## Documentation experience
 
