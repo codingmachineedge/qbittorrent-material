@@ -35,3 +35,7 @@ compile_commands.json
 # OS
 .DS_Store
 Thumbs.db
+
+# ──── Desktop Material: Build artifacts ────  (dm-template:build-artifacts)
+build/
+# ──── end Desktop Material: Build artifacts ────  (dm-template:build-artifacts)
