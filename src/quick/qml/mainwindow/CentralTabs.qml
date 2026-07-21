@@ -65,6 +65,17 @@ Item {
         return workspaceLoader.item
     }
 
+    function openSearchPlugins() {
+        // Enabling the loader and selecting the page are deliberately kept in
+        // one synchronous path. This also makes the menu action work when
+        // Search has not been enabled in Preferences yet.
+        if (!searchEnabled)
+            central.shell.setSearchTabEnabled(true)
+        central.currentIndex = 1
+        if (searchLoader.item && searchLoader.item.openPluginsDialog)
+            searchLoader.item.openPluginsDialog()
+    }
+
     function newWorkspaceTab() {
         var item = workspaceItem()
         if (item) item.createTab()

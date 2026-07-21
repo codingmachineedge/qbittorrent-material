@@ -5,6 +5,7 @@
  */
 
 import QtQuick
+import QtQuick.Controls
 import QtQuick.Layouts
 import qBittorrent
 
@@ -45,53 +46,65 @@ Rectangle {
 
             Repeater {
                 model: root.tabs
-                delegate: Item {
+                delegate: AbstractButton {
+                    id: tabButton
                     required property var modelData
                     required property int index
                     readonly property bool active: root.currentTab === index
 
                     Layout.preferredHeight: 40
                     implicitWidth: tabRow.implicitWidth + 32
+                    padding: 0
+                    hoverEnabled: true
+                    activeFocusOnTab: true
 
-                    Row {
-                        id: tabRow
-                        anchors.centerIn: parent
-                        spacing: 6
-                        MDIcon {
-                            anchors.verticalCenter: parent.verticalCenter
-                            name: modelData.icon
-                            size: 16
-                            color: parent.parent.active ? Theme.color("primary") : Theme.color("onSurfaceVariant")
+                    // Qt Quick exposes no TabItem role in all supported Qt
+                    // 6.8 accessibility backends; Button keeps the control
+                    // discoverable without emitting an undefined-role warning.
+                    Accessible.role: Accessible.Button
+                    Accessible.name: modelData.label
+                    Accessible.description: active
+                        ? qsTr("Current details tab") : qsTr("Show details tab")
+
+                    background: Item { }
+
+                    contentItem: Item {
+                        Row {
+                            id: tabRow
+                            anchors.centerIn: parent
+                            spacing: 6
+                            MDIcon {
+                                anchors.verticalCenter: parent.verticalCenter
+                                name: modelData.icon
+                                size: 16
+                                color: tabButton.active ? Theme.color("primary") : Theme.color("onSurfaceVariant")
+                            }
+                            Text {
+                                anchors.verticalCenter: parent.verticalCenter
+                                text: modelData.label
+                                font.family: Typography.family
+                                font.pixelSize: 13
+                                font.weight: Font.DemiBold
+                                color: tabButton.active ? Theme.color("primary") : Theme.color("onSurfaceVariant")
+                            }
                         }
-                        Text {
-                            anchors.verticalCenter: parent.verticalCenter
-                            text: modelData.label
-                            font.family: Typography.family
-                            font.pixelSize: 13
-                            font.weight: Font.DemiBold
-                            color: parent.parent.active ? Theme.color("primary") : Theme.color("onSurfaceVariant")
+
+                        Rectangle {
+                            anchors.bottom: parent.bottom
+                            anchors.left: parent.left
+                            anchors.right: parent.right
+                            anchors.leftMargin: 12
+                            anchors.rightMargin: 12
+                            height: 3
+                            radius: 2
+                            color: Theme.color("primary")
+                            opacity: tabButton.active ? 1 : 0
+                            Behavior on opacity { NumberAnimation { duration: 200 } }
                         }
                     }
 
-                    Rectangle {
-                        anchors.bottom: parent.bottom
-                        anchors.left: parent.left
-                        anchors.right: parent.right
-                        anchors.leftMargin: 12
-                        anchors.rightMargin: 12
-                        height: 3
-                        radius: 2
-                        color: Theme.color("primary")
-                        opacity: parent.active ? 1 : 0
-                        Behavior on opacity { NumberAnimation { duration: 200 } }
-                    }
-
-                    MouseArea {
-                        anchors.fill: parent
-                        cursorShape: Qt.PointingHandCursor
-                        hoverEnabled: true
-                        onClicked: root.currentTab = index
-                    }
+                    HoverHandler { cursorShape: Qt.PointingHandCursor }
+                    onClicked: root.currentTab = index
                 }
             }
             Item { Layout.fillWidth: true }

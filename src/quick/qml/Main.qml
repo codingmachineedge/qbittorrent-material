@@ -1086,7 +1086,10 @@ ApplicationWindow {
     }
     function managePlugins() {
         Log.info("ui", "Action: Manage plugins")
-        // TODO(engine): wire the desktop plugins dialog when ENABLE_PLUGINS is built.
+        // Search owns the plugin manager dialog. Route the legacy menu action
+        // through the same destination path as the visible Search plugins
+        // button so it cannot silently become a dead end.
+        centralTabs.openSearchPlugins()
     }
 
     function lockUI() {
@@ -1138,24 +1141,24 @@ ApplicationWindow {
         root.searchTabEnabled = v
         Preferences.setSearchEnabled(v)
         Preferences.apply()
-        if (v)
-            root.switchToTab(1)
+        if (v && root.currentTabIndex !== 1)
+            centralTabs.activateTab(1)
     }
     function setRSSTabEnabled(v) {
         Log.info("ui", "RSS tab enabled -> " + v)
         root.rssTabEnabled = v
         Preferences.setRSSWidgetVisible(v)
         Preferences.apply()
-        if (v)
-            root.switchToTab(2)
+        if (v && root.currentTabIndex !== 2)
+            centralTabs.activateTab(2)
     }
     function setExecutionLogEnabled(v) {
         Log.info("ui", "Execution log enabled -> " + v)
         root.executionLogEnabled = v
         Preferences.setValue("GUI/Log/Enabled", v)
         Preferences.apply()
-        if (v)
-            root.switchToTab(3)
+        if (v && root.currentTabIndex !== 3)
+            centralTabs.activateTab(3)
     }
     function setLogTypeEnabled(which, v) {
         Log.info("ui", "Log message type '" + which + "' -> " + v)

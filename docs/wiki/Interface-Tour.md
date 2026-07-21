@@ -26,6 +26,12 @@ Each workspace uses 24px page gutters and a dominant flat, outlined panel with a
 
 Search, RSS, and Execution Log remain optional features: selecting one enables and loads its native QML workspace. Options is available from both the command bar and navigation and opens the native preferences surface.
 
+Navigation controls are keyboard-reachable buttons in every shell style. When
+an optional workspace is selected, the shell enables its loader before changing
+the central index. The Transfers details strip uses the same focusable control
+semantics for General, Trackers, Peers, Content, and Speed, and the application
+menu's plugin command opens the Search plugins dialog directly.
+
 ![RSS reader workspace](images/app/08-main-workspace.png)
 
 ## Find and organize transfers

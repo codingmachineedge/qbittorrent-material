@@ -52,6 +52,11 @@ the registered `image://flags` provider; flag SVGs are optional, and an absent
 asset intentionally becomes a transparent placeholder rather than a broken
 image.
 
+Navigation and details tabs use focusable controls with a single destination
+handoff, so optional Search/RSS/Log workspaces are enabled before selection and
+the application-menu plugin action opens the same Search plugins dialog as the
+visible Search workspace button.
+
 ## Persistent custom workspace
 
 The built-in **Workspace** adds browser-style tabs for personal plain-text pages.

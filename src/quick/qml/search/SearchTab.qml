@@ -63,6 +63,11 @@ Item {
         }
     }
 
+    function openPluginsDialog() {
+        Log.info("search", "Search plugins dialog opened from application menu")
+        pluginsDialog.open()
+    }
+
     Component.onCompleted: {
         Log.debug("search", "SearchTab opened")
         _refillCategories()
